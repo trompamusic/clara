@@ -37,7 +37,7 @@ class Variations extends Component {
   }
 
   componentDidMount() { 
-    this.props.traverse("variations.json", {numHops:0});
+    this.props.traverse("structure/WoO80.json", {numHops:0});
    }
 
   componentDidUpdate(prevProps, prevState) { 
@@ -72,7 +72,7 @@ class Variations extends Component {
             this.state.segments.map( (seg) => { 
               return (
                 <option key={ seg["@id"] } value={ seg["@id"] }>
-                  { seg["http://www.w3.org/1999/02/22-rdf-syntax-ns#label"] }
+                  { seg["http://www.w3.org/2000/01/rdf-schema#label"] }
                 </option>
               )
             })
@@ -83,9 +83,9 @@ class Variations extends Component {
   }
 
   handleSegmentSelected(e) { 
-    console.log("Selected: ", e.target.value);
+    console.log("Selected: ", e.target);
     const selected = this.state.segments.filter( (seg) => { return seg["@id"] === e.target.value });
-    const target = selected[0]["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/1999/02/22-rdf-syntax-ns#member"]["@id"];
+    const target = selected[0]["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/2000/01/rdf-schema#member"]["@id"];
     this.props.scorePageToComponentTarget(target, scoreUri, this.props.score.MEI[scoreUri]);
   }
 

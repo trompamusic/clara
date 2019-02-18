@@ -1,0 +1,42 @@
+@prefix mo: <http://purl.org/ontology/mo/> .
+@prefix so: <http://www.linkedmusic.org/ontologies/segment/> .
+@prefix frbr: <http://purl.org/vocab/frbr/core#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix meld: <https://meld.linkedmusic.org/terms/> .
+@prefix struct: <http://localhost:8080/structure/> .
+@prefix tl: <http://purl.org/NET/c4dm/timeline.owl#> .
+@prefix al: <http://localhost:8080/timeline/BeethovenWettbewerb/AdelaLiculescu.ttl#> .
+
+al:WoO80 a tl:Timeline .
+
+al:Thema a so:Segment ;
+ tl:onTimeLine al:WoO80 ;
+ tl:beginsAtDuration "P51S" ;
+ tl:endsAtDuration "P66S" ;
+ rdfs:label "Thema" .
+al:VarI a so:Segment ;
+ tl:onTimeLine al:WoO80 ;
+ tl:beginsAtDuration "P66S" ;
+ tl:endsAtDuration "P79S" ;
+ rdfs:label "Var. I" .
+al:VarII a so:Segment ;
+ tl:onTimeLine al:WoO80 ;
+ tl:beginsAtDuration "P79S" ;
+ tl:endsAtDuration "P92S" ;
+ rdfs:label "Var. II" .
+al:VarIII a so:Segment ;
+ tl:onTimeLine al:WoO80 ;
+ tl:beginsAtDuration "P92S" ;
+ tl:endsAtDuration "P106S" ;
+ rdfs:label "Var. III" .
+al:VarIV a so:Segment ;
+ tl:onTimeLine al:WoO80 ;
+ tl:beginsAtDuration "P106S" ;
+ tl:endsAtDuration "P120S" ;
+ rdfs:label "Var. IV" .
+al:VarV a so:Segment ;
+ tl:onTimeLine al:WoO80 ;
+ tl:beginsAtDuration "P120S" ;
+ rdfs:label "Var. V" .
+

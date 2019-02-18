@@ -1,0 +1,42 @@
+@prefix mo: <http://purl.org/ontology/mo/> .
+@prefix so: <http://www.linkedmusic.org/ontologies/segment/> .
+@prefix frbr: <http://purl.org/vocab/frbr/core#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix meld: <https://meld.linkedmusic.org/terms/> .
+@prefix struct: <http://localhost:8080/structure/> .
+@prefix tl: <http://purl.org/NET/c4dm/timeline.owl#> .
+@prefix dkm: <http://localhost:8080/timeline/BeethovenWettbewerb/DorothyKhademMissagh.ttl#> .
+
+dkm:WoO80 a tl:Timeline .
+
+dkm:Thema a so:Segment ;
+ tl:onTimeLine dkm:WoO80 ;
+ tl:beginsAtDuration "P45S" ;
+ tl:endsAtDuration "P62S" ;
+ rdfs:label "Thema" .
+dkm:VarI a so:Segment ;
+ tl:onTimeLine dkm:WoO80 ;
+ tl:beginsAtDuration "P62S" ;
+ tl:endsAtDuration "P78S" ;
+ rdfs:label "Var. I" .
+dkm:VarII a so:Segment ;
+ tl:onTimeLine dkm:WoO80 ;
+ tl:beginsAtDuration "P78S" ;
+ tl:endsAtDuration "P93S" ;
+ rdfs:label "Var. II" .
+dkm:VarIII a so:Segment ;
+ tl:onTimeLine dkm:WoO80 ;
+ tl:beginsAtDuration "P93S" ;
+ tl:endsAtDuration "P109S" ;
+ rdfs:label "Var. III" .
+dkm:VarIV a so:Segment ;
+ tl:onTimeLine dkm:WoO80 ;
+ tl:beginsAtDuration "P109S" ;
+ tl:endsAtDuration "P126S" ;
+ rdfs:label "Var. IV" .
+dkm:VarV a so:Segment ;
+ tl:onTimeLine dkm:WoO80 ;
+ tl:beginsAtDuration "P126S" ;
+ rdfs:label "Var. V" .
+

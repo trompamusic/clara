@@ -1,0 +1,80 @@
+{
+  "@context": {
+    "al": "http://localhost:8080/timeline/BeethovenWettbewerb/AdelaLiculescu.json#",
+    "frbr": "http://purl.org/vocab/frbr/core#",
+    "meld": "https://meld.linkedmusic.org/terms/",
+    "mo": "http://purl.org/ontology/mo/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "rdfs1": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "so": "http://www.linkedmusic.org/ontologies/segment/",
+    "struct": "http://localhost:8080/structure/",
+    "tl": "http://purl.org/NET/c4dm/timeline.owl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@graph": [
+    {
+      "@id": "al:VarI",
+      "@type": "so:Segment",
+      "rdfs1:label": "Var. I",
+      "tl:beginsAtDuration": "P66S",
+      "tl:endsAtDuration": "P79S",
+      "tl:onTimeLine": {
+        "@id": "al:WoO80"
+      }
+    },
+    {
+      "@id": "al:WoO80",
+      "@type": "tl:Timeline"
+    },
+    {
+      "@id": "al:VarIV",
+      "@type": "so:Segment",
+      "rdfs1:label": "Var. IV",
+      "tl:beginsAtDuration": "P106S",
+      "tl:endsAtDuration": "P120S",
+      "tl:onTimeLine": {
+        "@id": "al:WoO80"
+      }
+    },
+    {
+      "@id": "al:VarII",
+      "@type": "so:Segment",
+      "rdfs1:label": "Var. II",
+      "tl:beginsAtDuration": "P79S",
+      "tl:endsAtDuration": "P92S",
+      "tl:onTimeLine": {
+        "@id": "al:WoO80"
+      }
+    },
+    {
+      "@id": "al:VarIII",
+      "@type": "so:Segment",
+      "rdfs1:label": "Var. III",
+      "tl:beginsAtDuration": "P92S",
+      "tl:endsAtDuration": "P106S",
+      "tl:onTimeLine": {
+        "@id": "al:WoO80"
+      }
+    },
+    {
+      "@id": "al:Thema",
+      "@type": "so:Segment",
+      "rdfs1:label": "Thema",
+      "tl:beginsAtDuration": "P51S",
+      "tl:endsAtDuration": "P66S",
+      "tl:onTimeLine": {
+        "@id": "al:WoO80"
+      }
+    },
+    {
+      "@id": "al:VarV",
+      "@type": "so:Segment",
+      "rdfs1:label": "Var. V",
+      "tl:beginsAtDuration": "P120S",
+      "tl:onTimeLine": {
+        "@id": "al:WoO80"
+      }
+    }
+  ]
+}

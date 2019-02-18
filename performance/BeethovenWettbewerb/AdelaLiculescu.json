@@ -1,0 +1,45 @@
+{
+  "@context": {
+    "frbr": "http://purl.org/vocab/frbr/core#",
+    "meld": "https://meld.linkedmusic.org/terms/",
+    "mo": "http://purl.org/ontology/mo/",
+    "perf": "file:///base/data/home/apps/s%7Erdf-translator/2.408516547054015808/performance/BeethovenWettbewerb/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "rdfs1": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "score": "file:///base/data/home/apps/s%7Erdf-translator/2.408516547054015808/score/",
+    "so": "http://www.linkedmusic.org/ontologies/segment/",
+    "struct": "file:///base/data/home/apps/s%7Erdf-translator/2.408516547054015808/structure/",
+    "tl": "http://purl.org/NET/c4dm/timeline.owl#",
+    "vid": "file:///base/data/home/apps/s%7Erdf-translator/2.408516547054015808/videos/BeethovenWettbewerb/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@graph": [
+    {
+      "@id": "score:WoO80",
+      "@type": "mo:Score",
+      "meld:segments": {
+        "@id": "struct:WoO80.json"
+      },
+      "mo:published_as": {
+        "@id": "file:///base/data/home/apps/s%7Erdf-translator/2.408516547054015808/Beethoven_WoO80-32-Variationen-c-Moll.mei"
+      }
+    },
+    {
+      "@id": "perf:AdelaLiculescu",
+      "@type": "mo:Performance",
+      "mo:performance_of": {
+        "@id": "score:WoO80"
+      },
+      "mo:recorded_as": {
+        "@id": "perf:AdelaLiculescoSignal"
+      }
+    },
+    {
+      "@id": "perf:AdelaLiculescoSignal",
+      "mo:available_as": {
+        "@id": "vid:R1_Adela%20Liculescu_MDW-1080_1.mp4"
+      }
+    }
+  ]
+}

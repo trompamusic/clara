@@ -1,0 +1,42 @@
+@prefix mo: <http://purl.org/ontology/mo/> .
+@prefix so: <http://www.linkedmusic.org/ontologies/segment/> .
+@prefix frbr: <http://purl.org/vocab/frbr/core#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix meld: <https://meld.linkedmusic.org/terms/> .
+@prefix struct: <http://localhost:8080/structure/> .
+@prefix tl: <http://purl.org/NET/c4dm/timeline.owl#> .
+@prefix rl: <http://localhost:8080/timeline/BeethovenWettbewerb/RodolfoLeone.ttl#> .
+
+rl:WoO80 a tl:Timeline .
+
+rl:Thema a so:Segment ;
+ tl:onTimeLine rl:WoO80 ;
+ tl:beginsAtDuration "P626S" ;
+ tl:endsAtDuration "P641S" ;
+ rdfs:label "Thema" .
+rl:VarI a so:Segment ;
+ tl:onTimeLine rl:WoO80 ;
+ tl:beginsAtDuration "P641S" ;
+ tl:endsAtDuration "P654S" ;
+ rdfs:label "Var. I" .
+rl:VarII a so:Segment ;
+ tl:onTimeLine rl:WoO80 ;
+ tl:beginsAtDuration "P654S" ;
+ tl:endsAtDuration "P668S" ;
+ rdfs:label "Var. II" .
+rl:VarIII a so:Segment ;
+ tl:onTimeLine rl:WoO80 ;
+ tl:beginsAtDuration "P668S" ;
+ tl:endsAtDuration "P681S" ;
+ rdfs:label "Var. III" .
+rl:VarIV a so:Segment ;
+ tl:onTimeLine rl:WoO80 ;
+ tl:beginsAtDuration "P681S" ;
+ tl:endsAtDuration "P696S" ;
+ rdfs:label "Var. IV" .
+rl:VarV a so:Segment ;
+ tl:onTimeLine rl:WoO80 ;
+ tl:beginsAtDuration "P696S" ;
+ rdfs:label "Var. V" .
+
