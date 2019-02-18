@@ -25,20 +25,26 @@ class Variations extends Component {
   constructor(props) {
     super(props);
 		// Following bindings required to make 'this' work in the callbacks
-    this.state = { segments: [] }
-		this.projectAnnotations = this.projectAnnotations.bind(this);
+    this.state = { performances: [], segments: [], selectedVideo: "" }
+		this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
 		this.handleSegmentSelected = this.handleSegmentSelected.bind(this);
+		this.handlePerformanceSelected = this.handlePerformanceSelected.bind(this);
   }
 
   componentWillMount() { 
     this.props.setTraversalObjectives([
+      { "@type": "http://purl.org/ontology/mo/Performance" },
       { "@type": "http://www.linkedmusic.org/ontologies/segment/Segment" }
     ]);
   }
 
   componentDidMount() { 
-    this.props.traverse("structure/WoO80.json", {numHops:0});
-   }
+    this.props.traverse("performance/BeethovenWettbewerb/WoO80.json", {
+      numHops:2, 
+      objectPrefixWhitelist:["http://localhost:8080/"],
+      objectPrefixBlacklist:["http://localhost:8080/videos/", "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei"]
+    });
+  }
 
   componentDidUpdate(prevProps, prevState) { 
     console.log('updating');
@@ -49,7 +55,7 @@ class Variations extends Component {
 			}
 			if(prevProps.graph.outcomesHash !== this.props.graph.outcomesHash) { 
 				// outcomes have changed, need to update our projections!
-				this.projectAnnotations(this.props.graph.outcomes);
+				this.processTraversalOutcomes(this.props.graph.outcomes);
 			}
 		}
   }
@@ -78,27 +84,64 @@ class Variations extends Component {
             })
           }
        </select>
-      </div>
+       <select name="perfSelect" onChange={ this.handlePerformanceSelected }>
+        <option value="none">Select a rendition...</option>
+        {
+          this.state.performances.map( (perf) => { 
+            return( 
+              <option key={ perf["@id"] } value={ perf["@id"] }>
+                { perf["http://www.w3.org/2000/01/rdf-schema#label"] }
+              </option>
+            )
+          })
+        }
+      </select>
+      <Media>
+        <div className="media">
+          <div className="media-player">
+            <Player src={ this.state.selectedVideo } />
+          </div>
+          <div className="media-controls">
+            <PlayPause/>
+            <CurrentTime/>
+            <SeekBar/>
+            <Duration/>
+         </div>
+       </div>
+     </Media>
+    </div>
     )
   }
 
   handleSegmentSelected(e) { 
-    console.log("Selected: ", e.target);
+    console.log("Segment selected: ", e.target);
     const selected = this.state.segments.filter( (seg) => { return seg["@id"] === e.target.value });
     const target = selected[0]["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/2000/01/rdf-schema#member"]["@id"];
     this.props.scorePageToComponentTarget(target, scoreUri, this.props.score.MEI[scoreUri]);
   }
+  
+  handlePerformanceSelected(e) { 
+    console.log("Rendition selected: ", e.target);
+    const selected = this.state.performances.filter( (perf) => { return perf["@id"] === e.target.value });
+    const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
+    this.setState({ selectedVideo });
+  }
 
-  projectAnnotations(outcomes) { 
+  processTraversalOutcomes(outcomes) { 
     let segments = [];
-    console.log("~~~OUTSIDE MAP ", outcomes[0]["@graph"]);
-    outcomes[0]["@graph"].map( (outcome) => {
-      // FIXME "targets" and "bodies" here should really be 
-      // "fragments" and "payloads" or similar in the core reducer
-      // TODO, think through and improve
-      segments.push(outcome)
-    })
-    this.setState({ segments });
+    let performances= [];
+    if(outcomes.length === 2 && 
+      typeof outcomes[0] !== 'undefined' && 
+      typeof outcomes[1] !== 'undefined') { 
+      console.log("Outcomes: ", outcomes)
+      outcomes[0]["@graph"].map( (outcome) => {
+        performances.push(outcome)
+      });
+      outcomes[1]["@graph"].map( (outcome) => {
+        segments.push(outcome)
+      });
+      this.setState({ performances, segments });
+    }
   }
 }
 

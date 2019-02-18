@@ -6,7 +6,6 @@
     "mo": "http://purl.org/ontology/mo/",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "rdfs1": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "so": "http://www.linkedmusic.org/ontologies/segment/",
     "struct": "http://localhost:8080/structure/",
     "tl": "http://purl.org/NET/c4dm/timeline.owl#",
@@ -16,7 +15,7 @@
     {
       "@id": "dkm:Thema",
       "@type": "so:Segment",
-      "rdfs1:label": "Thema",
+      "rdfs:label": "Thema",
       "tl:beginsAtDuration": "P45S",
       "tl:endsAtDuration": "P62S",
       "tl:onTimeLine": {
@@ -30,7 +29,7 @@
     {
       "@id": "dkm:VarII",
       "@type": "so:Segment",
-      "rdfs1:label": "Var. II",
+      "rdfs:label": "Var. II",
       "tl:beginsAtDuration": "P78S",
       "tl:endsAtDuration": "P93S",
       "tl:onTimeLine": {
@@ -40,7 +39,7 @@
     {
       "@id": "dkm:VarV",
       "@type": "so:Segment",
-      "rdfs1:label": "Var. V",
+      "rdfs:label": "Var. V",
       "tl:beginsAtDuration": "P126S",
       "tl:onTimeLine": {
         "@id": "dkm:WoO80"
@@ -49,7 +48,7 @@
     {
       "@id": "dkm:VarIV",
       "@type": "so:Segment",
-      "rdfs1:label": "Var. IV",
+      "rdfs:label": "Var. IV",
       "tl:beginsAtDuration": "P109S",
       "tl:endsAtDuration": "P126S",
       "tl:onTimeLine": {
@@ -59,7 +58,7 @@
     {
       "@id": "dkm:VarI",
       "@type": "so:Segment",
-      "rdfs1:label": "Var. I",
+      "rdfs:label": "Var. I",
       "tl:beginsAtDuration": "P62S",
       "tl:endsAtDuration": "P78S",
       "tl:onTimeLine": {
@@ -69,7 +68,7 @@
     {
       "@id": "dkm:VarIII",
       "@type": "so:Segment",
-      "rdfs1:label": "Var. III",
+      "rdfs:label": "Var. III",
       "tl:beginsAtDuration": "P93S",
       "tl:endsAtDuration": "P109S",
       "tl:onTimeLine": {

@@ -2,21 +2,26 @@
 @prefix so: <http://www.linkedmusic.org/ontologies/segment/> .
 @prefix frbr: <http://purl.org/vocab/frbr/core#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix meld: <https://meld.linkedmusic.org/terms/> .
-@prefix struct: <structure/> .
+@prefix struct: <http://localhost:8080/structure/> .
 @prefix tl: <http://purl.org/NET/c4dm/timeline.owl#> .
-@prefix vid: <videos/BeethovenWettbewerb/> .
-@prefix perf: <performance/BeethovenWettbewerb/> .
-@prefix score: <score/> .
+@prefix vid: <http://localhost:8080/videos/BeethovenWettbewerb/> .
+@prefix perf: <http://localhost:8080/performance/BeethovenWettbewerb/> .
+@prefix perftl: <http://localhost:8080/timeline/BeethovenWettbewerb/> .
+@prefix score: <http://localhost:8080/score/> .
 
-perf:DorothyKhademMissagh a mo:Performance ;
+perf:DorothyKhademMissagh.ttl a mo:Performance ;
   mo:performance_of score:WoO80 ;
-  mo:recorded_as perf:DorothyKhademMissagh .
+  mo:recorded_as perf:DorothyKhademMissaghSignal ;
+  rdfs:label "Dorothy Khadem-Missagh: Round 1" .
 
-perf:DorothyKhademMissagh mo:available_as vid:R1_Dorothy%20Khadem-Missagh-1080_1.mp4 .
+perf:DorothyKhademMissaghSignal mo:available_as vid:R1_Dorothy%20Khadem-Missagh_MDW-1080_1.mp4 ;
+  mo:time [ a tl:Interval ;
+    tl:onTimeLine perftl:DorothyKhademMissagh.ttl 
+  ] .
 
 score:WoO80 a mo:Score ; 
- mo:published_as <Beethoven_WoO80-32-Variationen-c-Moll.mei> ;
+ mo:published_as <http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei> ;
  meld:segments struct:WoO80.ttl .
   

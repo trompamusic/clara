@@ -5,7 +5,6 @@
     "mo": "http://purl.org/ontology/mo/",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "rdfs1": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rl": "http://localhost:8080/timeline/BeethovenWettbewerb/RodolfoLeone.ttl#",
     "so": "http://www.linkedmusic.org/ontologies/segment/",
     "struct": "http://localhost:8080/structure/",
@@ -16,7 +15,7 @@
     {
       "@id": "rl:VarI",
       "@type": "so:Segment",
-      "rdfs1:label": "Var. I",
+      "rdfs:label": "Var. I",
       "tl:beginsAtDuration": "P641S",
       "tl:endsAtDuration": "P654S",
       "tl:onTimeLine": {
@@ -26,7 +25,7 @@
     {
       "@id": "rl:VarII",
       "@type": "so:Segment",
-      "rdfs1:label": "Var. II",
+      "rdfs:label": "Var. II",
       "tl:beginsAtDuration": "P654S",
       "tl:endsAtDuration": "P668S",
       "tl:onTimeLine": {
@@ -36,7 +35,7 @@
     {
       "@id": "rl:VarIII",
       "@type": "so:Segment",
-      "rdfs1:label": "Var. III",
+      "rdfs:label": "Var. III",
       "tl:beginsAtDuration": "P668S",
       "tl:endsAtDuration": "P681S",
       "tl:onTimeLine": {
@@ -46,7 +45,7 @@
     {
       "@id": "rl:VarIV",
       "@type": "so:Segment",
-      "rdfs1:label": "Var. IV",
+      "rdfs:label": "Var. IV",
       "tl:beginsAtDuration": "P681S",
       "tl:endsAtDuration": "P696S",
       "tl:onTimeLine": {
@@ -56,7 +55,7 @@
     {
       "@id": "rl:VarV",
       "@type": "so:Segment",
-      "rdfs1:label": "Var. V",
+      "rdfs:label": "Var. V",
       "tl:beginsAtDuration": "P696S",
       "tl:onTimeLine": {
         "@id": "rl:WoO80"
@@ -69,7 +68,7 @@
     {
       "@id": "rl:Thema",
       "@type": "so:Segment",
-      "rdfs1:label": "Thema",
+      "rdfs:label": "Thema",
       "tl:beginsAtDuration": "P626S",
       "tl:endsAtDuration": "P641S",
       "tl:onTimeLine": {
