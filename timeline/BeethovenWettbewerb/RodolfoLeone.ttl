@@ -11,31 +11,37 @@
 rl:WoO80 a tl:Timeline .
 
 rl:Thema a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine rl:WoO80 ;
  tl:beginsAtDuration "P626S" ;
  tl:endsAtDuration "P641S" ;
  rdfs:label "Thema" .
 rl:VarI a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine rl:WoO80 ;
  tl:beginsAtDuration "P641S" ;
  tl:endsAtDuration "P654S" ;
  rdfs:label "Var. I" .
 rl:VarII a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine rl:WoO80 ;
  tl:beginsAtDuration "P654S" ;
  tl:endsAtDuration "P668S" ;
  rdfs:label "Var. II" .
 rl:VarIII a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine rl:WoO80 ;
  tl:beginsAtDuration "P668S" ;
  tl:endsAtDuration "P681S" ;
  rdfs:label "Var. III" .
 rl:VarIV a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine rl:WoO80 ;
  tl:beginsAtDuration "P681S" ;
  tl:endsAtDuration "P696S" ;
  rdfs:label "Var. IV" .
 rl:VarV a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine rl:WoO80 ;
  tl:beginsAtDuration "P696S" ;
  rdfs:label "Var. V" .

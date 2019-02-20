@@ -14,7 +14,10 @@
   "@graph": [
     {
       "@id": "al:VarI",
-      "@type": "so:Segment",
+      "@type": [
+        "so:Segment",
+        "tl:Interval"
+      ],
       "rdfs:label": "Var. I",
       "tl:beginsAtDuration": "P66S",
       "tl:endsAtDuration": "P79S",
@@ -28,7 +31,10 @@
     },
     {
       "@id": "al:VarIV",
-      "@type": "so:Segment",
+      "@type": [
+        "tl:Interval",
+        "so:Segment"
+      ],
       "rdfs:label": "Var. IV",
       "tl:beginsAtDuration": "P106S",
       "tl:endsAtDuration": "P120S",
@@ -38,7 +44,10 @@
     },
     {
       "@id": "al:VarII",
-      "@type": "so:Segment",
+      "@type": [
+        "so:Segment",
+        "tl:Interval"
+      ],
       "rdfs:label": "Var. II",
       "tl:beginsAtDuration": "P79S",
       "tl:endsAtDuration": "P92S",
@@ -48,7 +57,10 @@
     },
     {
       "@id": "al:VarIII",
-      "@type": "so:Segment",
+      "@type": [
+        "tl:Interval",
+        "so:Segment"
+      ],
       "rdfs:label": "Var. III",
       "tl:beginsAtDuration": "P92S",
       "tl:endsAtDuration": "P106S",
@@ -58,7 +70,10 @@
     },
     {
       "@id": "al:Thema",
-      "@type": "so:Segment",
+      "@type": [
+        "so:Segment",
+        "tl:Interval"
+      ],
       "rdfs:label": "Thema",
       "tl:beginsAtDuration": "P51S",
       "tl:endsAtDuration": "P66S",
@@ -68,7 +83,10 @@
     },
     {
       "@id": "al:VarV",
-      "@type": "so:Segment",
+      "@type": [
+        "tl:Interval",
+        "so:Segment"
+      ],
       "rdfs:label": "Var. V",
       "tl:beginsAtDuration": "P120S",
       "tl:onTimeLine": {

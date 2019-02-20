@@ -11,31 +11,37 @@
 al:WoO80 a tl:Timeline .
 
 al:Thema a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P51S" ;
  tl:endsAtDuration "P66S" ;
  rdfs:label "Thema" .
 al:VarI a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P66S" ;
  tl:endsAtDuration "P79S" ;
  rdfs:label "Var. I" .
 al:VarII a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P79S" ;
  tl:endsAtDuration "P92S" ;
  rdfs:label "Var. II" .
 al:VarIII a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P92S" ;
  tl:endsAtDuration "P106S" ;
  rdfs:label "Var. III" .
 al:VarIV a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P106S" ;
  tl:endsAtDuration "P120S" ;
  rdfs:label "Var. IV" .
 al:VarV a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P120S" ;
  rdfs:label "Var. V" .

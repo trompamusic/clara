@@ -1,6 +1,6 @@
 {
   "@context": {
-    "dkm": "http://localhost:8080/timeline/BeethovenWettbewerb/DorothyKhademMissagh.ttl#",
+    "dkm": "http://localhost:8080/timeline/BeethovenWettbewerb/DorothyKhademMissagh.json#",
     "frbr": "http://purl.org/vocab/frbr/core#",
     "meld": "https://meld.linkedmusic.org/terms/",
     "mo": "http://purl.org/ontology/mo/",
@@ -14,10 +14,38 @@
   "@graph": [
     {
       "@id": "dkm:Thema",
-      "@type": "so:Segment",
+      "@type": [
+        "tl:Interval",
+        "so:Segment"
+      ],
       "rdfs:label": "Thema",
       "tl:beginsAtDuration": "P45S",
       "tl:endsAtDuration": "P62S",
+      "tl:onTimeLine": {
+        "@id": "dkm:WoO80"
+      }
+    },
+    {
+      "@id": "dkm:VarV",
+      "@type": [
+        "so:Segment",
+        "tl:Interval"
+      ],
+      "rdfs:label": "Var. V",
+      "tl:beginsAtDuration": "P126S",
+      "tl:onTimeLine": {
+        "@id": "dkm:WoO80"
+      }
+    },
+    {
+      "@id": "dkm:VarII",
+      "@type": [
+        "tl:Interval",
+        "so:Segment"
+      ],
+      "rdfs:label": "Var. II",
+      "tl:beginsAtDuration": "P78S",
+      "tl:endsAtDuration": "P93S",
       "tl:onTimeLine": {
         "@id": "dkm:WoO80"
       }
@@ -27,27 +55,11 @@
       "@type": "tl:Timeline"
     },
     {
-      "@id": "dkm:VarII",
-      "@type": "so:Segment",
-      "rdfs:label": "Var. II",
-      "tl:beginsAtDuration": "P78S",
-      "tl:endsAtDuration": "P93S",
-      "tl:onTimeLine": {
-        "@id": "dkm:WoO80"
-      }
-    },
-    {
-      "@id": "dkm:VarV",
-      "@type": "so:Segment",
-      "rdfs:label": "Var. V",
-      "tl:beginsAtDuration": "P126S",
-      "tl:onTimeLine": {
-        "@id": "dkm:WoO80"
-      }
-    },
-    {
       "@id": "dkm:VarIV",
-      "@type": "so:Segment",
+      "@type": [
+        "tl:Interval",
+        "so:Segment"
+      ],
       "rdfs:label": "Var. IV",
       "tl:beginsAtDuration": "P109S",
       "tl:endsAtDuration": "P126S",
@@ -57,7 +69,10 @@
     },
     {
       "@id": "dkm:VarI",
-      "@type": "so:Segment",
+      "@type": [
+        "tl:Interval",
+        "so:Segment"
+      ],
       "rdfs:label": "Var. I",
       "tl:beginsAtDuration": "P62S",
       "tl:endsAtDuration": "P78S",
@@ -67,7 +82,10 @@
     },
     {
       "@id": "dkm:VarIII",
-      "@type": "so:Segment",
+      "@type": [
+        "so:Segment",
+        "tl:Interval"
+      ],
       "rdfs:label": "Var. III",
       "tl:beginsAtDuration": "P93S",
       "tl:endsAtDuration": "P109S",

@@ -11,31 +11,37 @@
 dkm:WoO80 a tl:Timeline .
 
 dkm:Thema a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine dkm:WoO80 ;
  tl:beginsAtDuration "P45S" ;
  tl:endsAtDuration "P62S" ;
  rdfs:label "Thema" .
 dkm:VarI a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine dkm:WoO80 ;
  tl:beginsAtDuration "P62S" ;
  tl:endsAtDuration "P78S" ;
  rdfs:label "Var. I" .
 dkm:VarII a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine dkm:WoO80 ;
  tl:beginsAtDuration "P78S" ;
  tl:endsAtDuration "P93S" ;
  rdfs:label "Var. II" .
 dkm:VarIII a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine dkm:WoO80 ;
  tl:beginsAtDuration "P93S" ;
  tl:endsAtDuration "P109S" ;
  rdfs:label "Var. III" .
 dkm:VarIV a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine dkm:WoO80 ;
  tl:beginsAtDuration "P109S" ;
  tl:endsAtDuration "P126S" ;
  rdfs:label "Var. IV" .
 dkm:VarV a so:Segment ;
+ a tl:Interval ;
  tl:onTimeLine dkm:WoO80 ;
  tl:beginsAtDuration "P126S" ;
  rdfs:label "Var. V" .

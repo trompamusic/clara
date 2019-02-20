@@ -5,7 +5,7 @@
     "mo": "http://purl.org/ontology/mo/",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-    "rl": "http://localhost:8080/timeline/BeethovenWettbewerb/RodolfoLeone.ttl#",
+    "rl": "http://localhost:8080/timeline/BeethovenWettbewerb/RodolfoLeone.json#",
     "so": "http://www.linkedmusic.org/ontologies/segment/",
     "struct": "http://localhost:8080/structure/",
     "tl": "http://purl.org/NET/c4dm/timeline.owl#",
@@ -14,7 +14,10 @@
   "@graph": [
     {
       "@id": "rl:VarI",
-      "@type": "so:Segment",
+      "@type": [
+        "so:Segment",
+        "tl:Interval"
+      ],
       "rdfs:label": "Var. I",
       "tl:beginsAtDuration": "P641S",
       "tl:endsAtDuration": "P654S",
@@ -24,7 +27,10 @@
     },
     {
       "@id": "rl:VarII",
-      "@type": "so:Segment",
+      "@type": [
+        "so:Segment",
+        "tl:Interval"
+      ],
       "rdfs:label": "Var. II",
       "tl:beginsAtDuration": "P654S",
       "tl:endsAtDuration": "P668S",
@@ -34,7 +40,10 @@
     },
     {
       "@id": "rl:VarIII",
-      "@type": "so:Segment",
+      "@type": [
+        "so:Segment",
+        "tl:Interval"
+      ],
       "rdfs:label": "Var. III",
       "tl:beginsAtDuration": "P668S",
       "tl:endsAtDuration": "P681S",
@@ -44,7 +53,10 @@
     },
     {
       "@id": "rl:VarIV",
-      "@type": "so:Segment",
+      "@type": [
+        "tl:Interval",
+        "so:Segment"
+      ],
       "rdfs:label": "Var. IV",
       "tl:beginsAtDuration": "P681S",
       "tl:endsAtDuration": "P696S",
@@ -54,7 +66,10 @@
     },
     {
       "@id": "rl:VarV",
-      "@type": "so:Segment",
+      "@type": [
+        "tl:Interval",
+        "so:Segment"
+      ],
       "rdfs:label": "Var. V",
       "tl:beginsAtDuration": "P696S",
       "tl:onTimeLine": {
@@ -67,7 +82,10 @@
     },
     {
       "@id": "rl:Thema",
-      "@type": "so:Segment",
+      "@type": [
+        "tl:Interval",
+        "so:Segment"
+      ],
       "rdfs:label": "Thema",
       "tl:beginsAtDuration": "P626S",
       "tl:endsAtDuration": "P641S",
