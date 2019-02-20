@@ -138,7 +138,11 @@ class Variations extends Component {
         performances.push(outcome)
       });
       outcomes[1]["@graph"].map( (outcome) => {
-        segments.push(outcome)
+        const types = Array.isArray(outcome["@type"]) ? outcome["@type"] : [outcome["@type"]];
+        if(types.indexOf("http://purl.org/NET/c4dm/timeline.owl#Interval") === -1) { 
+          // only add structural segments, not timeline segments (which are performance dependent...)
+          segments.push(outcome)
+        }
       });
       this.setState({ performances, segments });
     }
