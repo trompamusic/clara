@@ -1,5 +1,6 @@
 {
   "@context": {
+    "WoO80": "http://localhost:8080/segment/WoO80/",
     "frbr": "http://purl.org/vocab/frbr/core#",
     "meld": "https://meld.linkedmusic.org/terms/",
     "mo": "http://purl.org/ontology/mo/",
@@ -15,9 +16,12 @@
     {
       "@id": "rl:VarI",
       "@type": [
-        "so:Segment",
-        "tl:Interval"
+        "tl:Interval",
+        "so:Segment"
       ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:VarI"
+      },
       "rdfs:label": "Var. I",
       "tl:beginsAtDuration": "P641S",
       "tl:endsAtDuration": "P654S",
@@ -28,9 +32,12 @@
     {
       "@id": "rl:VarII",
       "@type": [
-        "so:Segment",
-        "tl:Interval"
+        "tl:Interval",
+        "so:Segment"
       ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:VarII"
+      },
       "rdfs:label": "Var. II",
       "tl:beginsAtDuration": "P654S",
       "tl:endsAtDuration": "P668S",
@@ -41,9 +48,12 @@
     {
       "@id": "rl:VarIII",
       "@type": [
-        "so:Segment",
-        "tl:Interval"
+        "tl:Interval",
+        "so:Segment"
       ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:VarIII"
+      },
       "rdfs:label": "Var. III",
       "tl:beginsAtDuration": "P668S",
       "tl:endsAtDuration": "P681S",
@@ -57,6 +67,9 @@
         "tl:Interval",
         "so:Segment"
       ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:VarIV"
+      },
       "rdfs:label": "Var. IV",
       "tl:beginsAtDuration": "P681S",
       "tl:endsAtDuration": "P696S",
@@ -67,9 +80,12 @@
     {
       "@id": "rl:VarV",
       "@type": [
-        "tl:Interval",
-        "so:Segment"
+        "so:Segment",
+        "tl:Interval"
       ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:VarV"
+      },
       "rdfs:label": "Var. V",
       "tl:beginsAtDuration": "P696S",
       "tl:onTimeLine": {
@@ -86,6 +102,9 @@
         "tl:Interval",
         "so:Segment"
       ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:Thema"
+      },
       "rdfs:label": "Thema",
       "tl:beginsAtDuration": "P626S",
       "tl:endsAtDuration": "P641S",

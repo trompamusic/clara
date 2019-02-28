@@ -1,5 +1,6 @@
 {
   "@context": {
+    "WoO80": "http://localhost:8080/segment/WoO80/",
     "al": "http://localhost:8080/timeline/BeethovenWettbewerb/AdelaLiculescu.json#",
     "frbr": "http://purl.org/vocab/frbr/core#",
     "meld": "https://meld.linkedmusic.org/terms/",
@@ -18,6 +19,9 @@
         "so:Segment",
         "tl:Interval"
       ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:VarI"
+      },
       "rdfs:label": "Var. I",
       "tl:beginsAtDuration": "P66S",
       "tl:endsAtDuration": "P79S",
@@ -32,25 +36,15 @@
     {
       "@id": "al:VarIV",
       "@type": [
-        "tl:Interval",
-        "so:Segment"
-      ],
-      "rdfs:label": "Var. IV",
-      "tl:beginsAtDuration": "P106S",
-      "tl:endsAtDuration": "P120S",
-      "tl:onTimeLine": {
-        "@id": "al:WoO80"
-      }
-    },
-    {
-      "@id": "al:VarII",
-      "@type": [
         "so:Segment",
         "tl:Interval"
       ],
-      "rdfs:label": "Var. II",
-      "tl:beginsAtDuration": "P79S",
-      "tl:endsAtDuration": "P92S",
+      "frbr:embodimentOf": {
+        "@id": "WoO80:VarIV"
+      },
+      "rdfs:label": "Var. IV",
+      "tl:beginsAtDuration": "P106S",
+      "tl:endsAtDuration": "P120S",
       "tl:onTimeLine": {
         "@id": "al:WoO80"
       }
@@ -61,6 +55,9 @@
         "tl:Interval",
         "so:Segment"
       ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:VarIII"
+      },
       "rdfs:label": "Var. III",
       "tl:beginsAtDuration": "P92S",
       "tl:endsAtDuration": "P106S",
@@ -69,11 +66,30 @@
       }
     },
     {
-      "@id": "al:Thema",
+      "@id": "al:VarII",
       "@type": [
         "so:Segment",
         "tl:Interval"
       ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:VarII"
+      },
+      "rdfs:label": "Var. II",
+      "tl:beginsAtDuration": "P79S",
+      "tl:endsAtDuration": "P92S",
+      "tl:onTimeLine": {
+        "@id": "al:WoO80"
+      }
+    },
+    {
+      "@id": "al:Thema",
+      "@type": [
+        "tl:Interval",
+        "so:Segment"
+      ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:Thema"
+      },
       "rdfs:label": "Thema",
       "tl:beginsAtDuration": "P51S",
       "tl:endsAtDuration": "P66S",
@@ -84,9 +100,12 @@
     {
       "@id": "al:VarV",
       "@type": [
-        "tl:Interval",
-        "so:Segment"
+        "so:Segment",
+        "tl:Interval"
       ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:VarV"
+      },
       "rdfs:label": "Var. V",
       "tl:beginsAtDuration": "P120S",
       "tl:onTimeLine": {

@@ -7,6 +7,7 @@
 @prefix struct: <http://localhost:8080/structure/> .
 @prefix tl: <http://purl.org/NET/c4dm/timeline.owl#> .
 @prefix al: <http://localhost:8080/timeline/BeethovenWettbewerb/AdelaLiculescu.ttl#> .
+@prefix WoO80: <http://localhost:8080/segment/WoO80/> .
 
 al:WoO80 a tl:Timeline .
 
@@ -15,34 +16,40 @@ al:Thema a so:Segment ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P51S" ;
  tl:endsAtDuration "P66S" ;
+ frbr:embodimentOf WoO80:Thema ;
  rdfs:label "Thema" .
 al:VarI a so:Segment ;
  a tl:Interval ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P66S" ;
  tl:endsAtDuration "P79S" ;
+ frbr:embodimentOf WoO80:VarI;
  rdfs:label "Var. I" .
 al:VarII a so:Segment ;
  a tl:Interval ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P79S" ;
  tl:endsAtDuration "P92S" ;
+ frbr:embodimentOf WoO80:VarII;
  rdfs:label "Var. II" .
 al:VarIII a so:Segment ;
  a tl:Interval ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P92S" ;
  tl:endsAtDuration "P106S" ;
+ frbr:embodimentOf WoO80:VarIII;
  rdfs:label "Var. III" .
 al:VarIV a so:Segment ;
  a tl:Interval ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P106S" ;
  tl:endsAtDuration "P120S" ;
+ frbr:embodimentOf WoO80:VarIV;
  rdfs:label "Var. IV" .
 al:VarV a so:Segment ;
  a tl:Interval ;
  tl:onTimeLine al:WoO80 ;
  tl:beginsAtDuration "P120S" ;
+ frbr:embodimentOf WoO80:VarV;
  rdfs:label "Var. V" .
 
