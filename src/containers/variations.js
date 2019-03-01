@@ -25,10 +25,16 @@ class Variations extends Component {
   constructor(props) {
     super(props);
 		// Following bindings required to make 'this' work in the callbacks
-    this.state = { performances: [], segments: [], selectedVideo: "" }
+    this.state = { 
+      performances: [], 
+      segments: [], 
+      selectedVideo: "",
+      lastMediaTick: 0
+    }
 		this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
 		this.handleSegmentSelected = this.handleSegmentSelected.bind(this);
 		this.handlePerformanceSelected = this.handlePerformanceSelected.bind(this);
+		this.tick = this.tick.bind(this);
   }
 
   componentWillMount() { 
@@ -99,7 +105,9 @@ class Variations extends Component {
       <Media>
         <div className="media">
           <div className="media-player">
-            <Player src={ this.state.selectedVideo } />
+            <Player src={ this.state.selectedVideo } onTimeUpdate={ (t) => {
+              this.tick(this.state.selectedVideo, t)
+            } } />
           </div>
           <div className="media-controls">
             <PlayPause/>
@@ -125,7 +133,34 @@ class Variations extends Component {
     const selected = this.state.performances.filter( (perf) => { return perf["@id"] === e.target.value });
     const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
     this.setState({ selectedVideo });
+		this.props.registerClock(selectedVideo);
   }
+	
+  tick(id,t) {
+		if(Math.floor(t.currentTime) > this.state.lastMediaTick || // if we've progressed across the next second boundary, 
+			 t.currentTime < this.state.lastMediaTick) { // OR if we've gone back in time (user did a seek)...
+			this.setState({ lastMediaTick: Math.floor(t.currentTime) }); // keep track of this time tick)
+			// dispatch a "TICK" action 
+			// any time-sensitive component subscribes to it, 
+			// triggering time-anchored annotations triggered as appropriate
+			this.props.tickTimedResource(id, Math.floor(t.currentTime));
+      // find the performance that corresponds to the selected video
+      const selectedPerformance = this.props.graph.outcomes[0].filter( (perf) => { 
+        // recorded signal of the performance
+        const recording = "http://purl.org/ontology/mo/recorded_as" in perf ?
+          perf["http://purl.org/ontology/mo/recorded_as"] : "";
+        // video of the recorded signal
+        const video = recording && "http://purl.org/ontology/mo/available_as" in recording ? 
+          recording["http://purl.org/ontology/mo/available_as"]["@id"] : "";
+        // only return if we've found the performance who's video corresponds to the selected video
+        return video === id  
+      })[0] // ASSUMPTION: only one performance corresponds to the selected video
+      if(selectedPerformance) { 
+        const selectedTimeline = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["@id"];
+        console.log("FOUND TIMELINE: ", selectedTimeline);
+      }
+		}
+	}
 
   processTraversalOutcomes(outcomes) { 
     let segments = [];
@@ -155,7 +190,16 @@ function mapStateToProps({ score, graph }) {
 }
 
 function mapDispatchToProps(dispatch) { 
-  return bindActionCreators( { traverse, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget }, dispatch);
+  return bindActionCreators( { 
+    traverse, 
+    setTraversalObjectives, 
+    checkTraversalObjectives, 
+    scoreNextPageStatic, 
+    scorePrevPageStatic, 
+    scorePageToComponentTarget, 
+    registerClock,
+    tickTimedResource
+    }, dispatch);
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Variations);
