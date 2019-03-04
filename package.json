@@ -17,7 +17,7 @@
    "dependencies": {
       "axios": "^0.15.3",
       "babel-preset-stage-1": "^6.1.18",
-      "meld-clients-core": "oerc-music/meld-clients-core#enableTurtleTraversal",
+      "meld-clients-core": "oerc-music/meld-clients-core",
       "react": "^0.14.3",
       "react-dom": "^0.14.3",
       "react-redux": "^4.0.0",
