@@ -24,17 +24,19 @@ const vrvOptions = {
 class Variations extends Component {
   constructor(props) {
     super(props);
-		// Following bindings required to make 'this' work in the callbacks
     this.state = { 
       performances: [], 
       segments: [], 
       selectedVideo: "",
-      lastMediaTick: 0
+      lastMediaTick: 0,
+      currentPerfSegment: {},
+      currentSegment: {}
     }
-		this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
-		this.handleSegmentSelected = this.handleSegmentSelected.bind(this);
-		this.handlePerformanceSelected = this.handlePerformanceSelected.bind(this);
-		this.tick = this.tick.bind(this);
+	// Following bindings required to make 'this' work in the callbacks
+    this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
+    this.handleSegmentSelected = this.handleSegmentSelected.bind(this);
+    this.handlePerformanceSelected = this.handlePerformanceSelected.bind(this);
+    this.tick = this.tick.bind(this);
   }
 
   componentWillMount() { 
@@ -53,7 +55,6 @@ class Variations extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) { 
-    console.log('updating');
 		if("graph" in prevProps) { 
 			// check our traversal objectives if the graph has updated
 			if(prevProps.graph.graph.length !== this.props.graph.graph.length) { 
@@ -67,7 +68,6 @@ class Variations extends Component {
   }
 
   render() { 
-    console.log("Segments now: ", this.state.segments);
     return(
       <div id="wrapper">
         <Score uri={ scoreUri } key = { scoreUri } options = { vrvOptions }/>
@@ -105,7 +105,7 @@ class Variations extends Component {
       <Media>
         <div className="media">
           <div className="media-player">
-            <Player src={ this.state.selectedVideo } onTimeUpdate={ (t) => {
+            <Player autoPlay={true} src={ this.state.selectedVideo } onTimeUpdate={ (t) => {
               this.tick(this.state.selectedVideo, t)
             } } />
           </div>
@@ -145,7 +145,7 @@ class Variations extends Component {
 			// triggering time-anchored annotations triggered as appropriate
 			this.props.tickTimedResource(id, Math.floor(t.currentTime));
       // find the performance that corresponds to the selected video
-      const selectedPerformance = this.props.graph.outcomes[0].filter( (perf) => { 
+      const selectedPerformance = this.props.graph.outcomes[0]["@graph"].filter( (perf) => { 
         // recorded signal of the performance
         const recording = "http://purl.org/ontology/mo/recorded_as" in perf ?
           perf["http://purl.org/ontology/mo/recorded_as"] : "";
@@ -156,8 +156,37 @@ class Variations extends Component {
         return video === id  
       })[0] // ASSUMPTION: only one performance corresponds to the selected video
       if(selectedPerformance) { 
-        const selectedTimeline = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["@id"];
-        console.log("FOUND TIMELINE: ", selectedTimeline);
+        const selectedTimeline = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+        // find timeline segments associated with this timeline
+        const timelineSegments = this.props.graph.outcomes[1]["@graph"].filter( (seg) => { 
+          if("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in seg) { 
+            return seg["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] === selectedTimeline;
+          }
+        });
+        // update current segment if we can find one
+        const newSeg = timelineSegments.filter( (seg) => {
+          if("http://purl.org/NET/c4dm/timeline.owl#beginsAtDuration" in seg &&
+             "http://purl.org/NET/c4dm/timeline.owl#endsAtDuration" in seg &&
+             seg["http://purl.org/NET/c4dm/timeline.owl#beginsAtDuration"].replace(/\D/g, '') <= t.currentTime &&
+             seg["http://purl.org/NET/c4dm/timeline.owl#endsAtDuration"].replace(/\D/g, '') >= t.currentTime) { 
+            // FIXME this should check and validate formatting of times
+            return seg;
+          }
+        });
+        // if we've found a new segment, and it's different to the current one
+        // (or no current one exists yet)
+        if(newSeg.length > 0 && (
+            newSeg[0]["@id"] !== this.state.currentPerfSegment["@id"] ||
+            !("@id" in this.state.currentPerfSegment)  
+          )) {
+          // we have found a matching timed segment, and it's different to the current one
+          // FIXME this should check if multiple segments match
+          this.setState({ 
+            currentPerfSegment:newSeg[0], 
+            currentSegment: newSeg[0]["http://purl.org/vocab/frbr/core#embodimentOf"]
+           });
+          // TODO update selection box
+        }
       }
 		}
 	}
@@ -168,7 +197,6 @@ class Variations extends Component {
     if(outcomes.length === 2 && 
       typeof outcomes[0] !== 'undefined' && 
       typeof outcomes[1] !== 'undefined') { 
-      console.log("Outcomes: ", outcomes)
       outcomes[0]["@graph"].map( (outcome) => {
         performances.push(outcome)
       });
