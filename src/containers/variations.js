@@ -225,12 +225,14 @@ class Variations extends Component {
           )) {
           // we have found a matching timed segment, and it's different to the current one
           // FIXME this should check if multiple segments match
+          const structSegment = newSeg[0]["http://purl.org/vocab/frbr/core#embodimentOf"]
           this.setState({ 
             currentPerfSegment:newSeg[0], 
-            currentSegment: newSeg[0]["http://purl.org/vocab/frbr/core#embodimentOf"]
+            currentSegment: structSegment
            });
-          // TODO update selection box
-          this.refs.segmentSelect.value = newSeg[0]["http://purl.org/vocab/frbr/core#embodimentOf"]["@id"];
+          this.refs.segmentSelect.value = structSegment["@id"];
+          const target = structSegment["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/2000/01/rdf-schema#member"]["@id"];;
+          this.props.scorePageToComponentTarget(target, scoreUri, this.props.score.MEI[scoreUri]);
         }
       }
 		}
