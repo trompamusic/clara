@@ -16,8 +16,8 @@
     {
       "@id": "rl:VarI",
       "@type": [
-        "tl:Interval",
-        "so:Segment"
+        "so:Segment",
+        "tl:Interval"
       ],
       "frbr:embodimentOf": {
         "@id": "WoO80:VarI"
@@ -26,14 +26,18 @@
       "tl:beginsAtDuration": "P641S",
       "tl:endsAtDuration": "P654S",
       "tl:onTimeLine": {
-        "@id": "rl:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/RodolfoLeone.json"
       }
+    },
+    {
+      "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/RodolfoLeone.json",
+      "@type": "tl:Timeline"
     },
     {
       "@id": "rl:VarII",
       "@type": [
-        "tl:Interval",
-        "so:Segment"
+        "so:Segment",
+        "tl:Interval"
       ],
       "frbr:embodimentOf": {
         "@id": "WoO80:VarII"
@@ -42,7 +46,7 @@
       "tl:beginsAtDuration": "P654S",
       "tl:endsAtDuration": "P668S",
       "tl:onTimeLine": {
-        "@id": "rl:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/RodolfoLeone.json"
       }
     },
     {
@@ -58,7 +62,7 @@
       "tl:beginsAtDuration": "P668S",
       "tl:endsAtDuration": "P681S",
       "tl:onTimeLine": {
-        "@id": "rl:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/RodolfoLeone.json"
       }
     },
     {
@@ -74,14 +78,14 @@
       "tl:beginsAtDuration": "P681S",
       "tl:endsAtDuration": "P696S",
       "tl:onTimeLine": {
-        "@id": "rl:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/RodolfoLeone.json"
       }
     },
     {
       "@id": "rl:VarV",
       "@type": [
-        "so:Segment",
-        "tl:Interval"
+        "tl:Interval",
+        "so:Segment"
       ],
       "frbr:embodimentOf": {
         "@id": "WoO80:VarV"
@@ -89,12 +93,8 @@
       "rdfs:label": "Var. V",
       "tl:beginsAtDuration": "P696S",
       "tl:onTimeLine": {
-        "@id": "rl:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/RodolfoLeone.json"
       }
-    },
-    {
-      "@id": "rl:WoO80",
-      "@type": "tl:Timeline"
     },
     {
       "@id": "rl:Thema",
@@ -109,7 +109,7 @@
       "tl:beginsAtDuration": "P626S",
       "tl:endsAtDuration": "P641S",
       "tl:onTimeLine": {
-        "@id": "rl:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/RodolfoLeone.json"
       }
     }
   ]

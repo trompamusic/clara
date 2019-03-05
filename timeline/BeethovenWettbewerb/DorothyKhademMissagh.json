@@ -4,6 +4,7 @@
     "dkm": "http://localhost:8080/timeline/BeethovenWettbewerb/DorothyKhademMissagh.json#",
     "frbr": "http://purl.org/vocab/frbr/core#",
     "meld": "https://meld.linkedmusic.org/terms/",
+    "mo": "http://purl.org/ontology/mo/",
     "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
     "so": "http://www.linkedmusic.org/ontologies/segment/",
@@ -25,18 +26,29 @@
       "tl:beginsAtDuration": "P45S",
       "tl:endsAtDuration": "P62S",
       "tl:onTimeLine": {
-        "@id": "dkm:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/DorothyKhademMissagh.json"
       }
     },
     {
-      "@id": "dkm:WoO80",
-      "@type": "tl:Timeline"
+      "@id": "dkm:VarV",
+      "@type": [
+        "so:Segment",
+        "tl:Interval"
+      ],
+      "frbr:embodimentOf": {
+        "@id": "WoO80:VarV"
+      },
+      "rdfs:label": "Var. V",
+      "tl:beginsAtDuration": "P126S",
+      "tl:onTimeLine": {
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/DorothyKhademMissagh.json"
+      }
     },
     {
       "@id": "dkm:VarII",
       "@type": [
-        "tl:Interval",
-        "so:Segment"
+        "so:Segment",
+        "tl:Interval"
       ],
       "frbr:embodimentOf": {
         "@id": "WoO80:VarII"
@@ -45,22 +57,7 @@
       "tl:beginsAtDuration": "P78S",
       "tl:endsAtDuration": "P93S",
       "tl:onTimeLine": {
-        "@id": "dkm:WoO80"
-      }
-    },
-    {
-      "@id": "dkm:VarV",
-      "@type": [
-        "tl:Interval",
-        "so:Segment"
-      ],
-      "frbr:embodimentOf": {
-        "@id": "WoO80:VarV"
-      },
-      "rdfs:label": "Var. V",
-      "tl:beginsAtDuration": "P126S",
-      "tl:onTimeLine": {
-        "@id": "dkm:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/DorothyKhademMissagh.json"
       }
     },
     {
@@ -76,7 +73,7 @@
       "tl:beginsAtDuration": "P109S",
       "tl:endsAtDuration": "P126S",
       "tl:onTimeLine": {
-        "@id": "dkm:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/DorothyKhademMissagh.json"
       }
     },
     {
@@ -92,14 +89,14 @@
       "tl:beginsAtDuration": "P62S",
       "tl:endsAtDuration": "P78S",
       "tl:onTimeLine": {
-        "@id": "dkm:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/DorothyKhademMissagh.json"
       }
     },
     {
       "@id": "dkm:VarIII",
       "@type": [
-        "tl:Interval",
-        "so:Segment"
+        "so:Segment",
+        "tl:Interval"
       ],
       "frbr:embodimentOf": {
         "@id": "WoO80:VarIII"
@@ -108,8 +105,13 @@
       "tl:beginsAtDuration": "P93S",
       "tl:endsAtDuration": "P109S",
       "tl:onTimeLine": {
-        "@id": "dkm:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/DorothyKhademMissagh.json"
       }
+    },
+    {
+      "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/DorothyKhademMissagh.json",
+      "@type": "tl:Timeline"
     }
   ]
 }
+

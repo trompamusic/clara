@@ -16,8 +16,8 @@
     {
       "@id": "al:VarI",
       "@type": [
-        "so:Segment",
-        "tl:Interval"
+        "tl:Interval",
+        "so:Segment"
       ],
       "frbr:embodimentOf": {
         "@id": "WoO80:VarI"
@@ -26,18 +26,14 @@
       "tl:beginsAtDuration": "P66S",
       "tl:endsAtDuration": "P79S",
       "tl:onTimeLine": {
-        "@id": "al:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/AdelaLiculescu.json"
       }
-    },
-    {
-      "@id": "al:WoO80",
-      "@type": "tl:Timeline"
     },
     {
       "@id": "al:VarIV",
       "@type": [
-        "so:Segment",
-        "tl:Interval"
+        "tl:Interval",
+        "so:Segment"
       ],
       "frbr:embodimentOf": {
         "@id": "WoO80:VarIV"
@@ -46,8 +42,12 @@
       "tl:beginsAtDuration": "P106S",
       "tl:endsAtDuration": "P120S",
       "tl:onTimeLine": {
-        "@id": "al:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/AdelaLiculescu.json"
       }
+    },
+    {
+      "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/AdelaLiculescu.json",
+      "@type": "tl:Timeline"
     },
     {
       "@id": "al:VarIII",
@@ -62,14 +62,14 @@
       "tl:beginsAtDuration": "P92S",
       "tl:endsAtDuration": "P106S",
       "tl:onTimeLine": {
-        "@id": "al:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/AdelaLiculescu.json"
       }
     },
     {
       "@id": "al:VarII",
       "@type": [
-        "so:Segment",
-        "tl:Interval"
+        "tl:Interval",
+        "so:Segment"
       ],
       "frbr:embodimentOf": {
         "@id": "WoO80:VarII"
@@ -78,7 +78,7 @@
       "tl:beginsAtDuration": "P79S",
       "tl:endsAtDuration": "P92S",
       "tl:onTimeLine": {
-        "@id": "al:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/AdelaLiculescu.json"
       }
     },
     {
@@ -94,14 +94,14 @@
       "tl:beginsAtDuration": "P51S",
       "tl:endsAtDuration": "P66S",
       "tl:onTimeLine": {
-        "@id": "al:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/AdelaLiculescu.json"
       }
     },
     {
       "@id": "al:VarV",
       "@type": [
-        "so:Segment",
-        "tl:Interval"
+        "tl:Interval",
+        "so:Segment"
       ],
       "frbr:embodimentOf": {
         "@id": "WoO80:VarV"
@@ -109,7 +109,7 @@
       "rdfs:label": "Var. V",
       "tl:beginsAtDuration": "P120S",
       "tl:onTimeLine": {
-        "@id": "al:WoO80"
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/AdelaLiculescu.json"
       }
     }
   ]
