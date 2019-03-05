@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
-import { Media, Player, controls, utils } from 'react-media-player'
+import { Media, Player, controls, utils, withMediaProps } from 'react-media-player'
 const { PlayPause, CurrentTime, Progress, SeekBar, Duration, MuteUnmute, Volume, Fullscreen } = controls
 const { formatTime } = utils
 
@@ -28,9 +28,10 @@ class Variations extends Component {
       performances: [], 
       segments: [], 
       selectedVideo: "",
+      selectedPerformance: "",
       lastMediaTick: 0,
       currentPerfSegment: {},
-      currentSegment: {}
+      currentSegment: {},
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -78,7 +79,7 @@ class Variations extends Component {
 	  e.stopPropagation();
           this.props.scoreNextPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri]); 
         }}> Next </div>
-        <select name="segmentSelect" onChange={ this.handleSegmentSelected }>
+        <select name="segmentSelect" onChange={ this.handleSegmentSelected } ref='segmentSelect'>
           <option value="none">Select a segment...</option>
           { 
             this.state.segments.map( (seg) => { 
@@ -102,12 +103,13 @@ class Variations extends Component {
           })
         }
       </select>
-      <Media>
+      <Media ref="media">
         <div className="media">
           <div className="media-player">
             <Player autoPlay={true} src={ this.state.selectedVideo } onTimeUpdate={ (t) => {
-              this.tick(this.state.selectedVideo, t)
-            } } />
+                this.tick(this.state.selectedVideo, t)
+              } } 
+            />
           </div>
           <div className="media-controls">
             <PlayPause/>
@@ -126,13 +128,30 @@ class Variations extends Component {
     const selected = this.state.segments.filter( (seg) => { return seg["@id"] === e.target.value });
     const target = selected[0]["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/2000/01/rdf-schema#member"]["@id"];
     this.props.scorePageToComponentTarget(target, scoreUri, this.props.score.MEI[scoreUri]);
+    // if a video is selected, jump to the beginning of this segment in its performance timeline
+    if(this.state.selectedPerformance)  {
+      // find the time segment on the selected performance's timeline that corresponds to the
+      // selected segment
+      const timelineSegment = this.props.graph.outcomes[1]["@graph"].filter( (seg) => { 
+        const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+        console.log("considering: ", seg, selectedTimeline, selected[0]["@id"] );
+        if("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in seg &&
+           seg["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]===selectedTimeline &&
+           seg["http://purl.org/vocab/frbr/core#embodimentOf"]["@id"]===selected[0]["@id"]) { 
+          return seg;
+        }
+      })
+      const startTime = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#beginsAtDuration"].replace(/\D/g, '');
+      this.refs.media.seekTo(startTime);
+    }
   }
   
   handlePerformanceSelected(e) { 
     console.log("Rendition selected: ", e.target);
     const selected = this.state.performances.filter( (perf) => { return perf["@id"] === e.target.value });
     const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
-    this.setState({ selectedVideo });
+    const selectedPerformance = selected[0];
+    this.setState({ selectedVideo, selectedPerformance });
 		this.props.registerClock(selectedVideo);
   }
 	
@@ -145,18 +164,18 @@ class Variations extends Component {
 			// triggering time-anchored annotations triggered as appropriate
 			this.props.tickTimedResource(id, Math.floor(t.currentTime));
       // find the performance that corresponds to the selected video
-      const selectedPerformance = this.props.graph.outcomes[0]["@graph"].filter( (perf) => { 
-        // recorded signal of the performance
-        const recording = "http://purl.org/ontology/mo/recorded_as" in perf ?
-          perf["http://purl.org/ontology/mo/recorded_as"] : "";
-        // video of the recorded signal
-        const video = recording && "http://purl.org/ontology/mo/available_as" in recording ? 
-          recording["http://purl.org/ontology/mo/available_as"]["@id"] : "";
-        // only return if we've found the performance who's video corresponds to the selected video
-        return video === id  
-      })[0] // ASSUMPTION: only one performance corresponds to the selected video
-      if(selectedPerformance) { 
-        const selectedTimeline = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+//      const selectedPerformance = this.props.graph.outcomes[0]["@graph"].filter( (perf) => { 
+//        // recorded signal of the performance
+//        const recording = "http://purl.org/ontology/mo/recorded_as" in perf ?
+//          perf["http://purl.org/ontology/mo/recorded_as"] : "";
+//        // video of the recorded signal
+//        const video = recording && "http://purl.org/ontology/mo/available_as" in recording ? 
+//          recording["http://purl.org/ontology/mo/available_as"]["@id"] : "";
+//        // only return if we've found the performance who's video corresponds to the selected video
+//        return video === id  
+//      })[0] // ASSUMPTION: only one performance corresponds to the selected video
+      if(this.state.selectedPerformance) { 
+        const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
         // find timeline segments associated with this timeline
         const timelineSegments = this.props.graph.outcomes[1]["@graph"].filter( (seg) => { 
           if("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in seg) { 
@@ -186,6 +205,7 @@ class Variations extends Component {
             currentSegment: newSeg[0]["http://purl.org/vocab/frbr/core#embodimentOf"]
            });
           // TODO update selection box
+          this.refs.segmentSelect.value = newSeg[0]["http://purl.org/vocab/frbr/core#embodimentOf"]["@id"];
         }
       }
 		}
