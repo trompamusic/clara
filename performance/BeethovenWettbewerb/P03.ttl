@@ -8,13 +8,20 @@
 @prefix tl: <http://purl.org/NET/c4dm/timeline.owl#> .
 @prefix vid: <http://localhost:8080/videos/BeethovenWettbewerb/> .
 @prefix perf: <http://localhost:8080/performance/BeethovenWettbewerb/> .
+@prefix perftl: <http://localhost:8080/timeline/BeethovenWettbewerb/> .
 @prefix score: <http://localhost:8080/score/> .
-@prefix ldp: <http://www.w3.org/ns/ldp#> .
-@prefix dcterm: <http://purl.org/dc/terms/> .
 
-perf:WoO80.ttl a ldp:Container; 
-  a ldp:BasicContainer ;
-  dcterm:title "Performances of 32 Variations in C minor (WoO80) at the International Beethoven Festival 2017" ;
-  ldp:contains perf:AdelaLiculescu.ttl; 
-  ldp:contains perf:DorothyKhademMissagh.ttl; 
-  ldp:contains perf:RodolfoLeone.ttl .
+perf:P03.ttl a mo:Performance ;
+  mo:performance_of score:WoO80 ;
+  mo:recorded_as perf:P03Signal;
+  rdfs:label "Dorothy Khadem-Missagh: Round 1" .
+
+perf:P03Signal mo:available_as vid:R1_Dorothy%20Khadem-Missagh_MDW-1080_1.mp4 ;
+  mo:time [ a tl:Interval ;
+    tl:onTimeLine perftl:P03-notes.ttl 
+  ] .
+
+score:WoO80 a mo:Score ; 
+ mo:published_as <http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei> ;
+ meld:segments struct:WoO80.ttl .
+  

@@ -15,21 +15,15 @@
     "vid": "http://localhost:8080/videos/BeethovenWettbewerb/",
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
-  "@id": "perf:WoO80.json",
+  "@id": "perf:WoO80-all.json",
   "@type": [
     "ldp:BasicContainer",
     "ldp:Container"
   ],
   "dcterm:title": "Performances of 32 Variations in C minor (WoO80) at the International Beethoven Festival 2017",
   "ldp:contains": [
-    {
-      "@id": "perf:DorothyKhademMissagh.json"
-    },
-    {
-      "@id": "perf:RodolfoLeone.json"
-    },
-    {
-      "@id": "perf:AdelaLiculescu.json"
-    }
+    { "@id": "perf:P03.json" },
+    { "@id": "perf:P23.json" },
+    { "@id": "perf:P15.json" }
   ]
 }

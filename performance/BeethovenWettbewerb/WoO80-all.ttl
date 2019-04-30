@@ -12,9 +12,7 @@
 @prefix ldp: <http://www.w3.org/ns/ldp#> .
 @prefix dcterm: <http://purl.org/dc/terms/> .
 
-perf:WoO80.ttl a ldp:Container; 
+perf:WoO80-all.ttl a ldp:Container; 
   a ldp:BasicContainer ;
   dcterm:title "Performances of 32 Variations in C minor (WoO80) at the International Beethoven Festival 2017" ;
-  ldp:contains perf:AdelaLiculescu.ttl; 
-  ldp:contains perf:DorothyKhademMissagh.ttl; 
-  ldp:contains perf:RodolfoLeone.ttl .
+  ldp:contains perf:P03.ttl .

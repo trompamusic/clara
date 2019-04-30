@@ -15,7 +15,7 @@ const scoreUri = "Beethoven_WoO80-32-Variationen-c-Moll.mei";
 
 const vrvOptions = {
 	scale: 45,
-	pageHeight: 1600,
+	pageHeight: 1000,
 	pageWidth: 2200,
 	noFooter: 1,
 	unit: 6 
@@ -27,6 +27,7 @@ class Variations extends Component {
     this.state = { 
       performances: [], 
       segments: [], 
+      instants: [],
       selectedVideo: "",
       selectedPerformance: "",
       lastMediaTick: 0,
@@ -39,18 +40,19 @@ class Variations extends Component {
     this.handleSegmentSelected = this.handleSegmentSelected.bind(this);
     this.handlePerformanceSelected = this.handlePerformanceSelected.bind(this);
     this.tick = this.tick.bind(this);
-    this.findSegmentToSeekTo = this.findSegmentToSeekTo.bind(this);
+    this.findInstantToSeekTo = this.findInstantToSeekTo.bind(this);
   }
 
   componentWillMount() { 
     this.props.setTraversalObjectives([
       { "@type": "http://purl.org/ontology/mo/Performance" },
-      { "@type": "http://www.linkedmusic.org/ontologies/segment/Segment" }
+      { "@type": "http://www.linkedmusic.org/ontologies/segment/Segment" },
+      { "@type": "http://purl.org/NET/c4dm/timeline.owl#Instant" }
     ]);
   }
 
   componentDidMount() { 
-    this.props.traverse("performance/BeethovenWettbewerb/WoO80.json", {
+    this.props.traverse("performance/BeethovenWettbewerb/WoO80-all.json", {
       numHops:2, 
       objectPrefixWhitelist:["http://localhost:8080/"],
       objectPrefixBlacklist:["http://localhost:8080/videos/", "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei"]
@@ -68,13 +70,6 @@ class Variations extends Component {
 				this.processTraversalOutcomes(this.props.graph.outcomes);
 			}
 		}
-//    if("time" in this.state.seekTo && this.refs.media.src === this.state.seekTo["video"]) {
-//      console.log("HELLO", this.state);
-//      const time = this.state.seekTo.time; 
-//      this.refs.media.seekTo(time);
-//      this.setState({seekTo: {} })
-//    }
-
   }
 
   render() { 
@@ -94,7 +89,7 @@ class Variations extends Component {
             this.state.segments.map( (seg) => { 
               return (
                 <option key={ seg["@id"] } value={ seg["@id"] }>
-                  { seg["http://www.w3.org/2000/01/rdf-schema#label"] }
+                  { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("-") +1) }
                 </option>
               )
             })
@@ -144,14 +139,20 @@ class Variations extends Component {
   handleSegmentSelected(e) { 
     console.log("Segment selected: ", e.target);
     const selected = this.state.segments.filter( (seg) => { return seg["@id"] === e.target.value });
+    console.log("SELECTED: ", selected)
     const target = selected[0]["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/2000/01/rdf-schema#member"]["@id"];
     this.props.scorePageToComponentTarget(target, scoreUri, this.props.score.MEI[scoreUri]);
     // if a video is selected, jump to the beginning of this segment in its performance timeline
     if(this.state.selectedPerformance)  {
-      const timelineSegment = this.findSegmentToSeekTo(selected[0]);
+      const timelineSegment = this.findInstantToSeekTo(selected[0]);
+      console.log("timelineSegment: ", timelineSegment)
       if(timelineSegment.length) { 
-        const startTime = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#beginsAtDuration"].replace(/\D/g, '');
-        console.log("Trying to seek to: ", startTime)
+        console.log(timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]);
+        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        let startTime = parseFloat(dur.substr(1, dur.length-2));
+        // HACK: Offsets should be incorporated into data model through timeline maps
+        startTime += parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
+        console.log("Trying to seek to: ", startTime);
         this.refs.media.seekTo(startTime);
       }
     }
@@ -166,29 +167,41 @@ class Variations extends Component {
 		this.props.registerClock(selectedVideo);
     if("@id" in this.state.currentSegment) { 
       // set up a jump to the currently selected segment in this performance
-      const timelineSegment = this.findSegmentToSeekTo(this.state.currentSegment, selectedPerformance);
+      const timelineSegment = this.findInstantToSeekTo(this.state.currentSegment, selectedPerformance);
       if(timelineSegment.length) {
-        const startTime = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#beginsAtDuration"].replace(/\D/g, '');
+        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        const startTime = dur.substr(1, dur.length-1);
+        console.log("Setting seekTo: ", startTime);
         this.setState({ seekTo: startTime });
       }
     }
   }
 
-  findSegmentToSeekTo(seg, selectedPerformance = this.state.selectedPerformance) { 
-    console.log("Got segment: ", seg);
+  findInstantToSeekTo(segment, selectedPerformance = this.state.selectedPerformance) { 
+    console.log("Got segment: ", segment);
     console.log("Got performance: ", selectedPerformance);
-    // find the time segment on the selected performance's timeline that corresponds to the
+    const selectedTimeline = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+    // find the time instant on the selected performance's timeline that corresponds to the
     // selected segment
-    const timelineSegment = this.props.graph.outcomes[1]["@graph"].filter( (s) => { 
-      const selectedTimeline = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
-      console.log("Selected timeline: ", selectedTimeline);
-      if("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in s &&
-         s["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]===selectedTimeline &&
-         s["http://purl.org/vocab/frbr/core#embodimentOf"]["@id"]===seg["@id"]) { 
-        return seg;
+    const timelineSegment = this.props.graph.outcomes[2]["@graph"].filter( (i) => { 
+      if(!("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in i) || 
+         i["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]!==selectedTimeline) { 
+        return false;
       }
+      let segNotes = [];
+        // do any of our instat's note embodiments match one of the segment's note embodiments?
+      segNotes = segment["http://purl.org/vocab/frbr/core#embodiment"]["https://meld.linkedmusic.org/terms/notes"].filter( (segNote) => {
+        return i["http://purl.org/vocab/frbr/core#embodimentOf"]["@id"]===segNote["@id"]
+      })
+      return segNotes.length;
     })
-    return timelineSegment;
+    // returned them in chronological order
+    const sorted = timelineSegment.sort( (a, b) => { 
+      let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+      let bDur = b["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+      return parseFloat(aDur.substr(1, aDur.length-1)) - parseFloat(bDur.substr(1, bDur.length-1))
+    })
+    return sorted;
   }
 	
   tick(id,t) {
@@ -209,10 +222,8 @@ class Variations extends Component {
         });
         // update current segment if we can find one
         const newSeg = timelineSegments.filter( (seg) => {
-          if("http://purl.org/NET/c4dm/timeline.owl#beginsAtDuration" in seg &&
-             "http://purl.org/NET/c4dm/timeline.owl#endsAtDuration" in seg &&
-             seg["http://purl.org/NET/c4dm/timeline.owl#beginsAtDuration"].replace(/\D/g, '') <= t.currentTime &&
-             seg["http://purl.org/NET/c4dm/timeline.owl#endsAtDuration"].replace(/\D/g, '') >= t.currentTime) { 
+          if("http://purl.org/NET/c4dm/timeline.owl#atDuration" in seg &&
+             seg["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/\D/g, '') <= t.currentTime) { 
             // FIXME this should check and validate formatting of times
             return seg;
           }
@@ -241,20 +252,26 @@ class Variations extends Component {
   processTraversalOutcomes(outcomes) { 
     let segments = [];
     let performances= [];
-    if(outcomes.length === 2 && 
+    let instants = [];
+    if(outcomes.length === 3 && 
       typeof outcomes[0] !== 'undefined' && 
-      typeof outcomes[1] !== 'undefined') { 
+      typeof outcomes[1] !== 'undefined' &&
+      typeof outcomes[2] !== 'undefined') { 
       outcomes[0]["@graph"].map( (outcome) => {
         performances.push(outcome)
       });
       outcomes[1]["@graph"].map( (outcome) => {
-        const types = Array.isArray(outcome["@type"]) ? outcome["@type"] : [outcome["@type"]];
-        if(types.indexOf("http://purl.org/NET/c4dm/timeline.owl#Interval") === -1) { 
-          // only add structural segments, not timeline segments (which are performance dependent...)
-          segments.push(outcome)
-        }
+        segments.push(outcome)
       });
-      this.setState({ performances, segments });
+      segments = segments.sort( (a, b) => { 
+        return parseInt(a["https://meld.linkedmusic.org/terms/order"]) - parseInt(b["https://meld.linkedmusic.org/terms/order"])
+      })
+      console.log("Sorted segments: ", segments)
+      outcomes[2]["@graph"].map( (outcome) => {
+        instants.push(outcome)
+      });
+      
+      this.setState({ performances, segments, instants });
     }
   }
 }
