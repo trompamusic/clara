@@ -28,7 +28,7 @@
     {
       "@id": "perf:P23.json",
       "@type": "mo:Performance",
-      "meld:offset": "51",
+      "meld:offset": "51.948",
       "mo:performance_of": {
         "@id": "score:WoO80"
       },
