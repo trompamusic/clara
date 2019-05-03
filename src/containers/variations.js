@@ -15,7 +15,7 @@ const scoreUri = "Beethoven_WoO80-32-Variationen-c-Moll.mei";
 
 const vrvOptions = {
 	scale: 45,
-	pageHeight: 1000,
+	pageHeight: 1080,
 	pageWidth: 2200,
 	noFooter: 1,
 	unit: 6 
@@ -118,6 +118,7 @@ class Variations extends Component {
               } }
               onPlay={ () => {
                 if(this.state.seekTo) { 
+                  console.log("Render loop: seeking to ", this.state.seekTo);
                   this.refs.media.seekTo(this.state.seekTo);
                   this.setState({seekTo: ""});
                 }
@@ -152,8 +153,9 @@ class Variations extends Component {
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         // HACK: Offsets should be incorporated into data model through timeline maps
         startTime += parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
-        console.log("Trying to seek to: ", startTime);
+        console.log("Trying to seek to: ", startTime, parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]));
         this.refs.media.seekTo(startTime);
+        this.setState({currentSegment: selected[0]}); // HACK: currentSegment should be set through "score following" ticks instead
       }
     }
   }
@@ -165,13 +167,15 @@ class Variations extends Component {
     const selectedPerformance = selected[0];
     this.setState({ selectedVideo, selectedPerformance });
 		this.props.registerClock(selectedVideo);
+
     if("@id" in this.state.currentSegment) { 
       // set up a jump to the currently selected segment in this performance
       const timelineSegment = this.findInstantToSeekTo(this.state.currentSegment, selectedPerformance);
       if(timelineSegment.length) {
         const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
-        const startTime = dur.substr(1, dur.length-1);
-        console.log("Setting seekTo: ", startTime);
+        let startTime = parseFloat(dur.substr(1, dur.length-2));
+        startTime += parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
+        console.log("? Setting seekTo: ", startTime, parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]), " -- ", timelineSegment[0]);
         this.setState({ seekTo: startTime });
       }
     }
@@ -189,18 +193,26 @@ class Variations extends Component {
         return false;
       }
       let segNotes = [];
-        // do any of our instat's note embodiments match one of the segment's note embodiments?
+        // do any of our instant's note embodiments match one of the segment's note embodiments?
       segNotes = segment["http://purl.org/vocab/frbr/core#embodiment"]["https://meld.linkedmusic.org/terms/notes"].filter( (segNote) => {
-        return i["http://purl.org/vocab/frbr/core#embodimentOf"]["@id"]===segNote["@id"]
+        // ensure array (in chords, one timeline instance maps to multiple note instances)
+        i["http://purl.org/vocab/frbr/core#embodimentOf"] = Array.isArray(i["http://purl.org/vocab/frbr/core#embodimentOf"]) ? 
+          i["http://purl.org/vocab/frbr/core#embodimentOf"] :
+          [ i["http://purl.org/vocab/frbr/core#embodimentOf"] ] 
+        const embodimentFound = i["http://purl.org/vocab/frbr/core#embodimentOf"].filter( (e) => {
+          return e["@id"] === segNote["@id"]
+        })
+        return embodimentFound.length // true if we found a matching embodiment
       })
-      return segNotes.length;
+      return segNotes.length; // true if we found a matching instance
     })
     // returned them in chronological order
     const sorted = timelineSegment.sort( (a, b) => { 
       let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
       let bDur = b["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
-      return parseFloat(aDur.substr(1, aDur.length-1)) - parseFloat(bDur.substr(1, bDur.length-1))
+      return parseFloat(aDur.substr(1, aDur.length-2)) - parseFloat(bDur.substr(1, bDur.length-2))
     })
+    console.log("timelineSegment: ", timelineSegment, "sorted: ", sorted);
     return sorted;
   }
 	
