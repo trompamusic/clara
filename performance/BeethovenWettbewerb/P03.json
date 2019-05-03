@@ -28,7 +28,7 @@
     {
       "@id": "perf:P03.json",
       "@type": "mo:Performance",
-      "meld:offset": "45",
+      "meld:offset": "45.59",
       "mo:performance_of": {
         "@id": "score:WoO80"
       },
