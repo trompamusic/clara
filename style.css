@@ -2,3 +2,8 @@
   width:80%;
   max-width:600px;
 }
+
+.active { 
+  fill:red;
+  stroke:red;
+}

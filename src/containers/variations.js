@@ -28,6 +28,7 @@ class Variations extends Component {
       performances: [], 
       segments: [], 
       instants: [],
+      instantsByPerfTime: [],
       selectedVideo: "",
       selectedPerformance: "",
       lastMediaTick: 0,
@@ -155,7 +156,7 @@ class Variations extends Component {
         startTime += parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         console.log("Trying to seek to: ", startTime, parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]));
         this.refs.media.seekTo(startTime);
-        this.setState({currentSegment: selected[0]}); // HACK: currentSegment should be set through "score following" ticks instead
+        this.setState({currentSegment: selected[0]}); 
       }
     }
   }
@@ -217,47 +218,84 @@ class Variations extends Component {
   }
 	
   tick(id,t) {
-		if(Math.floor(t.currentTime) > this.state.lastMediaTick || // if we've progressed across the next second boundary, 
+		if(t.currentTime > this.state.lastMediaTick || // if we've progressed across the next second boundary, 
 			 t.currentTime < this.state.lastMediaTick) { // OR if we've gone back in time (user did a seek)...
-			this.setState({ lastMediaTick: Math.floor(t.currentTime) }); // keep track of this time tick)
+			this.setState({ lastMediaTick: t.currentTime }); // keep track of this time tick)
 			// dispatch a "TICK" action 
 			// any time-sensitive component subscribes to it, 
 			// triggering time-anchored annotations triggered as appropriate
-			this.props.tickTimedResource(id, Math.floor(t.currentTime));
+			this.props.tickTimedResource(id, t.currentTime);
       if(this.state.selectedPerformance) { 
-        const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
-        // find timeline segments associated with this timeline
-        const timelineSegments = this.props.graph.outcomes[1]["@graph"].filter( (seg) => { 
-          if("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in seg) { 
-            return seg["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] === selectedTimeline;
-          }
+        // find closest corresponding instant on this timeline
+        const thisTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+        console.log("Timeline: ", this.state.selectedPerformance, thisTimeline);
+        const thisOffset = this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]
+        let closestInstantIx = this.state.instantsByPerfTime[thisTimeline].findIndex( (i) => { 
+          let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+          dur = dur.substr(1, dur.length-2);
+          return parseFloat(dur) + parseFloat(thisOffset) > t.currentTime;
         });
-        // update current segment if we can find one
-        const newSeg = timelineSegments.filter( (seg) => {
-          if("http://purl.org/NET/c4dm/timeline.owl#atDuration" in seg &&
-             seg["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/\D/g, '') <= t.currentTime) { 
-            // FIXME this should check and validate formatting of times
-            return seg;
-          }
-        });
-        // if we've found a new segment, and it's different to the current one
-        // (or no current one exists yet)
-        if(newSeg.length > 0 && (
-            newSeg[0]["@id"] !== this.state.currentPerfSegment["@id"] ||
-            !("@id" in this.state.currentPerfSegment)  
-          )) {
-          // we have found a matching timed segment, and it's different to the current one
-          // FIXME this should check if multiple segments match
-          const structSegment = newSeg[0]["http://purl.org/vocab/frbr/core#embodimentOf"]
-          this.setState({ 
-            currentPerfSegment:newSeg[0], 
-            currentSegment: structSegment
-           });
-          this.refs.segmentSelect.value = structSegment["@id"];
-          const target = structSegment["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/2000/01/rdf-schema#member"]["@id"];;
-          this.props.scorePageToComponentTarget(target, scoreUri, this.props.score.MEI[scoreUri]);
+        console.log("Got closest instant IX: ", closestInstantIx);
+        // if we're at 0 use that, otherwise use the one before this one 
+        // (i.e., closest without going over)
+        closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
+        let currentNote = this.state.instantsByPerfTime[thisTimeline][closestInstantIx]["http://purl.org/vocab/frbr/core#embodimentOf"];
+        // handle array (instant might correspond to chord...)
+        currentNote = Array.isArray(currentNote) ? currentNote[0]["@id"] : currentNote["@id"];
+        // clear any pre-existing active notes
+        const previouslyActive = document.getElementsByClassName("active")
+        Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
+        const currentNoteId = currentNote.substr(currentNote.lastIndexOf("#")+1);
+        // highlight the current note if on current page
+        const currentNoteElement = document.getElementById(currentNoteId);
+        if(currentNoteElement) { 
+          // make the current note active
+          currentNoteElement.classList.add("active");
+        } else { 
+          // or otherwise flip to the correct page
+          this.props.scorePageToComponentTarget(currentNote, scoreUri, this.props.score.MEI[scoreUri]);
         }
+        // find current note's segment
+        //
+        // TODO DW 20190503 --
+        //  * create nice notes => segments structure (when traversal finished)
+        //  * figure out current segment from this
+        //  * if changed, update to the new segment
       }
+
+//       const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+//       // find timeline segments associated with this timeline
+//       const timelineSegments = this.props.graph.outcomes[1]["@graph"].filter( (seg) => { 
+//         if("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in seg) { 
+//           return seg["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] === selectedTimeline;
+//         }
+//       });
+//       // update current segment if we can find one
+//       const newSeg = timelineSegments.filter( (seg) => {
+//         if("http://purl.org/NET/c4dm/timeline.owl#atDuration" in seg &&
+//            seg["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/\D/g, '') <= t.currentTime) { 
+//           // FIXME this should check and validate formatting of times
+//           return seg;
+//         }
+//       });
+//       // if we've found a new segment, and it's different to the current one
+//       // (or no current one exists yet)
+//       if(newSeg.length > 0 && (
+//           newSeg[0]["@id"] !== this.state.currentPerfSegment["@id"] ||
+//           !("@id" in this.state.currentPerfSegment)  
+//         )) {
+//         // we have found a matching timed segment, and it's different to the current one
+//         // FIXME this should check if multiple segments match
+//         const structSegment = newSeg[0]["http://purl.org/vocab/frbr/core#embodimentOf"]
+//         this.setState({ 
+//           currentPerfSegment:newSeg[0], 
+//           currentSegment: structSegment
+//          });
+//         this.refs.segmentSelect.value = structSegment["@id"];
+//         const target = structSegment["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/2000/01/rdf-schema#member"]["@id"];;
+//         this.props.scorePageToComponentTarget(target, scoreUri, this.props.score.MEI[scoreUri]);
+        //}
+     // }
 		}
 	}
 
@@ -265,6 +303,7 @@ class Variations extends Component {
     let segments = [];
     let performances= [];
     let instants = [];
+    let instantsByPerfTime = {};
     if(outcomes.length === 3 && 
       typeof outcomes[0] !== 'undefined' && 
       typeof outcomes[1] !== 'undefined' &&
@@ -281,9 +320,21 @@ class Variations extends Component {
       console.log("Sorted segments: ", segments)
       outcomes[2]["@graph"].map( (outcome) => {
         instants.push(outcome)
+        if(outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] in instantsByPerfTime) {
+          instantsByPerfTime[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]].push(outcome)
+        } else { 
+          instantsByPerfTime[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]] = [outcome]
+        }
       });
-      
-      this.setState({ performances, segments, instants });
+      Object.keys(instantsByPerfTime).map( (tl) => { 
+        // order the instances along each timeline
+        instantsByPerfTime[tl] = instantsByPerfTime[tl].sort( (a, b) => { 
+          let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+          let bDur = b["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+          return parseFloat(aDur.substr(1, aDur.length-2)) - parseFloat(bDur.substr(1, bDur.length-2))
+        })
+      })
+      this.setState({ performances, segments, instants, instantsByPerfTime });
     }
   }
 }
