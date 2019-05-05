@@ -11647,7 +11647,7 @@
                                     </layer>
                                 </staff>
                                 <tempo xml:id="tempo-0000005293821834" type="heading" tstamp="1" staff="1" place="above">
-                                    <rend fontsize="125%" fontstyle="normal" fontweight="normal" halign="left">Var. XII</rend>
+                                    <rend fontsize="125%" fontstyle="normal" fontweight="normal" halign="left">Var. XXII</rend>
                                 </tempo>
                                 <dynam xml:id="dynam-0000000781104446" place="below" staff="1" startid="#chord-0000001185560857">f</dynam>
                                 <dynam xml:id="dynam-0000001866500708" place="below" staff="1" startid="#chord-0000000184253387">sf</dynam>
