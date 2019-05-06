@@ -229,7 +229,6 @@ class Variations extends Component {
       if(this.state.selectedPerformance) { 
         // find closest corresponding instant on this timeline
         const thisTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
-        console.log("Timeline: ", this.state.selectedPerformance, thisTimeline);
         const thisOffset = this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]
         let closestInstantIx = this.state.instantsByPerfTime[thisTimeline].findIndex( (i) => { 
           let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
@@ -246,10 +245,11 @@ class Variations extends Component {
         // clear any pre-existing active notes
         const previouslyActive = document.getElementsByClassName("active")
         Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
+        let currentNoteElement;
         currentNotes.map( (n) => { 
           const currentNoteId =n["@id"].substr(n["@id"].lastIndexOf("#")+1);
         // highlight the current note if on current page
-          const currentNoteElement = document.getElementById(currentNoteId);
+          currentNoteElement = document.getElementById(currentNoteId);
           if(currentNoteElement) { 
             currentNoteElement.classList.add("active");
           } else { 
@@ -257,47 +257,41 @@ class Variations extends Component {
             this.props.scorePageToComponentTarget(n["@id"], scoreUri, this.props.score.MEI[scoreUri]);
           }
         })
-        // find current note's segment
-        //
-        // TODO DW 20190503 --
-        //  * create nice notes => segments structure (when traversal finished)
-        //  * figure out current segment from this
-        //  * if changed, update to the new segment
+        if(currentNoteElement) { 
+          // check whether we're in a new section segment
+          // BUT, Verovio doesn't include sections in the hierarchy of its output
+          // Instead it uses "milestones" on the measure level
+          // So, follow siblings backwards from the current measure until we hit a section
+          // start point
+          const currentMeasure = currentNoteElement.closest(".measure")
+          let sibling = currentMeasure.previousElementSibling;
+          while(sibling) { 
+            if(sibling.matches(".section")) { 
+              break;
+            }
+            sibling = sibling.previousElementSibling;
+          }
+          //console.log("Found section: ", sibling, " measure: ", currentMeasure, " note: ", currentNoteElement);
+          const sectionId = sibling ? sibling.getAttribute("id") : "";
+        //  console.log("Note: ", currentNoteElement,  "Measure: ", currentMeasure, " Section ID: ", sectionId);
+          if(sectionId && sectionId  !== this.state.currentSegment["@id"].substr(this.state.currentSegment["@id"].lastIndexOf("#") + 1)) { 
+            // we've entered a new section (segment)
+            // find the corresponding segment in our outcomes
+            const newSeg = this.props.graph.outcomes[1]["@graph"].filter( (s) => {
+              return s["@id"].substr(s["@id"].lastIndexOf("#")+1) === sectionId
+            });
+            if(newSeg.length === 0) { console.log("WARNING: Cannot find segment corresponding to section ", sectionId, " of note", currentNoteElement) }
+            else if(newSeg.length > 1) { console.log("WARNING: Duplicate segment found corresponding to section ", sectionId, " of note ", currentNoteElement) }
+            if(newSeg.length) { 
+              console.log("SETTING TO: ", newSeg[0]);
+              // update selection box
+              this.refs.segmentSelect.value = newSeg[0]["@id"];
+              // update state
+              this.setState({ currentSegment: newSeg[0] });
+            }
+          }
+        }
       }
-
-//       const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
-//       // find timeline segments associated with this timeline
-//       const timelineSegments = this.props.graph.outcomes[1]["@graph"].filter( (seg) => { 
-//         if("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in seg) { 
-//           return seg["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] === selectedTimeline;
-//         }
-//       });
-//       // update current segment if we can find one
-//       const newSeg = timelineSegments.filter( (seg) => {
-//         if("http://purl.org/NET/c4dm/timeline.owl#atDuration" in seg &&
-//            seg["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/\D/g, '') <= t.currentTime) { 
-//           // FIXME this should check and validate formatting of times
-//           return seg;
-//         }
-//       });
-//       // if we've found a new segment, and it's different to the current one
-//       // (or no current one exists yet)
-//       if(newSeg.length > 0 && (
-//           newSeg[0]["@id"] !== this.state.currentPerfSegment["@id"] ||
-//           !("@id" in this.state.currentPerfSegment)  
-//         )) {
-//         // we have found a matching timed segment, and it's different to the current one
-//         // FIXME this should check if multiple segments match
-//         const structSegment = newSeg[0]["http://purl.org/vocab/frbr/core#embodimentOf"]
-//         this.setState({ 
-//           currentPerfSegment:newSeg[0], 
-//           currentSegment: structSegment
-//          });
-//         this.refs.segmentSelect.value = structSegment["@id"];
-//         const target = structSegment["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/2000/01/rdf-schema#member"]["@id"];;
-//         this.props.scorePageToComponentTarget(target, scoreUri, this.props.score.MEI[scoreUri]);
-        //}
-     // }
 		}
 	}
 
