@@ -240,29 +240,23 @@ class Variations extends Component {
         // if we're at 0 use that, otherwise use the one before this one 
         // (i.e., closest without going over)
         closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
-        let currentNote = this.state.instantsByPerfTime[thisTimeline][closestInstantIx]["http://purl.org/vocab/frbr/core#embodimentOf"];
-        // handle array (instant might correspond to chord...)
-        currentNote = Array.isArray(currentNote) ? currentNote[0]["@id"] : currentNote["@id"];
+        let currentNotes = this.state.instantsByPerfTime[thisTimeline][closestInstantIx]["http://purl.org/vocab/frbr/core#embodimentOf"];
+        // handle array (instant might correspond to chord or multiple voices...)
+        currentNotes = Array.isArray(currentNotes) ? currentNotes : [currentNotes];
         // clear any pre-existing active notes
         const previouslyActive = document.getElementsByClassName("active")
         Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
-        const currentNoteId = currentNote.substr(currentNote.lastIndexOf("#")+1);
+        currentNotes.map( (n) => { 
+          const currentNoteId =n["@id"].substr(n["@id"].lastIndexOf("#")+1);
         // highlight the current note if on current page
-        const currentNoteElement = document.getElementById(currentNoteId);
-        if(currentNoteElement) { 
-          // are we part of a chord?
-          const currentChord = currentNoteElement.closest(".chord");
-          if(currentChord) { 
-            // yes, so make the whole chord active
-            currentChord.classList.add("active");
-          } else { 
-            // no, so make the current note active
+          const currentNoteElement = document.getElementById(currentNoteId);
+          if(currentNoteElement) { 
             currentNoteElement.classList.add("active");
+          } else { 
+            // or otherwise flip to the correct page
+            this.props.scorePageToComponentTarget(n["@id"], scoreUri, this.props.score.MEI[scoreUri]);
           }
-        } else { 
-          // or otherwise flip to the correct page
-          this.props.scorePageToComponentTarget(currentNote, scoreUri, this.props.score.MEI[scoreUri]);
-        }
+        })
         // find current note's segment
         //
         // TODO DW 20190503 --
