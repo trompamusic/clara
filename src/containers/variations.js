@@ -11,7 +11,6 @@ import { traverse, setTraversalObjectives, checkTraversalObjectives, scoreNextPa
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
 const scoreUri = "Beethoven_WoO80-32-Variationen-c-Moll.mei";
-//const scoreUri = "test.mei"
 
 const vrvOptions = {
 	scale: 45,
@@ -34,7 +33,8 @@ class Variations extends Component {
       lastMediaTick: 0,
       currentPerfSegment: {},
       currentSegment: {},
-      seekTo:""
+      seekTo:"",
+      videoOffset: .45 // in seconds
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -218,6 +218,7 @@ class Variations extends Component {
   }
 	
   tick(id,t) {
+    t.currentTime += this.state.videoOffset;
 		if(t.currentTime > this.state.lastMediaTick || // if we've progressed across the next second boundary, 
 			 t.currentTime < this.state.lastMediaTick) { // OR if we've gone back in time (user did a seek)...
 			this.setState({ lastMediaTick: t.currentTime }); // keep track of this time tick)
@@ -249,8 +250,15 @@ class Variations extends Component {
         // highlight the current note if on current page
         const currentNoteElement = document.getElementById(currentNoteId);
         if(currentNoteElement) { 
-          // make the current note active
-          currentNoteElement.classList.add("active");
+          // are we part of a chord?
+          const currentChord = currentNoteElement.closest(".chord");
+          if(currentChord) { 
+            // yes, so make the whole chord active
+            currentChord.classList.add("active");
+          } else { 
+            // no, so make the current note active
+            currentNoteElement.classList.add("active");
+          }
         } else { 
           // or otherwise flip to the correct page
           this.props.scorePageToComponentTarget(currentNote, scoreUri, this.props.score.MEI[scoreUri]);
