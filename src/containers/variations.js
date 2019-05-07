@@ -2,9 +2,10 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
-import { Media, Player, controls, utils, withMediaProps } from 'react-media-player'
-const { PlayPause, CurrentTime, Progress, SeekBar, Duration, MuteUnmute, Volume, Fullscreen } = controls
-const { formatTime } = utils
+import ReactPlayer from 'react-player'
+//import { Media, Player, controls, utils, withMediaProps } from 'react-media-player'
+//const { PlayPause, CurrentTime, Progress, SeekBar, Duration, MuteUnmute, Volume, Fullscreen } = controls
+//const { formatTime } = utils
 
 import Score from 'meld-clients-core/src/containers/score';
 import { traverse, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget } from 'meld-clients-core/src/actions/index';
@@ -34,7 +35,7 @@ class Variations extends Component {
       currentPerfSegment: {},
       currentSegment: {},
       seekTo:"",
-      videoOffset: .45 // in seconds
+      videoOffset: 0 // in seconds
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -73,6 +74,10 @@ class Variations extends Component {
 		}
   }
 
+  ref = player => {
+    this.player = player
+  }
+
   render() { 
     return(
       <div id="wrapper">
@@ -81,7 +86,7 @@ class Variations extends Component {
           this.props.scorePrevPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri])
         }}> Previous </div>
         <div id="next" onClick={(e) => {
-	  e.stopPropagation();
+          e.stopPropagation();
           this.props.scoreNextPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri]); 
         }}> Next </div>
         <select name="segmentSelect" onChange={ this.handleSegmentSelected } ref='segmentSelect'>
@@ -95,53 +100,49 @@ class Variations extends Component {
               )
             })
           }
-       </select>
-       <select name="perfSelect" onChange={ this.handlePerformanceSelected }>
-        <option value="none">Select a rendition...</option>
-        {
-          this.state.performances.map( (perf) => { 
-            return( 
-              <option key={ perf["@id"] } value={ perf["@id"] }>
-                { perf["http://www.w3.org/2000/01/rdf-schema#label"] }
-              </option>
-            )
-          })
-        }
-      </select>
-      <Media ref="media">
-        <div className="media">
-          <div className="media-player">
-            <Player 
-              autoPlay={true} 
-              src={ this.state.selectedVideo } 
-              onTimeUpdate={ (t) => {
-                this.tick(this.state.selectedVideo, t)
-              } }
-              onPlay={ () => {
-                if(this.state.seekTo) { 
-                  console.log("Render loop: seeking to ", this.state.seekTo);
-                  this.refs.media.seekTo(this.state.seekTo);
-                  this.setState({seekTo: ""});
-                }
-              } }
-            />
-          </div>
-          <div className="media-controls">
-            <PlayPause/>
-            <CurrentTime/>
-            <SeekBar/>
-            <Duration/>
-         </div>
-       </div>
-     </Media>
-    </div>
+        </select>
+        <select name="perfSelect" onChange={ this.handlePerformanceSelected }>
+          <option value="none">Select a rendition...</option>
+          {
+            this.state.performances.map( (perf) => { 
+              return( 
+                <option key={ perf["@id"] } value={ perf["@id"] }>
+                  { perf["http://www.w3.org/2000/01/rdf-schema#label"] }
+                </option>
+              )
+            })
+          }
+        </select>
+        <ReactPlayer 
+          playing
+          ref={this.ref}
+          url={ this.state.selectedVideo }
+          progressInterval = { 10 } // update rate in milliseconds 
+          controls={ true }
+          onProgress={ (p) => {
+            this.tick(this.state.selectedVideo, p["playedSeconds"])
+          }}
+//         onPlay={ () => {
+//           if(this.state.seekTo) { 
+//             console.log("Render loop onPlay: seeking to ", this.state.seekTo);
+//             this.player.seekTo(this.state.seekTo);
+//             this.setState({seekTo: ""});
+//           }
+//         }}
+          onReady={ () => {
+            if(this.state.seekTo) { 
+              console.log("Render loop onReady: seeking to ", this.state.seekTo);
+              this.player.seekTo(this.state.seekTo);
+              this.setState({seekTo: ""});
+            }
+          }}
+        />
+      </div>
     )
   }
 
   handleSegmentSelected(e) { 
-    console.log("Segment selected: ", e.target);
     const selected = this.state.segments.filter( (seg) => { return seg["@id"] === e.target.value });
-    console.log("SELECTED: ", selected)
     const target = selected[0]["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/2000/01/rdf-schema#member"]["@id"];
     this.props.scorePageToComponentTarget(target, scoreUri, this.props.score.MEI[scoreUri]);
     // if a video is selected, jump to the beginning of this segment in its performance timeline
@@ -149,13 +150,12 @@ class Variations extends Component {
       const timelineSegment = this.findInstantToSeekTo(selected[0]);
       console.log("timelineSegment: ", timelineSegment)
       if(timelineSegment.length) { 
-        console.log(timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]);
         const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         // HACK: Offsets should be incorporated into data model through timeline maps
         startTime += parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         console.log("Trying to seek to: ", startTime, parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]));
-        this.refs.media.seekTo(startTime);
+        this.player.seekTo(startTime);
         this.setState({currentSegment: selected[0]}); 
       }
     }
@@ -176,15 +176,12 @@ class Variations extends Component {
         const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         startTime += parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
-        console.log("? Setting seekTo: ", startTime, parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]), " -- ", timelineSegment[0]);
         this.setState({ seekTo: startTime });
       }
     }
   }
 
   findInstantToSeekTo(segment, selectedPerformance = this.state.selectedPerformance) { 
-    console.log("Got segment: ", segment);
-    console.log("Got performance: ", selectedPerformance);
     const selectedTimeline = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
     // find the time instant on the selected performance's timeline that corresponds to the
     // selected segment
@@ -218,14 +215,17 @@ class Variations extends Component {
   }
 	
   tick(id,t) {
-    t.currentTime += this.state.videoOffset;
-		if(t.currentTime > this.state.lastMediaTick || // if we've progressed across the next second boundary, 
-			 t.currentTime < this.state.lastMediaTick) { // OR if we've gone back in time (user did a seek)...
-			this.setState({ lastMediaTick: t.currentTime }); // keep track of this time tick)
+    if(!("@id" in this.state.currentSegment)) { 
+      return // ignore unless segment selected
+    }
+    t += this.state.videoOffset;
+		if(t > this.state.lastMediaTick || // if we've progressed across the next second boundary, 
+			 t < this.state.lastMediaTick) { // OR if we've gone back in time (user did a seek)...
+			this.setState({ lastMediaTick: t }); // keep track of this time tick)
 			// dispatch a "TICK" action 
 			// any time-sensitive component subscribes to it, 
 			// triggering time-anchored annotations triggered as appropriate
-			this.props.tickTimedResource(id, t.currentTime);
+			this.props.tickTimedResource(id, t);
       if(this.state.selectedPerformance) { 
         // find closest corresponding instant on this timeline
         const thisTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
@@ -233,7 +233,7 @@ class Variations extends Component {
         let closestInstantIx = this.state.instantsByPerfTime[thisTimeline].findIndex( (i) => { 
           let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
           dur = dur.substr(1, dur.length-2);
-          return parseFloat(dur) + parseFloat(thisOffset) > t.currentTime;
+          return parseFloat(dur) + parseFloat(thisOffset) > t;
         });
         console.log("Got closest instant IX: ", closestInstantIx);
         // if we're at 0 use that, otherwise use the one before this one 
@@ -246,18 +246,24 @@ class Variations extends Component {
         const previouslyActive = document.getElementsByClassName("active")
         Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
         let currentNoteElement;
+        let noteToFlipTo;
         currentNotes.map( (n) => { 
           const currentNoteId =n["@id"].substr(n["@id"].lastIndexOf("#")+1);
         // highlight the current note if on current page
           currentNoteElement = document.getElementById(currentNoteId);
           if(currentNoteElement) { 
             currentNoteElement.classList.add("active");
+          } else if(currentNoteId !== "inserted_state") { 
+            noteToFlipTo = n;
           } else { 
-            // or otherwise flip to the correct page
-            this.props.scorePageToComponentTarget(n["@id"], scoreUri, this.props.score.MEI[scoreUri]);
+            // TODO optionally, do something interesting to show inserted_state notes
           }
         })
-        if(currentNoteElement) { 
+        if(noteToFlipTo) { 
+          // a note wasn't on this page -- so flip to its page
+          console.log("Asking Score to flip to: ", noteToFlipTo);
+          this.props.scorePageToComponentTarget(noteToFlipTo["@id"], scoreUri, this.props.score.MEI[scoreUri]);
+        } else if(currentNoteElement) { 
           // check whether we're in a new section segment
           // BUT, Verovio doesn't include sections in the hierarchy of its output
           // Instead it uses "milestones" on the measure level
@@ -290,7 +296,7 @@ class Variations extends Component {
               this.setState({ currentSegment: newSeg[0] });
             }
           }
-        }
+        } 
       }
 		}
 	}
