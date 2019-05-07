@@ -166,9 +166,8 @@ class Variations extends Component {
     const selected = this.state.performances.filter( (perf) => { return perf["@id"] === e.target.value });
     const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
     const selectedPerformance = selected[0];
-    this.setState({ selectedVideo, selectedPerformance });
 		this.props.registerClock(selectedVideo);
-
+    let newState = { selectedVideo, selectedPerformance };
     if("@id" in this.state.currentSegment) { 
       // set up a jump to the currently selected segment in this performance
       const timelineSegment = this.findInstantToSeekTo(this.state.currentSegment, selectedPerformance);
@@ -176,9 +175,10 @@ class Variations extends Component {
         const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         startTime += parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
-        this.setState({ seekTo: startTime });
+        newState["seekTo"] = startTime;
       }
     }
+    this.setState(newState);
   }
 
   findInstantToSeekTo(segment, selectedPerformance = this.state.selectedPerformance) { 
@@ -221,7 +221,7 @@ class Variations extends Component {
     t += this.state.videoOffset;
 		if(t > this.state.lastMediaTick || // if we've progressed across the next second boundary, 
 			 t < this.state.lastMediaTick) { // OR if we've gone back in time (user did a seek)...
-			this.setState({ lastMediaTick: t }); // keep track of this time tick)
+			let newState = { lastMediaTick: t }; // keep track of this time tick)
 			// dispatch a "TICK" action 
 			// any time-sensitive component subscribes to it, 
 			// triggering time-anchored annotations triggered as appropriate
@@ -235,7 +235,7 @@ class Variations extends Component {
           dur = dur.substr(1, dur.length-2);
           return parseFloat(dur) + parseFloat(thisOffset) > t;
         });
-        console.log("Got closest instant IX: ", closestInstantIx);
+        console.log("Got closest instant IX: ", closestInstantIx, " lastMediaTick: ", this.state.lastMediaTick);
         // if we're at 0 use that, otherwise use the one before this one 
         // (i.e., closest without going over)
         closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
@@ -259,8 +259,9 @@ class Variations extends Component {
             // TODO optionally, do something interesting to show inserted_state notes
           }
         })
-        if(noteToFlipTo) { 
+        if(noteToFlipTo && closestInstantIx > 0) { 
           // a note wasn't on this page -- so flip to its page
+          // (closestInstantIx > 0 to avoid flipping to first page each time we swap performance)
           console.log("Asking Score to flip to: ", noteToFlipTo);
           this.props.scorePageToComponentTarget(noteToFlipTo["@id"], scoreUri, this.props.score.MEI[scoreUri]);
         } else if(currentNoteElement) { 
@@ -293,11 +294,12 @@ class Variations extends Component {
               // update selection box
               this.refs.segmentSelect.value = newSeg[0]["@id"];
               // update state
-              this.setState({ currentSegment: newSeg[0] });
+              newState["currentSegment"] = newSeg[0];
             }
           }
         } 
       }
+      this.setState(newState);
 		}
 	}
 
