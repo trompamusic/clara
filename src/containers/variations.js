@@ -246,6 +246,7 @@ class Variations extends Component {
         const previouslyActive = document.getElementsByClassName("active")
         Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
         let currentNoteElement;
+        let currentMeasure;
         let noteToFlipTo;
         currentNotes.map( (n) => { 
           const currentNoteId =n["@id"].substr(n["@id"].lastIndexOf("#")+1);
@@ -253,10 +254,19 @@ class Variations extends Component {
           currentNoteElement = document.getElementById(currentNoteId);
           if(currentNoteElement) { 
             currentNoteElement.classList.add("active");
-          } else if(currentNoteId !== "inserted_state") { 
-            noteToFlipTo = n;
+            currentMeasure = currentNoteElement.closest(".measure")
+          } else if(currentNoteId === "inserted_state") { 
+            // oops! wrong note played (according to MAPS at least)
+            // visualise this by CSS animation on the (most recent) measure (assuming we have one)
+              console.log("Inserted state detected at noteID: ", currentNoteId);
+              document.querySelector("svg").classList.add("errorDetected");
+              // and clear the animation a second later (so that we can punish the next pianist that gets this meausure wrong!)
+              setTimeout( () => { 
+                document.querySelector("svg").classList.remove("errorDetected") 
+              }, 1000); 
           } else { 
-            // TODO optionally, do something interesting to show inserted_state notes
+            // note not on this page; so we'll need to flip to it
+            noteToFlipTo = n;
           }
         })
         if(noteToFlipTo && closestInstantIx > 0) { 
@@ -270,7 +280,6 @@ class Variations extends Component {
           // Instead it uses "milestones" on the measure level
           // So, follow siblings backwards from the current measure until we hit a section
           // start point
-          const currentMeasure = currentNoteElement.closest(".measure")
           let sibling = currentMeasure.previousElementSibling;
           while(sibling) { 
             if(sibling.matches(".section")) { 

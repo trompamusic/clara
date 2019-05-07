@@ -4,6 +4,27 @@
 }
 
 .active { 
-  fill:red;
-  stroke:red;
+  fill:darkorange;
+  stroke:darkorange;
 }
+
+.errorDetected { 
+  fill:black;
+  stroke:black;
+  -webkit-animation-name: errorDetected; /* Safari 4.0 - 8.0 */
+  -webkit-animation-duration:0.3s; /* Safari 4.0 - 8.0 */
+  animation-name: errorDetected;
+  animation-duration:0.3s;
+}
+
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes errorDetected { 
+  from {fill:black; stroke:black;}
+  to {fill:red; stroke:red;}
+}
+
+@keyframes errorDetected { 
+  from {fill:black; stroke:black;}
+  to {fill:red; stroke:red;}
+}
+
