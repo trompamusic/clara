@@ -32,6 +32,7 @@ class Variations extends Component {
       selectedVideo: "",
       selectedPerformance: "",
       lastMediaTick: 0,
+      previouslyActive: [],
       currentPerfSegment: {},
       currentSegment: {},
       seekTo:"",
@@ -236,7 +237,7 @@ class Variations extends Component {
           dur = dur.substr(1, dur.length-2);
           return parseFloat(dur) + parseFloat(thisOffset) > t;
         });
-        console.log("Got closest instant IX: ", closestInstantIx, " lastMediaTick: ", this.state.lastMediaTick);
+        //console.log("Got closest instant IX: ", closestInstantIx, " lastMediaTick: ", this.state.lastMediaTick);
         // if we're at 0 use that, otherwise use the one before this one 
         // (i.e., closest without going over)
         closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
@@ -244,8 +245,12 @@ class Variations extends Component {
         // handle array (instant might correspond to chord or multiple voices...)
         currentNotes = Array.isArray(currentNotes) ? currentNotes : [currentNotes];
         // clear any pre-existing active notes
+        //const previouslyActive = document.getElementsByClassName("active")
         const previouslyActive = document.getElementsByClassName("active")
-        Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
+        if(previouslyActive.length) { 
+          newState["previouslyActive"] = Array.from(previouslyActive);
+          Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
+        }
         let currentNoteElement;
         let currentMeasure;
         let noteToFlipTo;
@@ -258,18 +263,20 @@ class Variations extends Component {
             currentMeasure = currentNoteElement.closest(".measure")
           } else if(currentNoteId === "inserted_state") { 
             // oops! wrong note played (according to MAPS at least)
-            // visualise this by CSS animation on the (most recent) measure (assuming we have one)
-              console.log("Inserted state detected at noteID: ", currentNoteId);
-              document.querySelector("svg").classList.add("errorDetected");
+            // visualise this by CSS animation on the (most recent) measure 
+              if(this.state.previouslyActive.length) {
+                this.state.previouslyActive[0].closest(".measure").classList.add("errorDetected");
               // and clear the animation a second later (so that we can punish the next pianist that gets this meausure wrong!)
-              setTimeout( () => { 
-                document.querySelector("svg").classList.remove("errorDetected") 
-              }, 1000); 
+                setTimeout( (element) => { 
+                  element.closest("measure").classList.remove("errorDetected");
+
+                }, 1000, this.state.previouslyActive[0]); 
+              } else { console.log("Insert state detected but no previously active note!"); }
           } else { 
             // note not on this page; so we'll need to flip to it
             noteToFlipTo = n;
           }
-        })
+        }, this)
         if(noteToFlipTo && closestInstantIx > 0) { 
           // a note wasn't on this page -- so flip to its page
           // (closestInstantIx > 0 to avoid flipping to first page each time we swap performance)
