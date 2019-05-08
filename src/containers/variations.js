@@ -35,7 +35,8 @@ class Variations extends Component {
       currentPerfSegment: {},
       currentSegment: {},
       seekTo:"",
-      videoOffset: 0 // in seconds
+      videoOffset: 0, // in seconds
+      progressInterval: 1 // in milliseconds
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -117,7 +118,7 @@ class Variations extends Component {
           playing
           ref={this.ref}
           url={ this.state.selectedVideo }
-          progressInterval = { 10 } // update rate in milliseconds 
+          progressInterval = { this.state.progressInterval } // update rate in milliseconds 
           controls={ true }
           onProgress={ (p) => {
             this.tick(this.state.selectedVideo, p["playedSeconds"])
