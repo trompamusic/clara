@@ -29,6 +29,7 @@ class Variations extends Component {
       segments: [], 
       instants: [],
       instantsByPerfTime: [],
+      instantsByNoteId: [],
       selectedVideo: "",
       selectedPerformance: "",
       lastMediaTick: 0,
@@ -45,6 +46,7 @@ class Variations extends Component {
     this.handlePerformanceSelected = this.handlePerformanceSelected.bind(this);
     this.tick = this.tick.bind(this);
     this.findInstantToSeekTo = this.findInstantToSeekTo.bind(this);
+    this.assignClickHandlersToNotes = this.assignClickHandlersToNotes.bind(this);
   }
 
   componentWillMount() { 
@@ -64,26 +66,53 @@ class Variations extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) { 
-		if("graph" in prevProps) { 
-			// check our traversal objectives if the graph has updated
-			if(prevProps.graph.graph.length !== this.props.graph.graph.length) { 
-				this.props.checkTraversalObjectives(this.props.graph.graph, this.props.graph.objectives);
-			}
-			if(prevProps.graph.outcomesHash !== this.props.graph.outcomesHash) { 
-				// outcomes have changed, need to update our projections!
-				this.processTraversalOutcomes(this.props.graph.outcomes);
-			}
-		}
+    if("graph" in prevProps) { 
+      // check our traversal objectives if the graph has updated
+      if(prevProps.graph.graph.length !== this.props.graph.graph.length) { 
+        this.props.checkTraversalObjectives(this.props.graph.graph, this.props.graph.objectives);
+      }
+      if(prevProps.graph.outcomesHash !== this.props.graph.outcomesHash) { 
+        // outcomes have changed, need to update our projections!
+        this.processTraversalOutcomes(this.props.graph.outcomes);
+      }
+    }
+    if("score" in prevProps && this.state.selectedPerformance &&
+       prevProps.score.pageNum !== this.props.score.pageNum) {
+      // page has been turned; reassign click handlers
+      this.assignClickHandlersToNotes();
+    }
+    if("score" in prevProps && this.state.selectedPerformance &&
+      prevState.selectedPerformance !== this.state.selectedPerformance) { 
+      // performance has been changed; reassign click handlers
+      this.assignClickHandlersToNotes();
+    }
+  }
+
+  assignClickHandlersToNotes() {
+    // check if our score page has updated
+    const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+    const notes = ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note");
+    Array.prototype.map.call(notes, (n) => { 
+      console.log("checking ", n, this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]);
+      if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
+        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+        nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
+        n.onclick = (e) => { 
+          console.log("On note click, attempting to  seek to: ", nDur);
+          this.player.seekTo(nDur);
+        }
+      }
+    });
   }
 
   ref = player => {
-    this.player = player
+    this.player = player;
   }
 
   render() { 
     return(
       <div id="wrapper">
-        <Score uri={ scoreUri } key = { scoreUri } options = { vrvOptions }/>
+        <Score uri={ scoreUri } key = { scoreUri } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
         <div id="prev" onClick={() => {
           this.props.scorePrevPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri])
         }}> Previous </div>
@@ -268,7 +297,7 @@ class Variations extends Component {
                 this.state.previouslyActive[0].closest(".measure").classList.add("errorDetected");
               // and clear the animation a second later (so that we can punish the next pianist that gets this meausure wrong!)
                 setTimeout( (element) => { 
-                  element.closest("measure").classList.remove("errorDetected");
+                  element.closest(".measure").classList.remove("errorDetected");
 
                 }, 1000, this.state.previouslyActive[0]); 
               } else { console.log("Insert state detected but no previously active note!"); }
@@ -325,6 +354,7 @@ class Variations extends Component {
     let performances= [];
     let instants = [];
     let instantsByPerfTime = {};
+    let instantsByNoteId = {};
     if(outcomes.length === 3 && 
       typeof outcomes[0] !== 'undefined' && 
       typeof outcomes[1] !== 'undefined' &&
@@ -341,11 +371,24 @@ class Variations extends Component {
       console.log("Sorted segments: ", segments)
       outcomes[2]["@graph"].map( (outcome) => {
         instants.push(outcome)
+        const embodiments = Array.isArray(outcome["http://purl.org/vocab/frbr/core#embodimentOf"]) ? 
+                                outcome["http://purl.org/vocab/frbr/core#embodimentOf"] :
+                                [ outcome["http://purl.org/vocab/frbr/core#embodimentOf"] ];
+        // instants per PerfTime
         if(outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] in instantsByPerfTime) {
           instantsByPerfTime[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]].push(outcome)
         } else { 
           instantsByPerfTime[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]] = [outcome]
         }
+        // instants per NoteId
+        embodiments.map( (e) => { 
+          const eId = e["@id"].substr(e["@id"].lastIndexOf("#")+1);
+          if(outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] in instantsByNoteId) {
+            instantsByNoteId[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]][eId] = outcome;
+          } else { 
+            instantsByNoteId[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]] = { [eId]: outcome };
+          }
+        })
       });
       Object.keys(instantsByPerfTime).map( (tl) => { 
         // order the instances along each timeline
@@ -355,7 +398,7 @@ class Variations extends Component {
           return parseFloat(aDur.substr(1, aDur.length-2)) - parseFloat(bDur.substr(1, bDur.length-2))
         })
       })
-      this.setState({ performances, segments, instants, instantsByPerfTime });
+      this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId });
     }
   }
 }
