@@ -8,7 +8,7 @@ import ReactPlayer from 'react-player'
 //const { formatTime } = utils
 
 import Score from 'meld-clients-core/src/containers/score';
-import { traverse, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget } from 'meld-clients-core/src/actions/index';
+import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget } from 'meld-clients-core/src/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
 const scoreUri = "Beethoven_WoO80-32-Variationen-c-Moll.mei";
@@ -38,7 +38,9 @@ class Variations extends Component {
       currentSegment: {},
       seekTo:"",
       videoOffset: 0, // in seconds
-      progressInterval: 1 // in milliseconds
+      progressInterval: 1, // in milliseconds
+      traversalThreshold: 20, // max parallel traversal threads,
+      loading: true // flip when traversals are completed
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -58,7 +60,7 @@ class Variations extends Component {
   }
 
   componentDidMount() { 
-    this.props.traverse("performance/BeethovenWettbewerb/WoO80-all.json", {
+    this.props.registerTraversal("performance/BeethovenWettbewerb/WoO80-all.json", {
       numHops:2, 
       objectPrefixWhitelist:["http://localhost:8080/"],
       objectPrefixBlacklist:["http://localhost:8080/videos/", "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei"]
@@ -66,16 +68,30 @@ class Variations extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) { 
+    if("traversalPool" in this.props && Object.keys(this.props.traversalPool.pool).length === 0 &&
+      prevProps.traversalPool.running > 0 && this.props.traversalPool.running === 0) { 
+      // finished all traversals
+      this.setState({loading: false});
+      console.log("Attempting to process outcomes:", this.props.graph.outcomes);
+      this.props.checkTraversalObjectives(this.props.graph.graph, this.props.graph.objectives);
+    }
     if("graph" in prevProps) { 
       // check our traversal objectives if the graph has updated
-      if(prevProps.graph.graph.length !== this.props.graph.graph.length) { 
-        this.props.checkTraversalObjectives(this.props.graph.graph, this.props.graph.objectives);
-      }
       if(prevProps.graph.outcomesHash !== this.props.graph.outcomesHash) { 
         // outcomes have changed, need to update our projections!
         this.processTraversalOutcomes(this.props.graph.outcomes);
       }
     }
+    if("traversalPool" in this.props &&  // if traversal pool reducer ready
+      Object.keys(this.props.traversalPool.pool).length && // and a traversal is waiting in the pool
+      this.props.traversalPool.running < this.state.traversalThreshold  // and we don't have too many
+    ) {  
+      // then start another traversal
+      const nextTraversalUri = Object.keys(this.props.traversalPool.pool)[0];
+      const nextTraversalParams = this.props.traversalPool.pool[nextTraversalUri];
+      this.props.traverse(nextTraversalUri, nextTraversalParams);
+    }
+
     if("score" in prevProps && this.state.selectedPerformance &&
        prevProps.score.pageNum !== this.props.score.pageNum) {
       // page has been turned; reassign click handlers
@@ -110,66 +126,70 @@ class Variations extends Component {
   }
 
   render() { 
-    return(
-      <div id="wrapper">
-        <Score uri={ scoreUri } key = { scoreUri } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
-        <div id="prev" onClick={() => {
-          this.props.scorePrevPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri])
-        }}> Previous </div>
-        <div id="next" onClick={(e) => {
-          e.stopPropagation();
-          this.props.scoreNextPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri]); 
-        }}> Next </div>
-        <select name="segmentSelect" onChange={ this.handleSegmentSelected } ref='segmentSelect'>
-          <option value="none">Select a segment...</option>
-          { 
-            this.state.segments.map( (seg) => { 
-              return (
-                <option key={ seg["@id"] } value={ seg["@id"] }>
-                  { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("-") +1) }
-                </option>
-              )
-            })
-          }
-        </select>
-        <select name="perfSelect" onChange={ this.handlePerformanceSelected }>
-          <option value="none">Select a rendition...</option>
-          {
-            this.state.performances.map( (perf) => { 
-              return( 
-                <option key={ perf["@id"] } value={ perf["@id"] }>
-                  { perf["http://www.w3.org/2000/01/rdf-schema#label"] }
-                </option>
-              )
-            })
-          }
-        </select>
-        <ReactPlayer 
-          playing
-          ref={this.ref}
-          url={ this.state.selectedVideo }
-          progressInterval = { this.state.progressInterval } // update rate in milliseconds 
-          controls={ true }
-          onProgress={ (p) => {
-            this.tick(this.state.selectedVideo, p["playedSeconds"])
-          }}
-//         onPlay={ () => {
-//           if(this.state.seekTo) { 
-//             console.log("Render loop onPlay: seeking to ", this.state.seekTo);
-//             this.player.seekTo(this.state.seekTo);
-//             this.setState({seekTo: ""});
-//           }
-//         }}
-          onReady={ () => {
-            if(this.state.seekTo) { 
-              console.log("Render loop onReady: seeking to ", this.state.seekTo);
-              this.player.seekTo(this.state.seekTo);
-              this.setState({seekTo: ""});
+    if(this.state.loading) { 
+      return(<div id="wrapper">Loading, please wait</div>);
+    } else {
+      return(
+        <div id="wrapper">
+          <Score uri={ scoreUri } key = { scoreUri } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
+          <div id="prev" onClick={() => {
+            this.props.scorePrevPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri])
+          }}> Previous </div>
+          <div id="next" onClick={(e) => {
+            e.stopPropagation();
+            this.props.scoreNextPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri]); 
+          }}> Next </div>
+          <select name="segmentSelect" onChange={ this.handleSegmentSelected } ref='segmentSelect'>
+            <option value="none">Select a segment...</option>
+            { 
+              this.state.segments.map( (seg) => { 
+                return (
+                  <option key={ seg["@id"] } value={ seg["@id"] }>
+                    { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("-") +1) }
+                  </option>
+                )
+              })
             }
-          }}
-        />
-      </div>
-    )
+          </select>
+          <select name="perfSelect" onChange={ this.handlePerformanceSelected }>
+            <option value="none">Select a rendition...</option>
+            {
+              this.state.performances.map( (perf) => { 
+                return( 
+                  <option key={ perf["@id"] } value={ perf["@id"] }>
+                    { perf["http://www.w3.org/2000/01/rdf-schema#label"] }
+                  </option>
+                )
+              })
+            }
+          </select>
+          <ReactPlayer 
+            playing
+            ref={this.ref}
+            url={ this.state.selectedVideo }
+            progressInterval = { this.state.progressInterval } // update rate in milliseconds 
+            controls={ true }
+            onProgress={ (p) => {
+              this.tick(this.state.selectedVideo, p["playedSeconds"])
+            }}
+  //         onPlay={ () => {
+  //           if(this.state.seekTo) { 
+  //             console.log("Render loop onPlay: seeking to ", this.state.seekTo);
+  //             this.player.seekTo(this.state.seekTo);
+  //             this.setState({seekTo: ""});
+  //           }
+  //         }}
+            onReady={ () => {
+              if(this.state.seekTo) { 
+                console.log("Render loop onReady: seeking to ", this.state.seekTo);
+                this.player.seekTo(this.state.seekTo);
+                this.setState({seekTo: ""});
+              }
+            }}
+          />
+        </div>
+      )
+    }
   }
 
   handleSegmentSelected(e) { 
@@ -404,13 +424,14 @@ class Variations extends Component {
 }
 
 
-function mapStateToProps({ score, graph }) {
-  return { score, graph }
+function mapStateToProps({ score, graph, traversalPool }) {
+  return { score, graph, traversalPool }
 }
 
 function mapDispatchToProps(dispatch) { 
   return bindActionCreators( { 
     traverse, 
+    registerTraversal,
     setTraversalObjectives, 
     checkTraversalObjectives, 
     scoreNextPageStatic, 
