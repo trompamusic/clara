@@ -109,12 +109,12 @@ class Variations extends Component {
     const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
     const notes = ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note");
     Array.prototype.map.call(notes, (n) => { 
-      console.log("checking ", n, this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]);
       if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
         let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         n.onclick = (e) => { 
           console.log("On note click, attempting to  seek to: ", nDur);
+          this.tick(this.state.selectedVideo, nDur);
           this.player.seekTo(nDur);
         }
       }
