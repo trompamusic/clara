@@ -17,6 +17,10 @@
   animation-duration:0.3s;
 }
 
+.instant { 
+  border: 1px solid green;
+}
+
 /* Safari 4.0 - 8.0 */
 @-webkit-keyframes errorDetected { 
   from {fill:black; stroke:black;}

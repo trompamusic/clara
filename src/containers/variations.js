@@ -49,6 +49,7 @@ class Variations extends Component {
     this.tick = this.tick.bind(this);
     this.findInstantToSeekTo = this.findInstantToSeekTo.bind(this);
     this.assignClickHandlersToNotes = this.assignClickHandlersToNotes.bind(this);
+    this.createInstantBoundingRects = this.createInstantBoundingRects.bind(this);
   }
 
   componentWillMount() { 
@@ -96,12 +97,68 @@ class Variations extends Component {
        prevProps.score.pageNum !== this.props.score.pageNum) {
       // page has been turned; reassign click handlers
       this.assignClickHandlersToNotes();
+      this.createInstantBoundingRects();
     }
     if("score" in prevProps && this.state.selectedPerformance &&
       prevState.selectedPerformance !== this.state.selectedPerformance) { 
       // performance has been changed; reassign click handlers
       this.assignClickHandlersToNotes();
+      this.createInstantBoundingRects();
     }
+  }
+
+  createInstantBoundingRects() {
+    // draw bounding rectangles for the note(s) on this page representing each instance
+    let notesOnPagePerInstant = {};
+    const boundingBoxesWrapper = document.getElementById("instantBoundingBoxes");
+    // clear previous bounding boxes
+    while(boundingBoxesWrapper.firstChild) { 
+      boundingBoxesWrapper.removeChild(boundingBoxesWrapper.firstChild)
+    }
+    const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+    const notes = ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note");
+    Array.prototype.map.call(notes, (n) => { 
+      // associate notes on this page with their instant duration
+      if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
+        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
+        if(nDur in notesOnPagePerInstant) { 
+          notesOnPagePerInstant[nDur].push(n);
+        } else { 
+          notesOnPagePerInstant[nDur] = [n];
+        }
+      }
+    })
+    Object.keys(notesOnPagePerInstant).map( (i) => { 
+      // for each instant, figure out the minimal bounding box that contains all its notes
+      let boxLeft = 10000;
+      let boxTop = 10000;
+      let boxWidth = 0 
+      let boxHeight = 0;
+      notesOnPagePerInstant[i].map( (n) => { 
+        // to contain all notes, we want to minimise left and top, 
+        // and maximise right and bottom
+        const boundRect = n.getBoundingClientRect();
+        boxLeft = boundRect.left < boxLeft ? boundRect.left : boxLeft; 
+        boxTop  = boundRect.top < boxTop ? boundRect.top : boxTop; 
+        boxWidth= boundRect.width > boxWidth? boundRect.width: boxWidth; 
+        boxHeight= boundRect.height > boxHeight? boundRect.height: boxHeight; 
+      });
+      // now draw the containing element
+      const boundRectDiv = document.createElement("div");
+      boundRectDiv.setAttribute("id", "bounding-" + i);
+      boundRectDiv.classList.add("instant");
+      boundRectDiv.setAttribute("style", 
+         "position:absolute;" + 
+         "left:"    + Math.floor(boxLeft) + "px;" + 
+         "top:"   + Math.floor(boxTop) + "px;" + 
+         "width:" + Math.ceil(boxWidth) + "px;" + 
+         "height:"+ Math.ceil(boxHeight) + "px;" + 
+         "background: rgb(" + Math.round(notesOnPagePerInstant[i]["https://terms.trompamusic.eu/maps#confidence"] * 255) + ", 0, 0);"
+      );
+      boundingBoxesWrapper.appendChild(boundRectDiv);
+      console.log("Conf: ", this.state.instantsByPerfTime[selectedTimeline][i], notesOnPagePerInstant[i], notesOnPagePerInstant[i]["https://terms.trompamusic.eu/maps#confidence"] * 255);
+    })
   }
 
   assignClickHandlersToNotes() {
@@ -131,6 +188,7 @@ class Variations extends Component {
     } else {
       return(
         <div id="wrapper">
+          <div id="instantBoundingBoxes" />
           <Score uri={ scoreUri } key = { scoreUri } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
           <div id="prev" onClick={() => {
             this.props.scorePrevPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri])
