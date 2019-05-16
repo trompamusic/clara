@@ -73,7 +73,7 @@ class Variations extends Component {
     if("traversalPool" in this.props && Object.keys(this.props.traversalPool.pool).length === 0 &&
       prevProps.traversalPool.running > 0 && this.props.traversalPool.running === 0) { 
       // finished all traversals
-      this.setState({loading: false});
+      this.setState({ "loading": false });
       console.log("Attempting to process outcomes:", this.props.graph.outcomes);
       this.props.checkTraversalObjectives(this.props.graph.graph, this.props.graph.objectives);
     }
@@ -226,30 +226,35 @@ class Variations extends Component {
             e.stopPropagation();
             this.props.scoreNextPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri]); 
           }}> Next </div>
-          <select name="segmentSelect" onChange={ this.handleSegmentSelected } ref='segmentSelect'>
-            <option value="none">Select a segment...</option>
-            { 
-              this.state.segments.map( (seg) => { 
-                return (
-                  <option key={ seg["@id"] } value={ seg["@id"] }>
-                    { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("-") +1) }
-                  </option>
-                )
-              })
-            }
-          </select>
-          <select name="perfSelect" onChange={ this.handlePerformanceSelected }>
-            <option value="none">Select a rendition...</option>
-            {
-              this.state.performances.map( (perf) => { 
-                return( 
-                  <option key={ perf["@id"] } value={ perf["@id"] }>
-                    { perf["http://www.w3.org/2000/01/rdf-schema#label"] }
-                  </option>
-                )
-              })
-            }
-          </select>
+          { this.state.performances.length === 0 
+            ? <div id="selectWrapper">Loading selectors, please wait...</div>
+            : <div id="selectWrapper">
+                <select name="segmentSelect" onChange={ this.handleSegmentSelected } ref='segmentSelect'>
+                  <option value="none">Select a segment...</option>
+                  { 
+                    this.state.segments.map( (seg) => { 
+                      return (
+                        <option key={ seg["@id"] } value={ seg["@id"] }>
+                          { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("-") +1) }
+                        </option>
+                      )
+                    })
+                  }
+                </select>
+                <select name="perfSelect" onChange={ this.handlePerformanceSelected }>
+                  <option value="none">Select a rendition...</option>
+                  {
+                    this.state.performances.map( (perf) => { 
+                      return( 
+                        <option key={ perf["@id"] } value={ perf["@id"] }>
+                          { perf["http://www.w3.org/2000/01/rdf-schema#label"] }
+                        </option>
+                      )
+                    })
+                  }
+                </select>
+              </div>
+          }
           <ReactPlayer 
             playing
             ref={this.ref}
