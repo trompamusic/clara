@@ -8,6 +8,11 @@
   stroke:darkorange;
 }
 
+.scorepane { 
+  min-height: 460px;
+  max-height: 460px;
+}
+
 .errorDetected { 
   fill:black;
   stroke:black;

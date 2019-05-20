@@ -134,8 +134,8 @@ class Variations extends Component {
       // for each instant, figure out the minimal bounding box that contains all its notes
       let boxLeft = 10000;
       let boxTop = 10000;
-      let boxWidth = 0 
-      let boxHeight = 0;
+      let boxRight= 0 
+      let boxBottom= 0;
       let noteId;
       notesOnPagePerInstant[i].map( (n) => { 
         // to contain all notes, we want to minimise left and top, 
@@ -143,8 +143,8 @@ class Variations extends Component {
         const boundRect = n.getBoundingClientRect();
         boxLeft = boundRect.left + window.scrollX < boxLeft ? boundRect.left + window.scrollX : boxLeft; 
         boxTop  = boundRect.top + window.scrollY < boxTop ? boundRect.top + window.scrollY: boxTop; 
-        boxWidth= boundRect.width > boxWidth? boundRect.width: boxWidth; 
-        boxHeight= boundRect.height > boxHeight? boundRect.height: boxHeight; 
+        boxRight= boundRect.right > boxRight? boundRect.right : boxRight; 
+        boxBottom= boundRect.bottom > boxBottom ? boundRect.bottom: boxBottom; 
         // remember a note ID for indexing into instantsByNoteId (to retrieve confidence) further below
         noteId = n.getAttribute("id"); 
       });
@@ -159,8 +159,8 @@ class Variations extends Component {
          "position:absolute;" + 
          "left:"    + Math.floor(boxLeft) + "px;" + 
          "top:"   + Math.floor(boxTop) + "px;" + 
-         "width:" + Math.ceil(boxWidth) + "px;" + 
-         "height:"+ Math.ceil(boxHeight) + "px;" + 
+         "width:" + Math.ceil(boxRight - boxLeft) + "px;" + 
+         "height:"+ Math.ceil(boxBottom - boxTop) + "px;" + 
          "background: rgba(255,0,0," + parseFloat(1 - this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"] * .01) + ");" + 
          "z-index: -1;"
       );
@@ -170,8 +170,8 @@ class Variations extends Component {
          "position:absolute;" + 
          "left:"    + Math.floor(boxLeft) + "px;" + 
          "top:"   + Math.floor(boxTop) + "px;" + 
-         "width:" + Math.ceil(boxWidth) + "px;" + 
-         "height:"+ Math.ceil(boxHeight) + "px;" + 
+         "width:" + Math.ceil(boxRight - boxLeft) + "px;" + 
+         "height:"+ Math.ceil(boxBottom - boxTop) + "px;" + 
          "background: rgba(0,0,0,0);" + 
          "z-index: 1;"
       );
