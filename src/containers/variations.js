@@ -219,13 +219,25 @@ class Variations extends Component {
         <div id="wrapper">
           <div id="instantBoundingBoxes" />
           <Score uri={ scoreUri } key = { scoreUri } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
-          <div id="prev" onClick={() => {
-            this.props.scorePrevPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri])
-          }}> Previous </div>
-          <div id="next" onClick={(e) => {
-            e.stopPropagation();
-            this.props.scoreNextPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri]); 
-          }}> Next </div>
+          <div id="pageControlsWrapper">
+          { this.props.score.pageNum > 0 
+            ? <div id="prev" onClick={() => {
+                this.props.scorePrevPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri])
+              }}> <img src="/static/prev.svg" alt="Previous page"/></div>
+            : <div id="prev" />
+          }
+          { this.props.score.pageCount > 0
+              ? <span id="pageNum">Page {this.props.score.pageNum} / {this.props.score.pageCount}</span> 
+              : <span id="pageNum"/>
+          }
+          { this.props.score.pageCount === 0 || this.props.score.pageNum < this.props.score.pageCount
+          ? <div id="next" onClick={(e) => {
+              e.stopPropagation();
+              this.props.scoreNextPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri]); 
+            }}> <img src="/static/next.svg" alt="Next page"/></div>
+          : <div id="next" />
+          }
+        </div>
           { this.state.performances.length === 0 
             ? <div id="selectWrapper">Loading selectors, please wait...</div>
             : <div id="selectWrapper">

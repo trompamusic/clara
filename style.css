@@ -8,6 +8,10 @@
   stroke:darkorange;
 }
 
+.clickableBoundedInstant{
+  cursor:pointer;
+}
+
 .scorepane { 
   min-height: 460px;
   max-height: 460px;
@@ -33,3 +37,35 @@
   to {fill:red; stroke:red;}
 }
 
+#pageControlsWrapper {
+  border-radius:10px;
+  max-width:945px;
+  margin-left:20px;
+  height:1.5em;
+  background: rgb(255,102,0);
+  background: linear-gradient(90deg, rgba(255,102,0,1) 0%, rgba(223,157,7,1) 50%, rgba(255,102,0,1) 100%);
+  display:flex;
+  justify-content:space-between;
+  padding-left:.3em;
+  padding-right:.3em;
+  padding-top:.3em;
+}
+
+#pageControlsWrapper #prev { 
+  cursor:pointer;
+}
+
+#pageControlsWrapper #next { 
+  cursor:pointer;
+}
+
+#pageControlsWrapper #pageNum {
+  color:white;
+  font-family: sans-serif;
+  font-weight: bold;
+}
+
+#selectWrapper { 
+  clear:both;
+  margin-left:20px;
+}
