@@ -141,8 +141,8 @@ class Variations extends Component {
         // to contain all notes, we want to minimise left and top, 
         // and maximise right and bottom
         const boundRect = n.getBoundingClientRect();
-        boxLeft = boundRect.left < boxLeft ? boundRect.left : boxLeft; 
-        boxTop  = boundRect.top < boxTop ? boundRect.top : boxTop; 
+        boxLeft = boundRect.left + window.scrollX < boxLeft ? boundRect.left + window.scrollX : boxLeft; 
+        boxTop  = boundRect.top + window.scrollY < boxTop ? boundRect.top + window.scrollY: boxTop; 
         boxWidth= boundRect.width > boxWidth? boundRect.width: boxWidth; 
         boxHeight= boundRect.height > boxHeight? boundRect.height: boxHeight; 
         // remember a note ID for indexing into instantsByNoteId (to retrieve confidence) further below
@@ -255,23 +255,27 @@ class Variations extends Component {
                 </select>
               </div>
           }
-          <ReactPlayer 
-            playing
-            ref={this.ref}
-            url={ this.state.selectedVideo }
-            progressInterval = { this.state.progressInterval } // update rate in milliseconds 
-            controls={ true }
-            onProgress={ (p) => {
-              this.tick(this.state.selectedVideo, p["playedSeconds"])
-            }}
-            onReady={ () => {
-              if(this.state.seekTo) { 
-                console.log("Render loop onReady: seeking to ", this.state.seekTo);
-                this.player.seekTo(this.state.seekTo);
-                this.setState({seekTo: ""});
-              }
-            }}
-          />
+          <div className="videoWrapper">
+            <ReactPlayer 
+              playing
+              ref={this.ref}
+              url={ this.state.selectedVideo }
+              progressInterval = { this.state.progressInterval } // update rate in milliseconds 
+              controls={ true }
+              width="100%"
+              height="100%"
+              onProgress={ (p) => {
+                this.tick(this.state.selectedVideo, p["playedSeconds"])
+              }}
+              onReady={ () => {
+                if(this.state.seekTo) { 
+                  console.log("Render loop onReady: seeking to ", this.state.seekTo);
+                  this.player.seekTo(this.state.seekTo);
+                  this.setState({seekTo: ""});
+                }
+              }}
+            />
+          </div>
         </div>
       )
     }

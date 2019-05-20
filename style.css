@@ -1,6 +1,6 @@
-.media-player video { 
-  width:80%;
-  max-width:600px;
+.videoWrapper { 
+  max-width:945px;
+  margin-left:20px;
 }
 
 .active { 
