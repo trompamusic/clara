@@ -248,6 +248,10 @@ class Variations extends Component {
     } else {
       return(
         <div id="wrapper">
+          <div id="logoWrapper">
+            <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" />
+            <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" />
+          </div>
           <div id="instantBoundingBoxes" />
           { this.state.currentScore 
             ? <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
