@@ -112,7 +112,15 @@ class Variations extends Component {
     }
     if(prevState.showConfidence !== this.state.showConfidence) { 
       this.createInstantBoundingRects(); // showConfidence preference changed; redraw boxes
+      this.refs.showConfidenceToggle.checked = this.state.showConfidence;
     }
+    if(prevState.scoreFollowing !== this.state.scoreFollowing) { 
+      this.refs.pageControlsWrapper.classList.toggle("following");
+      "next" in this.refs && this.refs.next.classList.toggle("following");
+      "prev" in this.refs && this.refs.prev.classList.toggle("following");
+      this.refs.scoreFollowingToggle.checked = this.state.scoreFollowing;
+    }
+
   }
   
   componentWillUnmount() { 
@@ -121,6 +129,7 @@ class Variations extends Component {
   }
 
   monitorKeys(e) { 
+    console.log("got: ", e);
     if("score" in this.props) { 
       switch(e.which) { 
         case 37: // left arrow
@@ -131,6 +140,16 @@ class Variations extends Component {
         case 39: // right arrow
           if(this.props.score.pageNum < this.props.score.pageCount) { 
             this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
+          }
+          break;
+        case 67: // 'c'  => "confidence"
+          if(this.state.selectedPerformance) { 
+            this.setState({ showConfidence: !this.state.showConfidence });
+          }
+          break;
+        case 70: // 'f'  => "follow"
+          if(this.state.selectedPerformance) { 
+            this.setState({ scoreFollowing: !this.state.scoreFollowing });
           }
           break;
       }
@@ -302,29 +321,36 @@ class Variations extends Component {
                     })
                   }
                 </select>
-                <span id="scoreFollowToggle">
-                  <input 
-                    type="checkbox" 
-                    defaultChecked={ false }
-                    onChange={ () => { 
-                      this.setState({ scoreFollowing: !this.state.scoreFollowing }) 
-                      this.refs.pageControlsWrapper.classList.toggle("following");
-                      this.refs.next.classList.toggle("following");
-                      this.refs.prev.classList.toggle("following");
-                    }}
-                  />
-                  Score-following
+              { this.state.selectedPerformance 
+              ? <span> 
+                  <span id="scoreFollowToggle">
+                    <input 
+                      type="checkbox" 
+                      ref="scoreFollowingToggle"
+                      defaultChecked={ false }
+                      onChange={ () => { 
+                        this.setState({ scoreFollowing: !this.state.scoreFollowing }) 
+                      }}
+                    />
+                    Score-following
+                  </span>
+                  <span id="confidenceToggle">
+                      <input 
+                        type="checkbox" 
+                        ref="showConfidenceToggle"
+                        defaultChecked={ false }
+                        onChange={ () => { 
+                          this.setState({ showConfidence: !this.state.showConfidence});
+                        }}
+                      />
+                      Show alignment confidence
+                  </span>
                 </span>
-                <span id="confidenceToggle">
-                  <input 
-                    type="checkbox" 
-                    defaultChecked={ false }
-                    onChange={ () => { 
-                      this.setState({ showConfidence: !this.state.showConfidence});
-                    }}
-                  />
-                Show alignment confidence
+              : <span>
+                  <span id="scoreFollowToggle" className="hidden"/>
+                  <span id="confidenceToggle" className="hidden" />
                 </span>
+              }
               </div>
           }
           <div className="videoWrapper">
@@ -587,9 +613,11 @@ class Variations extends Component {
       // set our MEI score based on the first performance
       // TODO this assumes all performances are of the same score - check that assumption;
       // to support multi-score, need to set state on every performance selection
-      const currentScore = performances[0]["http://purl.org/ontology/mo/performance_of"]["http://purl.org/ontology/mo/published_as"]["@id"];
-      this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
-      this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore });
+      if(performances.length) { 
+        const currentScore = performances[0]["http://purl.org/ontology/mo/performance_of"]["http://purl.org/ontology/mo/published_as"]["@id"];
+        this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
+        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore });
+      }
     }
   }
 }

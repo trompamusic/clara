@@ -1,3 +1,7 @@
+body { 
+  font-family: sans-serif;
+}
+
 .videoWrapper { 
   max-width:945px;
   margin-left:20px;
@@ -47,7 +51,6 @@
   justify-content: space-between;
   padding-left: .3em;
   padding-right: .3em;
-  font-family: sans-serif;
   font-weight: bold;
   color: rgba(255, 102, 0);
 }
@@ -66,7 +69,6 @@
 #pageControlsWrapper #prev.following, #pageControlsWrapper #next.following { 
   visibility: hidden;
 }
-
 
 #selectWrapper { 
   clear:both;
@@ -95,4 +97,8 @@
 
 #logoWrapper #mdwLogo { 
   height:64px;
+}
+
+.hidden {
+  visibility:hidden;
 }
