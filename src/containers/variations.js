@@ -8,10 +8,9 @@ import ReactPlayer from 'react-player'
 //const { formatTime } = utils
 
 import Score from 'meld-clients-core/src/containers/score';
-import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget } from 'meld-clients-core/src/actions/index';
+import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/src/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
-const scoreUri = "Beethoven_WoO80-32-Variationen-c-Moll.mei";
 
 const vrvOptions = {
 	scale: 45,
@@ -19,7 +18,7 @@ const vrvOptions = {
 	pageHeight: 1080,
 	pageWidth: 2200,
 	noFooter: 1,
-	unit: 6 
+	unit: 6
 };
 
 class Variations extends Component {
@@ -37,11 +36,14 @@ class Variations extends Component {
       previouslyActive: [],
       currentPerfSegment: {},
       currentSegment: {},
+      currentScore: "",
       seekTo:"",
       videoOffset: 0, // in seconds
       progressInterval: 1, // in milliseconds
       traversalThreshold: 20, // max parallel traversal threads,
-      loading: true // flip when traversals are completed
+      loading: true, // flip when traversals are completed
+      scoreFollowing: false, // if true, page automatically with playback 
+      showConfidence: false // if true, visualise MAPS confidence per instant
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -51,6 +53,7 @@ class Variations extends Component {
     this.findInstantToSeekTo = this.findInstantToSeekTo.bind(this);
     this.assignClickHandlersToNotes = this.assignClickHandlersToNotes.bind(this);
     this.createInstantBoundingRects = this.createInstantBoundingRects.bind(this);
+    this.monitorKeys= this.monitorKeys.bind(this);
   }
 
   componentWillMount() { 
@@ -67,6 +70,7 @@ class Variations extends Component {
       objectPrefixWhitelist:["http://localhost:8080/"],
       objectPrefixBlacklist:["http://localhost:8080/videos/", "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei"]
     });
+    document.addEventListener('keydown', this.monitorKeys);
   }
 
   componentDidUpdate(prevProps, prevState) { 
@@ -105,6 +109,31 @@ class Variations extends Component {
       // performance has been changed; reassign click handlers
 //      this.assignClickHandlersToNotes();
       this.createInstantBoundingRects();
+    }
+    if(prevState.showConfidence !== this.state.showConfidence) { 
+      this.createInstantBoundingRects(); // showConfidence preference changed; redraw boxes
+    }
+  }
+  
+  componentWillUnmount() { 
+    // clean up...
+    document.removeEventListener('keydown', this.monitorKeys);
+  }
+
+  monitorKeys(e) { 
+    if("score" in this.props) { 
+      switch(e.which) { 
+        case 37: // left arrow
+          if(this.props.score.pageNum > 1) { 
+            this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
+          }
+          break;
+        case 39: // right arrow
+          if(this.props.score.pageNum < this.props.score.pageCount) { 
+            this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
+          }
+          break;
+      }
     }
   }
 
@@ -184,9 +213,11 @@ class Variations extends Component {
       }
       let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
       clickableBoundDiv.setAttribute("title", "time: " + nDur.substr(1, nDur.length-2) + ", confidence: " + parseFloat(this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"]));
-      boundingBoxesWrapper.appendChild(confidenceBoundDiv);
+      // only add confidence visualisation if user wants us to
+      if(this.state.showConfidence) {
+        boundingBoxesWrapper.appendChild(confidenceBoundDiv);
+      }
       boundingBoxesWrapper.appendChild(clickableBoundDiv);
-      console.log("Conf: ", 1 - this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"] * .01);
     })
   }
 
@@ -218,11 +249,14 @@ class Variations extends Component {
       return(
         <div id="wrapper">
           <div id="instantBoundingBoxes" />
-          <Score uri={ scoreUri } key = { scoreUri } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
-          <div id="pageControlsWrapper">
-          { this.props.score.pageNum > 0 
-            ? <div id="prev" onClick={() => {
-                this.props.scorePrevPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri])
+          { this.state.currentScore 
+            ? <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
+            : <div className="loadingMsg">Loading score, please wait...</div>
+          }
+        <div id="pageControlsWrapper" ref="pageControlsWrapper">
+          { this.props.score.pageNum > 1 
+            ? <div id="prev" ref="prev" onClick={() => {
+                this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
               }}> <img src="/static/prev.svg" alt="Previous page"/></div>
             : <div id="prev" />
           }
@@ -231,15 +265,14 @@ class Variations extends Component {
               : <span id="pageNum"/>
           }
           { this.props.score.pageCount === 0 || this.props.score.pageNum < this.props.score.pageCount
-          ? <div id="next" onClick={(e) => {
-              e.stopPropagation();
-              this.props.scoreNextPageStatic(scoreUri, this.props.score.pageNum, this.props.score.MEI[scoreUri]); 
+          ? <div id="next" ref="next" onClick={(e) => {
+              this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
             }}> <img src="/static/next.svg" alt="Next page"/></div>
           : <div id="next" />
           }
         </div>
           { this.state.performances.length === 0 
-            ? <div id="selectWrapper">Loading selectors, please wait...</div>
+            ? <div className="loadingMsg">Loading selectors, please wait...</div>
             : <div id="selectWrapper">
                 <select name="segmentSelect" onChange={ this.handleSegmentSelected } ref='segmentSelect'>
                   <option value="none">Select a segment...</option>
@@ -265,6 +298,29 @@ class Variations extends Component {
                     })
                   }
                 </select>
+                <span id="scoreFollowToggle">
+                  <input 
+                    type="checkbox" 
+                    defaultChecked={ false }
+                    onChange={ () => { 
+                      this.setState({ scoreFollowing: !this.state.scoreFollowing }) 
+                      this.refs.pageControlsWrapper.classList.toggle("following");
+                      this.refs.next.classList.toggle("following");
+                      this.refs.prev.classList.toggle("following");
+                    }}
+                  />
+                  Score-following
+                </span>
+                <span id="confidenceToggle">
+                  <input 
+                    type="checkbox" 
+                    defaultChecked={ false }
+                    onChange={ () => { 
+                      this.setState({ showConfidence: !this.state.showConfidence});
+                    }}
+                  />
+                Show alignment confidence
+                </span>
               </div>
           }
           <div className="videoWrapper">
@@ -296,7 +352,7 @@ class Variations extends Component {
   handleSegmentSelected(e) { 
     const selected = this.state.segments.filter( (seg) => { return seg["@id"] === e.target.value });
     const target = selected[0]["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/2000/01/rdf-schema#member"]["@id"];
-    this.props.scorePageToComponentTarget(target, scoreUri, this.props.score.MEI[scoreUri]);
+    this.props.scorePageToComponentTarget(target, this.state.currentScore, this.props.score.MEI[this.state.currentScore]);
     // if a video is selected, jump to the beginning of this segment in its performance timeline
     if(this.state.selectedPerformance)  {
       const timelineSegment = this.findInstantToSeekTo(selected[0]);
@@ -429,10 +485,12 @@ class Variations extends Component {
             }
           }, this)
           if(noteToFlipTo && closestInstantIx > 0) { 
-            // a note wasn't on this page -- so flip to its page
-            // (closestInstantIx > 0 to avoid flipping to first page each time we swap performance)
-            console.log("Asking Score to flip to: ", noteToFlipTo);
-            this.props.scorePageToComponentTarget(noteToFlipTo["@id"], scoreUri, this.props.score.MEI[scoreUri]);
+            // a note wasn't on this page -- if we are score-following, flip to its page
+            // (the closestInstantIx > 0 check is to avoid flipping to first page each time we swap performance)
+            if(this.state.scoreFollowing) { 
+              console.log("Asking Score to flip to: ", noteToFlipTo);
+              this.props.scorePageToComponentTarget(noteToFlipTo["@id"], this.state.currentScore, this.props.score.MEI[this.state.currentScore]);
+            }
           } else if(currentNoteElement) { 
             // check whether we're in a new section segment
             // BUT, Verovio doesn't include sections in the hierarchy of its output
@@ -521,7 +579,12 @@ class Variations extends Component {
           return parseFloat(aDur.substr(1, aDur.length-2)) - parseFloat(bDur.substr(1, bDur.length-2))
         })
       })
-      this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId });
+      // set our MEI score based on the first performance
+      // TODO this assumes all performances are of the same score - check that assumption;
+      // to support multi-score, need to set state on every performance selection
+      const currentScore = performances[0]["http://purl.org/ontology/mo/performance_of"]["http://purl.org/ontology/mo/published_as"]["@id"];
+      this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
+      this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore });
     }
   }
 }
@@ -533,6 +596,7 @@ function mapStateToProps({ score, graph, traversalPool }) {
 
 function mapDispatchToProps(dispatch) { 
   return bindActionCreators( { 
+    fetchScore,
     traverse, 
     registerTraversal,
     setTraversalObjectives, 

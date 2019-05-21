@@ -39,33 +39,40 @@
 
 #pageControlsWrapper {
   border-radius:10px;
+  border: 1px solid rgb(255,102,0);
   max-width:945px;
   margin-left:20px;
   height:1.5em;
-  background: rgb(255,102,0);
-  background: linear-gradient(90deg, rgba(255,102,0,1) 0%, rgba(223,157,7,1) 50%, rgba(255,102,0,1) 100%);
   display:flex;
   justify-content:space-between;
   padding-left:.3em;
   padding-right:.3em;
   padding-top:.3em;
-}
-
-#pageControlsWrapper #prev { 
-  cursor:pointer;
-}
-
-#pageControlsWrapper #next { 
-  cursor:pointer;
-}
-
-#pageControlsWrapper #pageNum {
-  color:white;
   font-family: sans-serif;
   font-weight: bold;
+  color: rgba(255, 102, 0);
 }
+
+#pageControlsWrapper.following{
+  background: rgb(255,102,0);
+  background: linear-gradient(90deg, rgba(255,102,0,1) 0%, rgba(223,157,7,1) 50%, rgba(255,102,0,1) 100%);
+  color:white;
+}
+
+#pageControlsWrapper #prev, #pageControlsWrapper #next { 
+  cursor:pointer;
+}
+
+#pageControlsWrapper #prev.following, #pageControlsWrapper #next.following { 
+  visibility: hidden;
+}
+
 
 #selectWrapper { 
   clear:both;
+  margin-left:20px;
+}
+
+.loadingMsg { 
   margin-left:20px;
 }
