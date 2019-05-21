@@ -472,9 +472,10 @@ class Variations extends Component {
             if(currentNoteElement) { 
               currentNoteElement.classList.add("active");
               currentMeasure = currentNoteElement.closest(".measure")
-            } else if(currentNoteId === "inserted_state") { 
+            } else if(currentNoteId === "inserted_state" && this.state.showConfidence) { 
               // oops! wrong note played (according to MAPS at least)
               // visualise this by CSS animation on the (most recent) measure 
+              // (only if we are showing alignment confidence)
                 if(this.state.previouslyActive.length) {
                   this.state.previouslyActive[0].closest(".measure").classList.add("errorDetected");
                 // and clear the animation a second later (so that we can punish the next pianist that gets this meausure wrong!)
