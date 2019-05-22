@@ -457,105 +457,102 @@ class Variations extends Component {
       return // ignore unless segment selected
     }
     t += this.state.videoOffset;
-		if(t > this.state.lastMediaTick || // if we've progressed across the next second boundary, 
-			 t < this.state.lastMediaTick) { // OR if we've gone back in time (user did a seek)...
-			let newState = { lastMediaTick: t }; // keep track of this time tick)
-			// dispatch a "TICK" action 
-			// any time-sensitive component subscribes to it, 
-			// triggering time-anchored annotations triggered as appropriate
-			this.props.tickTimedResource(id, t);
-      if(this.state.selectedPerformance) { 
-        // find closest corresponding instant on this timeline
-        const thisTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
-        const thisOffset = this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]
-        let closestInstantIx = this.state.instantsByPerfTime[thisTimeline].findIndex( (i) => { 
-          let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
-          dur = dur.substr(1, dur.length-2);
-          return parseFloat(dur) + parseFloat(thisOffset) > t;
-        });
-        //console.log("Got closest instant IX: ", closestInstantIx, " lastMediaTick: ", this.state.lastMediaTick);
-        // if we're at 0 use that, otherwise use the one before this one 
-        // (i.e., closest without going over)
-        closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
-        if(closestInstantIx in this.state.instantsByPerfTime[thisTimeline]) {
-          let currentNotes = this.state.instantsByPerfTime[thisTimeline][closestInstantIx]["http://purl.org/vocab/frbr/core#embodimentOf"];
-          // handle array (instant might correspond to chord or multiple voices...)
-          currentNotes = Array.isArray(currentNotes) ? currentNotes : [currentNotes];
-          // clear any pre-existing active notes
-          //const previouslyActive = document.getElementsByClassName("active")
-          const previouslyActive = document.getElementsByClassName("active")
-          if(previouslyActive.length) { 
-            newState["previouslyActive"] = Array.from(previouslyActive);
-            Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
-          }
-          let currentNoteElement;
-          let currentMeasure;
-          let noteToFlipTo;
-          currentNotes.map( (n) => { 
-            const currentNoteId =n["@id"].substr(n["@id"].lastIndexOf("#")+1);
-          // highlight the current note if on current page
-            currentNoteElement = document.getElementById(currentNoteId);
-            if(currentNoteElement) { 
-              currentNoteElement.classList.add("active");
-              currentMeasure = currentNoteElement.closest(".measure")
-            } else if(currentNoteId === "inserted_state" && this.state.showConfidence) { 
-              // oops! wrong note played (according to MAPS at least)
-              // visualise this by CSS animation on the (most recent) measure 
-              // (only if we are showing alignment confidence)
-                if(this.state.previouslyActive.length) {
-                  this.state.previouslyActive[0].closest(".measure").classList.add("errorDetected");
-                // and clear the animation a second later (so that we can punish the next pianist that gets this meausure wrong!)
-                  setTimeout( (element) => { 
-                    element.closest(".measure").classList.remove("errorDetected");
-
-                  }, 1000, this.state.previouslyActive[0]); 
-                } else { console.log("Insert state detected but no previously active note!"); }
-            } else { 
-              // note not on this page; so we'll need to flip to it
-              noteToFlipTo = n;
-            }
-          }, this)
-          if(noteToFlipTo && closestInstantIx > 0) { 
-            // a note wasn't on this page -- if we are score-following, flip to its page
-            // (the closestInstantIx > 0 check is to avoid flipping to first page each time we swap performance)
-            if(this.state.scoreFollowing) { 
-              console.log("Asking Score to flip to: ", noteToFlipTo);
-              this.props.scorePageToComponentTarget(noteToFlipTo["@id"], this.state.currentScore, this.props.score.MEI[this.state.currentScore]);
-            }
-          } else if(currentNoteElement) { 
-            // check whether we're in a new section segment
-            // BUT, Verovio doesn't include sections in the hierarchy of its output
-            // Instead it uses "milestones" on the measure level
-            // So, follow siblings backwards from the current measure until we hit a section
-            // start point
-            let sibling = currentMeasure.previousElementSibling;
-            while(sibling) { 
-              if(sibling.matches(".section")) { 
-                break;
-              }
-              sibling = sibling.previousElementSibling;
-            }
-            //console.log("Found section: ", sibling, " measure: ", currentMeasure, " note: ", currentNoteElement);
-            const sectionId = sibling ? sibling.getAttribute("id") : "";
-          //  console.log("Note: ", currentNoteElement,  "Measure: ", currentMeasure, " Section ID: ", sectionId);
-            if(sectionId && sectionId  !== this.state.currentSegment["@id"].substr(this.state.currentSegment["@id"].lastIndexOf("#") + 1)) { 
-              // we've entered a new section (segment)
-              // find the corresponding segment in our outcomes
-              const newSeg = this.props.graph.outcomes[1]["@graph"].filter( (s) => {
-                return s["@id"].substr(s["@id"].lastIndexOf("#")+1) === sectionId
-              });
-              if(newSeg.length === 0) { console.log("WARNING: Cannot find segment corresponding to section ", sectionId, " of note", currentNoteElement) }
-              else if(newSeg.length > 1) { console.log("WARNING: Duplicate segment found corresponding to section ", sectionId, " of note ", currentNoteElement) }
-              if(newSeg.length) { 
-                console.log("SETTING TO: ", newSeg[0]);
-                // update selection box
-                this.refs.segmentSelect.value = newSeg[0]["@id"];
-                // update state
-                newState["currentSegment"] = newSeg[0];
-              }
-            }
-          } 
+    let newState = { lastMediaTick: t }; // keep track of this time tick)
+    // dispatch a "TICK" action 
+    // any time-sensitive component subscribes to it, 
+    // triggering time-anchored annotations triggered as appropriate
+    this.props.tickTimedResource(id, t);
+    if(this.state.selectedPerformance) { 
+      // find closest corresponding instant on this timeline
+      const thisTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+      const thisOffset = this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]
+      let closestInstantIx = this.state.instantsByPerfTime[thisTimeline].findIndex( (i) => { 
+        let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        dur = dur.substr(1, dur.length-2);
+        return parseFloat(dur) + parseFloat(thisOffset) > t;
+      });
+      //console.log("Got closest instant IX: ", closestInstantIx, " lastMediaTick: ", this.state.lastMediaTick);
+      // if we're at 0 use that, otherwise use the one before this one 
+      // (i.e., closest without going over)
+      closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
+      if(closestInstantIx in this.state.instantsByPerfTime[thisTimeline]) {
+        let currentNotes = this.state.instantsByPerfTime[thisTimeline][closestInstantIx]["http://purl.org/vocab/frbr/core#embodimentOf"];
+        // handle array (instant might correspond to chord or multiple voices...)
+        currentNotes = Array.isArray(currentNotes) ? currentNotes : [currentNotes];
+        // clear any pre-existing active notes
+        //const previouslyActive = document.getElementsByClassName("active")
+        const previouslyActive = document.getElementsByClassName("active")
+        if(previouslyActive.length) { 
+          newState["previouslyActive"] = Array.from(previouslyActive);
+          Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
         }
+        let currentNoteElement;
+        let currentMeasure;
+        let noteToFlipTo;
+        currentNotes.map( (n) => { 
+          const currentNoteId =n["@id"].substr(n["@id"].lastIndexOf("#")+1);
+        // highlight the current note if on current page
+          currentNoteElement = document.getElementById(currentNoteId);
+          if(currentNoteElement) { 
+            currentNoteElement.classList.add("active");
+            currentMeasure = currentNoteElement.closest(".measure")
+          } else if(currentNoteId === "inserted_state" && this.state.showConfidence) { 
+            // oops! wrong note played (according to MAPS at least)
+            // visualise this by CSS animation on the (most recent) measure 
+            // (only if we are showing alignment confidence)
+              if(this.state.previouslyActive.length) {
+                this.state.previouslyActive[0].closest(".measure").classList.add("errorDetected");
+              // and clear the animation a second later (so that we can punish the next pianist that gets this meausure wrong!)
+                setTimeout( (element) => { 
+                  element.closest(".measure").classList.remove("errorDetected");
+
+                }, 1000, this.state.previouslyActive[0]); 
+              } else { console.log("Insert state detected but no previously active note!"); }
+          } else { 
+            // note not on this page; so we'll need to flip to it
+            noteToFlipTo = n;
+          }
+        }, this)
+        if(noteToFlipTo && closestInstantIx > 0) { 
+          // a note wasn't on this page -- if we are score-following, flip to its page
+          // (the closestInstantIx > 0 check is to avoid flipping to first page each time we swap performance)
+          if(this.state.scoreFollowing) { 
+            console.log("Asking Score to flip to: ", noteToFlipTo);
+            this.props.scorePageToComponentTarget(noteToFlipTo["@id"], this.state.currentScore, this.props.score.MEI[this.state.currentScore]);
+          }
+        } else if(currentNoteElement) { 
+          // check whether we're in a new section segment
+          // BUT, Verovio doesn't include sections in the hierarchy of its output
+          // Instead it uses "milestones" on the measure level
+          // So, follow siblings backwards from the current measure until we hit a section
+          // start point
+          let sibling = currentMeasure.previousElementSibling;
+          while(sibling) { 
+            if(sibling.matches(".section")) { 
+              break;
+            }
+            sibling = sibling.previousElementSibling;
+          }
+          //console.log("Found section: ", sibling, " measure: ", currentMeasure, " note: ", currentNoteElement);
+          const sectionId = sibling ? sibling.getAttribute("id") : "";
+        //  console.log("Note: ", currentNoteElement,  "Measure: ", currentMeasure, " Section ID: ", sectionId);
+          if(sectionId && sectionId  !== this.state.currentSegment["@id"].substr(this.state.currentSegment["@id"].lastIndexOf("#") + 1)) { 
+            // we've entered a new section (segment)
+            // find the corresponding segment in our outcomes
+            const newSeg = this.props.graph.outcomes[1]["@graph"].filter( (s) => {
+              return s["@id"].substr(s["@id"].lastIndexOf("#")+1) === sectionId
+            });
+            if(newSeg.length === 0) { console.log("WARNING: Cannot find segment corresponding to section ", sectionId, " of note", currentNoteElement) }
+            else if(newSeg.length > 1) { console.log("WARNING: Duplicate segment found corresponding to section ", sectionId, " of note ", currentNoteElement) }
+            if(newSeg.length) { 
+              console.log("SETTING TO: ", newSeg[0]);
+              // update selection box
+              this.refs.segmentSelect.value = newSeg[0]["@id"];
+              // update state
+              newState["currentSegment"] = newSeg[0];
+            }
+          }
+        } 
       }
       this.setState(newState);
 		}
