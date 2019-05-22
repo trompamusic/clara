@@ -34,8 +34,6 @@
     { "@id": "perf:P18-performance.json" },
     { "@id": "perf:P03-performance.json" },
     { "@id": "perf:P24-performance.json" },
-    { "@id": "perf:P07-performance.json" 
-
-
+    { "@id": "perf:P07-performance.json" }
   ]
 }
