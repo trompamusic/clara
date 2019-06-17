@@ -55,7 +55,11 @@ body {
   color: rgba(255, 102, 0);
 }
 
-#pageControlsWrapper.following{
+#pageControlsWrapper.featureVis { 
+  max-width: 1745px;
+}
+
+#pageControlsWrapper.following {
   background: rgb(255,102,0);
   background: linear-gradient(90deg, rgba(255,102,0,1) 0%, rgba(223,157,7,1) 50%, rgba(255,102,0,1) 100%);
   color:white;
@@ -88,6 +92,10 @@ body {
   max-width: 950px;
   margin-left: 20px;
   z-index:-2;
+}
+
+#logoWrapper.featureVis { 
+  max-width: 1765px;
 }
 
 #logoWrapper #trompaLogo { 

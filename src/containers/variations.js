@@ -12,11 +12,20 @@ import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObje
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
 
-const vrvOptions = {
+const vrvOptionsPageView = {
 	scale: 45,
   adjustPageHeight: 1,
 	pageHeight: 1080,
 	pageWidth: 2200,
+	noFooter: 1,
+	unit: 6
+};
+
+const vrvOptionsFeatureVis = {
+	scale: 45,
+  adjustPageHeight: 1,
+	pageHeight: 400,
+	pageWidth: 4000,
 	noFooter: 1,
 	unit: 6
 };
@@ -43,7 +52,8 @@ class Variations extends Component {
       traversalThreshold: 20, // max parallel traversal threads,
       loading: true, // flip when traversals are completed
       scoreFollowing: false, // if true, page automatically with playback 
-      showConfidence: false // if true, visualise MAPS confidence per instant
+      showConfidence: false, // if true, visualise MAPS confidence per instant
+      mode: "pageView" // currently either pageView (portrait style) or featureVis (flattened single-system with vis canvas)
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -71,9 +81,14 @@ class Variations extends Component {
       objectPrefixBlacklist:["http://localhost:8080/videos/", "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei"]
     });
     document.addEventListener('keydown', this.monitorKeys);
+
   }
 
   componentDidUpdate(prevProps, prevState) { 
+    if(prevState.loading && !this.state.loading) { 
+      const ctx = this.refs.visCanvas.getContext('2d');
+      ctx.fillRect(0,0, 100, 100);
+    }
     if("traversalPool" in this.props && Object.keys(this.props.traversalPool.pool).length === 0 &&
       prevProps.traversalPool.running > 0 && this.props.traversalPool.running === 0) { 
       // finished all traversals
@@ -262,21 +277,30 @@ class Variations extends Component {
   }
 
   render() { 
+    let vrvOptions;
     if(this.state.loading) { 
       return(<div id="wrapper">Loading, please wait</div>);
     } else {
+      // set up score according to mode -- either pageView (portait) or featureVis (flat, single-system)
+      if(this.state.mode === "pageView") { 
+        vrvOptions = vrvOptionsPageView;
+      } else { 
+        vrvOptions = vrvOptionsFeatureVis;
+      }
+        
       return(
         <div id="wrapper">
-          <div id="logoWrapper">
+          <div id="logoWrapper" className = { this.state.mode } >
             <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" />
             <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" />
           </div>
           <div id="instantBoundingBoxes" />
+          <canvas id="visCanvas" ref="visCanvas" />
           { this.state.currentScore 
             ? <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
             : <div className="loadingMsg">Loading score, please wait...</div>
           }
-        <div id="pageControlsWrapper" ref="pageControlsWrapper">
+        <div id="pageControlsWrapper" ref="pageControlsWrapper" className={ this.state.mode }>
           { this.props.score.pageNum > 1 
             ? <div id="prev" ref="prev" onClick={() => {
                 this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
