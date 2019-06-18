@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 import ReactPlayer from 'react-player'
+import FeatureVis from './featureVis';
+
 //import { Media, Player, controls, utils, withMediaProps } from 'react-media-player'
 //const { PlayPause, CurrentTime, Progress, SeekBar, Duration, MuteUnmute, Volume, Fullscreen } = controls
 //const { formatTime } = utils
@@ -53,7 +55,7 @@ class Variations extends Component {
       loading: true, // flip when traversals are completed
       scoreFollowing: false, // if true, page automatically with playback 
       showConfidence: false, // if true, visualise MAPS confidence per instant
-      mode: "pageView" // currently either pageView (portrait style) or featureVis (flattened single-system with vis canvas)
+      mode: "featureVis" // currently either pageView (portrait style) or featureVis (flattened single-system with visualisation)
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -86,9 +88,9 @@ class Variations extends Component {
 
   componentDidUpdate(prevProps, prevState) { 
     if(prevState.loading && !this.state.loading) { 
-      const ctx = this.refs.visCanvas.getContext('2d');
-      ctx.fillRect(0,0, 100, 100);
+      //canvas
     }
+
     if("traversalPool" in this.props && Object.keys(this.props.traversalPool.pool).length === 0 &&
       prevProps.traversalPool.running > 0 && this.props.traversalPool.running === 0) { 
       // finished all traversals
@@ -295,7 +297,10 @@ class Variations extends Component {
             <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" />
           </div>
           <div id="instantBoundingBoxes" />
-          <canvas id="visCanvas" ref="visCanvas" />
+          {this.state.mode === "featureVis"
+            ? <FeatureVis />
+            : ""
+          }
           { this.state.currentScore 
             ? <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
             : <div className="loadingMsg">Loading score, please wait...</div>
