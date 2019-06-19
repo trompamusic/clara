@@ -41,6 +41,7 @@ class Variations extends Component {
       instants: [],
       instantsByPerfTime: [],
       instantsByNoteId: [],
+      notesOnPage: [],
       selectedVideo: "",
       selectedPerformance: "",
       lastMediaTick: 0,
@@ -119,7 +120,9 @@ class Variations extends Component {
        prevProps.score.pageNum !== this.props.score.pageNum) {
       // page has been turned; reassign click handlers
 //      this.assignClickHandlersToNotes();
-      this.createInstantBoundingRects();
+      const notes = ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note");
+      this.setState( {notesOnPage: notes} );
+      this.createInstantBoundingRects(notes);
     }
     if("score" in prevProps && this.state.selectedPerformance &&
       prevState.selectedPerformance !== this.state.selectedPerformance) { 
@@ -173,7 +176,7 @@ class Variations extends Component {
     }
   }
 
-  createInstantBoundingRects() {
+  createInstantBoundingRects(notes = this.state.notesOnPage) {
     // draw bounding rectangles for the note(s) on this page representing each instance
     let notesOnPagePerInstant = {};
     const boundingBoxesWrapper = document.getElementById("instantBoundingBoxes");
@@ -182,7 +185,6 @@ class Variations extends Component {
       boundingBoxesWrapper.removeChild(boundingBoxesWrapper.firstChild)
     }
     const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
-    const notes = ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note");
     Array.prototype.map.call(notes, (n) => { 
       // associate notes on this page with their instant duration
       if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
@@ -297,8 +299,8 @@ class Variations extends Component {
             <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" />
           </div>
           <div id="instantBoundingBoxes" />
-          {this.state.mode === "featureVis"
-            ? <FeatureVis />
+          {this.state.mode === "featureVis" 
+            ? <FeatureVis notesOnPage={ this.state.notesOnPage } instantsByNoteId={ this.state.instantsByNoteId } timelinesToVis = { Object.keys(this.state.instantsByNoteId) } />
             : ""
           }
           { this.state.currentScore 
