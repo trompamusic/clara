@@ -239,8 +239,8 @@ class Variations extends Component {
       }
       let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
       clickableBoundDiv.setAttribute("title", "time: " + nDur.substr(1, nDur.length-2) + 
-        "velocity: " + parseFloat(this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#velocity"]) + 
-        "confidence: " + parseFloat(this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"]));
+        " velocity: " + parseFloat(this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#velocity"]) + 
+        " confidence: " + parseFloat(this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"]));
       // only add confidence visualisation if user wants us to
       if(this.state.showConfidence) {
         boundingBoxesWrapper.appendChild(confidenceBoundDiv);
