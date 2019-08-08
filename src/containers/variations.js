@@ -39,7 +39,7 @@ class Variations extends Component {
       currentScore: "",
       seekTo:"",
       videoOffset: 0, // in seconds
-      progressInterval: 1, // in milliseconds
+      progressInterval: 5, // in milliseconds; n.b. somewhere between 4 and 5 seems to be minimum
       traversalThreshold: 20, // max parallel traversal threads,
       loading: true, // flip when traversals are completed
       scoreFollowing: false, // if true, page automatically with playback 
@@ -463,29 +463,40 @@ class Variations extends Component {
     // triggering time-anchored annotations triggered as appropriate
     this.props.tickTimedResource(id, t);
     if(this.state.selectedPerformance) { 
-      // find closest corresponding instant on this timeline
+      // find closest corresponding instants (within a window of progressInterval milliseconds) on this timeline
       const thisTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
       const thisOffset = this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]
-      let closestInstantIx = this.state.instantsByPerfTime[thisTimeline].findIndex( (i) => { 
+      let closestInstantIndices = this.state.instantsByPerfTime[thisTimeline].filter( (i) => { 
         let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
         dur = dur.substr(1, dur.length-2);
-        return parseFloat(dur) + parseFloat(thisOffset) > t;
-      });
-      //console.log("Got closest instant IX: ", closestInstantIx, " lastMediaTick: ", this.state.lastMediaTick);
+        const offsetDur = parseFloat(dur) + parseFloat(thisOffset);
+        //console.log("offsetDur: ", offsetDur, " t: ", t, " pI: ", this.state.progressInterval);
+        if(offsetDur > (t - this.state.progressInterval*.001) && offsetDur <= t) {
+          console.log("Found t:", t, "offsetdur: ", offsetDur, "dur: ", parseFloat(dur));
+        }
+        return offsetDur > (t - this.state.progressInterval*.001) && offsetDur <= t;
+      })
+
+//      let closestInstantIx = this.state.instantsByPerfTime[thisTimeline].findIndex( (i) => { 
+//        let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+//        dur = dur.substr(1, dur.length-2);
+//        return parseFloat(dur) + parseFloat(thisOffset) > t;
+//      });
+//      //console.log("Got closest instant IX: ", closestInstantIx, " lastMediaTick: ", this.state.lastMediaTick);
       // if we're at 0 use that, otherwise use the one before this one 
       // (i.e., closest without going over)
-      closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
-      if(closestInstantIx in this.state.instantsByPerfTime[thisTimeline]) {
+//      closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
+//     if(closestInstantIx in this.state.instantsByPerfTime[thisTimeline]) {
+      const previouslyActive = document.getElementsByClassName("active")
+      if(previouslyActive.length) { 
+        newState["previouslyActive"] = Array.from(previouslyActive);
+//        Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
+      }
+      closestInstantIndices.map( (closestInstant, closestInstantIx) => {
         let currentNotes = this.state.instantsByPerfTime[thisTimeline][closestInstantIx]["http://purl.org/vocab/frbr/core#embodimentOf"];
         // handle array (instant might correspond to chord or multiple voices...)
         currentNotes = Array.isArray(currentNotes) ? currentNotes : [currentNotes];
         // clear any pre-existing active notes
-        //const previouslyActive = document.getElementsByClassName("active")
-        const previouslyActive = document.getElementsByClassName("active")
-        if(previouslyActive.length) { 
-          newState["previouslyActive"] = Array.from(previouslyActive);
-          Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
-        }
         let currentNoteElement;
         let currentMeasure;
         let noteToFlipTo;
@@ -553,7 +564,7 @@ class Variations extends Component {
             }
           }
         } 
-      }
+      })
       this.setState(newState);
 		}
 	}

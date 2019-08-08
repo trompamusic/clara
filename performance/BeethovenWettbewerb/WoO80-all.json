@@ -35,6 +35,7 @@
     { "@id": "perf:P03-performance.json" },
     { "@id": "perf:P24-performance.json" },
     { "@id": "perf:P07-performance.json" },
-    { "@id": "perf:NAKAMURA-performance.json" }
+    { "@id": "perf:Liculescu-performance-r.json" },
+    { "@id": "perf:Leone-performance-r.json" }
   ]
 }
