@@ -39,7 +39,8 @@ class Variations extends Component {
       currentScore: "",
       seekTo:"",
       videoOffset: 0, // in seconds
-      progressInterval: 5, // in milliseconds; n.b. somewhere between 4 and 5 seems to be minimum
+      progressInterval: 1, // of video playback (callback rate), in milliseconds
+      activeWindow: .1, // window of notes before current instant considered active, in seconds 
       traversalThreshold: 20, // max parallel traversal threads,
       loading: true, // flip when traversals are completed
       scoreFollowing: false, // if true, page automatically with playback 
@@ -466,16 +467,16 @@ class Variations extends Component {
       // find closest corresponding instants (within a window of progressInterval milliseconds) on this timeline
       const thisTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
       const thisOffset = this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]
-      let closestInstantIndices = this.state.instantsByPerfTime[thisTimeline].filter( (i) => { 
-        let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+      let closestInstantIndices = this.state.instantsByPerfTime[thisTimeline].reduce( (indices, instant, thisIndex) => { 
+        let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
         dur = dur.substr(1, dur.length-2);
         const offsetDur = parseFloat(dur) + parseFloat(thisOffset);
         //console.log("offsetDur: ", offsetDur, " t: ", t, " pI: ", this.state.progressInterval);
-        if(offsetDur > (t - this.state.progressInterval*.001) && offsetDur <= t) {
-          console.log("Found t:", t, "offsetdur: ", offsetDur, "dur: ", parseFloat(dur));
+        if(offsetDur > (t - this.state.activeWindow) && offsetDur <= t) { 
+          indices.push(thisIndex);
         }
-        return offsetDur > (t - this.state.progressInterval*.001) && offsetDur <= t;
-      })
+        return indices;
+      }, []);
 
 //      let closestInstantIx = this.state.instantsByPerfTime[thisTimeline].findIndex( (i) => { 
 //        let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
@@ -488,11 +489,12 @@ class Variations extends Component {
 //      closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
 //     if(closestInstantIx in this.state.instantsByPerfTime[thisTimeline]) {
       const previouslyActive = document.getElementsByClassName("active")
-      if(previouslyActive.length) { 
+      if(previouslyActive.length && closestInstantIndices.length) { 
         newState["previouslyActive"] = Array.from(previouslyActive);
-//        Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
+        Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
       }
-      closestInstantIndices.map( (closestInstant, closestInstantIx) => {
+      console.log("Tick: ", t, ", offset: ", thisOffset + t, ", closest instants: ", closestInstantIndices);
+      closestInstantIndices.map( (closestInstantIx) => {
         let currentNotes = this.state.instantsByPerfTime[thisTimeline][closestInstantIx]["http://purl.org/vocab/frbr/core#embodimentOf"];
         // handle array (instant might correspond to chord or multiple voices...)
         currentNotes = Array.isArray(currentNotes) ? currentNotes : [currentNotes];
