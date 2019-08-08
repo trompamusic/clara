@@ -44,7 +44,12 @@ class Variations extends Component {
       traversalThreshold: 20, // max parallel traversal threads,
       loading: true, // flip when traversals are completed
       scoreFollowing: false, // if true, page automatically with playback 
-      showConfidence: false // if true, visualise MAPS confidence per instant
+      showConfidence: false, // if true, visualise MAPS confidence per instant
+      showVelocities: false, // if true, visualise note velocities
+      minOpacity: .2, // minimum opacity (when note played at smallest expected velocity
+      maxOpacity: 1, // max opacity (when note played at largest expected velocity)
+      minExpectedVel: 10, // guesstimate as to a note played at pianissimo (unit: midi velocity)
+      maxExpectedVel: 120 // guesstimate as to a note played at fortissimo (unit: midi velocity)
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -55,6 +60,7 @@ class Variations extends Component {
     this.assignClickHandlersToNotes = this.assignClickHandlersToNotes.bind(this);
     this.createInstantBoundingRects = this.createInstantBoundingRects.bind(this);
     this.monitorKeys= this.monitorKeys.bind(this);
+    this.mapVelocityToOpacity= this.mapVelocityToOpacity.bind(this);
   }
 
   componentWillMount() { 
@@ -346,6 +352,17 @@ class Variations extends Component {
                       />
                       Show alignment confidence
                   </span>
+                  <span id="velocitiesToggle">
+                      <input 
+                        type="checkbox" 
+                        ref="showVelocitiesToggle"
+                        defaultChecked={ false }
+                        onChange={ () => { 
+                          this.setState({ showVelocities: !this.state.showVelocities});
+                        }}
+                      />
+                      Show note velocities
+                  </span>
                 </span>
               : <span>
                   <span id="scoreFollowToggle" className="hidden"/>
@@ -452,7 +469,14 @@ class Variations extends Component {
     console.log("timelineSegment: ", timelineSegment, "sorted: ", sorted);
     return sorted;
   }
-	
+
+  mapVelocityToOpacity(vel) { 
+    let opacity = (vel - this.state.minExpectedVel) * (this.state.maxOpacity - this.state.minOpacity) / (this.state.maxExpectedVel - this.state.minExpectedVel) + this.state.minOpacity;
+    opacity = Math.max(0, opacity) // can't have opacity < 0
+    console.log("Mapping ", vel, " to ", Math.min(opacity, 1))
+    return(Math.min(opacity, 1)) // can't have opacity > 1
+  }
+
   tick(id,t) {
     if(!("@id" in this.state.currentSegment)) { 
       return // ignore unless segment selected
@@ -491,9 +515,9 @@ class Variations extends Component {
       const previouslyActive = document.getElementsByClassName("active")
       if(previouslyActive.length && closestInstantIndices.length) { 
         newState["previouslyActive"] = Array.from(previouslyActive);
-        Array.from(previouslyActive).map( (n) => { n.classList.remove("active") });
+        Array.from(previouslyActive).map( (n) => { n.classList.remove("active"); n.style.opacity=1 });
       }
-      console.log("Tick: ", t, ", offset: ", thisOffset + t, ", closest instants: ", closestInstantIndices);
+      //console.log("Tick: ", t, ", offset: ", thisOffset + t, ", closest instants: ", closestInstantIndices);
       closestInstantIndices.map( (closestInstantIx) => {
         let currentNotes = this.state.instantsByPerfTime[thisTimeline][closestInstantIx]["http://purl.org/vocab/frbr/core#embodimentOf"];
         // handle array (instant might correspond to chord or multiple voices...)
@@ -508,6 +532,9 @@ class Variations extends Component {
           currentNoteElement = document.getElementById(currentNoteId);
           if(currentNoteElement) { 
             currentNoteElement.classList.add("active");
+            if(this.state.showVelocities) { 
+              currentNoteElement.style.opacity = this.mapVelocityToOpacity(this.state.instantsByPerfTime[thisTimeline][closestInstantIx]["https://terms.trompamusic.eu/maps#velocity"])
+            }
             currentMeasure = currentNoteElement.closest(".measure")
           } else if(currentNoteId === "inserted_state" && this.state.showConfidence) { 
             // oops! wrong note played (according to MAPS at least)
