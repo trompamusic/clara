@@ -43,9 +43,9 @@ class Variations extends Component {
       activeWindow: .1, // window of notes before current instant considered active, in seconds 
       traversalThreshold: 20, // max parallel traversal threads,
       loading: true, // flip when traversals are completed
-      scoreFollowing: false, // if true, page automatically with playback 
+      scoreFollowing: true, // if true, page automatically with playback 
       showConfidence: false, // if true, visualise MAPS confidence per instant
-      showVelocities: false, // if true, visualise note velocities
+      showVelocities: true, // if true, visualise note velocities
       minMappedVelocity: 0, // minimum opacity (when note played at smallest expected velocity
       maxMappedVelocity: 255, // max opacity (when note played at largest expected velocity)
       minExpectedVel: 0, // guesstimate as to a note played at pianissimo (unit: midi velocity)
@@ -235,7 +235,16 @@ class Variations extends Component {
         console.log("On bounding box click, attempting to  seek to: ", nDur);
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         this.tick(this.state.selectedVideo, nDur);
-        this.player.seekTo(nDur);
+        this.player.seekTo(nDur); 
+        // reset note velocities display for all notes after this one
+        const notesOnPage = document.querySelectorAll(".note");
+        const thisNote = document.querySelector("#" + noteId);
+        const noteIndex = Array.prototype.indexOf.call(notesOnPage, thisNote);
+        const notesAfterThisOne = Array.prototype.slice.call(notesOnPage, noteIndex+1);
+        notesAfterThisOne.map( (n) => { 
+          n.style.fill="";
+          n.style.stroke="";
+        })
       }
       let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
       clickableBoundDiv.setAttribute("title", "time: " + nDur.substr(1, nDur.length-2) + 
@@ -336,7 +345,7 @@ class Variations extends Component {
                     <input 
                       type="checkbox" 
                       ref="scoreFollowingToggle"
-                      defaultChecked={ false }
+                      defaultChecked={ this.state.scoreFollowing }
                       onChange={ () => { 
                         this.setState({ scoreFollowing: !this.state.scoreFollowing }) 
                       }}
@@ -347,7 +356,7 @@ class Variations extends Component {
                       <input 
                         type="checkbox" 
                         ref="showConfidenceToggle"
-                        defaultChecked={ false }
+                        defaultChecked={ this.state.showConfidence }
                         onChange={ () => { 
                           this.setState({ showConfidence: !this.state.showConfidence});
                         }}
@@ -358,7 +367,7 @@ class Variations extends Component {
                       <input 
                         type="checkbox" 
                         ref="showVelocitiesToggle"
-                        defaultChecked={ false }
+                        defaultChecked={ this.state.showVelocities }
                         onChange={ () => { 
                           this.setState({ showVelocities: !this.state.showVelocities});
                         }}
@@ -436,6 +445,7 @@ class Variations extends Component {
         newState["seekTo"] = startTime;
       }
     }
+    document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
     this.setState(newState);
   }
 
@@ -519,8 +529,6 @@ class Variations extends Component {
         newState["previouslyActive"] = Array.from(previouslyActive);
         Array.from(previouslyActive).map( (n) => { 
           n.classList.remove("active"); 
-          n.style.fill = ""; // remove any additional styling (e.g. velocity colouring)
-          n.style.stroke = ""; 
         });
       }
       //console.log("Tick: ", t, ", offset: ", thisOffset + t, ", closest instants: ", closestInstantIndices);
