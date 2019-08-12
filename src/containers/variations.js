@@ -46,6 +46,7 @@ class Variations extends Component {
       scoreFollowing: true, // if true, page automatically with playback 
       showConfidence: false, // if true, visualise MAPS confidence per instant
       showVelocities: true, // if true, visualise note velocities
+      showInsertedDeleted: true, // if true, visualise note insertions and deletions
       minMappedVelocity: 0, // minimum opacity (when note played at smallest expected velocity
       maxMappedVelocity: 255, // max opacity (when note played at largest expected velocity)
       minExpectedVel: 0, // guesstimate as to a note played at pianissimo (unit: midi velocity)
@@ -59,6 +60,7 @@ class Variations extends Component {
     this.findInstantToSeekTo = this.findInstantToSeekTo.bind(this);
     this.assignClickHandlersToNotes = this.assignClickHandlersToNotes.bind(this);
     this.createInstantBoundingRects = this.createInstantBoundingRects.bind(this);
+    this.highlightDeletedNotes = this.highlightDeletedNotes.bind(this);
     this.monitorKeys= this.monitorKeys.bind(this);
     this.mapVelocity = this.mapVelocity.bind(this);
   }
@@ -110,12 +112,14 @@ class Variations extends Component {
       // page has been turned; reassign click handlers
 //      this.assignClickHandlersToNotes();
       this.createInstantBoundingRects();
+      this.highlightDeletedNotes();
     }
     if("score" in prevProps && this.state.selectedPerformance &&
       prevState.selectedPerformance !== this.state.selectedPerformance) { 
       // performance has been changed; reassign click handlers
 //      this.assignClickHandlersToNotes();
       this.createInstantBoundingRects();
+      this.highlightDeletedNotes();
     }
     if(prevState.showConfidence !== this.state.showConfidence) { 
       this.createInstantBoundingRects(); // showConfidence preference changed; redraw boxes
@@ -163,6 +167,31 @@ class Variations extends Component {
     }
   }
 
+  highlightDeletedNotes() { 
+    // highlight deleted notes (i.e., notes missed out during performance) on this page
+    // n.b. per Nakamura alignment convention, deleted notes have a performance time of -1
+    //
+    // first, tidy up left-over deleted notes from previous invocations (e.g. on another performance)
+    Array.prototype.map.call(document.querySelectorAll(".deleted"), (d) => { d.classList.remove("deleted") });
+    if(this.state.selectedPerformance && this.state.showInsertedDeleted) { 
+      const thisTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+      const deletedNotesInstant = this.state.instantsByPerfTime[thisTimeline].filter( (i) => { 
+        let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        dur = parseInt(dur.substr(1, dur.length-2));
+        return dur === -1; // all deleted notes "occur" at this instant
+      })
+      if(deletedNotesInstant.length) { // could be 0 in a perfect performance...
+        console.log("deleted notes instant: ", deletedNotesInstant);
+        const deletedNotes = deletedNotesInstant[0]["http://purl.org/vocab/frbr/core#embodimentOf"];
+        deletedNotes.map( (n) => { 
+          let noteOnPage = document.getElementById(n["@id"].substr(n["@id"].indexOf("#")+1));
+          if(noteOnPage) {
+            noteOnPage.classList.add("deleted");
+          }
+        })
+      }
+    }
+  }
   createInstantBoundingRects() {
     // draw bounding rectangles for the note(s) on this page representing each instance
     let notesOnPagePerInstant = {};
@@ -232,6 +261,10 @@ class Variations extends Component {
       );
       clickableBoundDiv.onclick = (e) => { 
         let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+        if(parseInt(nDur.substr(1,nDur.length-2)) === -1) {
+          // this is a deleted (i.e. unperformed) note; thus we can't seek to it!
+          return
+        }
         console.log("On bounding box click, attempting to  seek to: ", nDur);
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         this.tick(this.state.selectedVideo, nDur);
@@ -247,9 +280,14 @@ class Variations extends Component {
         })
       }
       let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
-      clickableBoundDiv.setAttribute("title", "time: " + nDur.substr(1, nDur.length-2) + 
+      nDur = nDur.substr(1, nDur.length-2);
+      if(parseInt(nDur) === -1) { 
+        clickableBoundDiv.setAttribute("title", "This note was not sounded during the selected performance");
+      } else { 
+        clickableBoundDiv.setAttribute("title", "time: " + nDur.substr(1, nDur.length-2) + 
         " velocity: " + parseFloat(this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#velocity"]) + 
         " confidence: " + parseFloat(this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"]));
+      }
       // only add confidence visualisation if user wants us to
       if(this.state.showConfidence) {
         boundingBoxesWrapper.appendChild(confidenceBoundDiv);
@@ -361,7 +399,7 @@ class Variations extends Component {
                           this.setState({ showConfidence: !this.state.showConfidence});
                         }}
                       />
-                      Show alignment confidence
+                      Alignment confidence
                   </span>
                   <span id="velocitiesToggle">
                       <input 
@@ -372,7 +410,22 @@ class Variations extends Component {
                           this.setState({ showVelocities: !this.state.showVelocities});
                         }}
                       />
-                      Show note velocities
+                      Note velocities
+                  </span>
+                  <span id="insertedDeletedToggle">
+                      <input 
+                        type="checkbox" 
+                        ref="showInsertedDeletedToggle"
+                        defaultChecked={ this.state.showInsertedDeleted}
+                        onChange={ () => { 
+                          if(this.state.showInsertedDeleted) { 
+                            // if we're unselecting, reset any deleted notes
+                            Array.prototype.map.call(document.querySelectorAll(".deleted"), (d) => { d.classList.remove("deleted") });
+                          } 
+                          this.setState({ showInsertedDeleted: !this.state.showInsertedDeleted}, () => { this.highlightDeletedNotes() });
+                        }}
+                      />
+                      Inserted / deleted notes
                   </span>
                 </span>
               : <span>
@@ -478,8 +531,13 @@ class Variations extends Component {
       let bDur = b["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
       return parseFloat(aDur.substr(1, aDur.length-2)) - parseFloat(bDur.substr(1, bDur.length-2))
     })
-    console.log("timelineSegment: ", timelineSegment, "sorted: ", sorted);
-    return sorted;
+    // remove any occurring at -1 (indicating deleted notes)
+    const filtered = sorted.filter( (n) => {
+      let dur = n["http://purl.org/NET/c4dm/timeline.owl#atDuration"]; 
+      dur = parseInt(dur.substr(1, dur.length-2));
+      return(dur !== -1)
+    })
+    return filtered;
   }
 
   mapVelocity(vel) { 
@@ -553,7 +611,7 @@ class Variations extends Component {
               currentNoteElement.style.stroke = hex;
             }
             currentMeasure = currentNoteElement.closest(".measure")
-          } else if(currentNoteId === "inserted_state" && this.state.showConfidence) { 
+          } else if(currentNoteId === "inserted_state" && this.state.showInsertedDeleted) { 
             // oops! wrong note played (according to MAPS at least)
             // visualise this by CSS animation on the (most recent) measure 
             // (only if we are showing alignment confidence)

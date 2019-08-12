@@ -12,6 +12,30 @@ body {
   stroke:darkorange;
 }
 
+.deleted {
+  fill: #00aaff;
+  stroke: #00aaff;
+}
+
+.wasActive{ 
+  fill:black;
+  stroke:black;
+  -webkit-animation-name: wasActive; /* Safari 4.0 - 8.0 */
+  -webkit-animation-duration:0.3s; /* Safari 4.0 - 8.0 */
+  animation-name: wasActive;
+  animation-duration:0.43;
+}
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes wasActive { 
+  from{fill:darkorange; stroke:darkorange}
+  to{fill:black; stroke:black;}
+}
+
+@keyframes wasActive { 
+  from{fill:darkorange; stroke:darkorange}
+  to{fill:#663300; stroke:#663300;}
+}
+
 .clickableBoundedInstant{
   cursor:pointer;
 }
