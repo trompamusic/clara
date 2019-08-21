@@ -21,7 +21,7 @@ const vrvOptions = {
 	unit: 6
 };
 
-class Variations extends Component {
+class Companion extends Component {
   constructor(props) {
     super(props);
     this.state = { 
@@ -63,6 +63,7 @@ class Variations extends Component {
     this.highlightDeletedNotes = this.highlightDeletedNotes.bind(this);
     this.monitorKeys= this.monitorKeys.bind(this);
     this.mapVelocity = this.mapVelocity.bind(this);
+    this.ensureArray = this.ensureArray.bind(this);
   }
 
   componentWillMount() { 
@@ -74,7 +75,7 @@ class Variations extends Component {
   }
 
   componentDidMount() { 
-    this.props.registerTraversal("performance/BeethovenWettbewerb/WoO80-all.json", {
+    this.props.registerTraversal(this.props.uri, {
       numHops:2, 
       objectPrefixWhitelist:["http://localhost:8080/"],
       objectPrefixBlacklist:["http://localhost:8080/videos/", "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei"]
@@ -200,7 +201,10 @@ class Variations extends Component {
     while(boundingBoxesWrapper.firstChild) { 
       boundingBoxesWrapper.removeChild(boundingBoxesWrapper.firstChild)
     }
-    const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+    console.log("Selected performance: ", this.state.selectedPerformance)
+    const selectedSignal = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]);
+    const selectedInstant = this.ensureArray(selectedSignal[0]["http://purl.org/ontology/mo/time"]);
+    const selectedTimeline = this.ensureArray(selectedInstant[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"])[0]["@id"];
     const notes = ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note");
     Array.prototype.map.call(notes, (n) => { 
       // associate notes on this page with their instant duration
@@ -673,6 +677,10 @@ class Variations extends Component {
 		}
 	}
 
+  ensureArray(val) { 
+    return Array.isArray(val) ? val : [val]
+  }
+
   processTraversalOutcomes(outcomes) { 
     let segments = [];
     let performances= [];
@@ -754,4 +762,4 @@ function mapDispatchToProps(dispatch) {
     }, dispatch);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Variations);
+export default connect(mapStateToProps, mapDispatchToProps)(Companion);
