@@ -25,8 +25,8 @@ export default class PieceSelection extends Component {
         }
         <select name="pieceSelect" onChange={ this.handlePieceSelected }>
           <option value="">Select a piece...</option>
-          <option key="http://localhost:8080/performance/BeethovenWettbewerb/WoO80-all.json"  value="http://localhost:8080/performance/BeethovenWettbewerb/WoO80-all.json"> WoO 80</option>
-          <option key="http://localhost:8080/performance/BeethovenWettbewerb/Op126Nr3-all.json"  value="http://localhost:8080/performance/BeethovenWettbewerb/Op126Nr3-all.json" onChange={this.handlePieceSelected}>Op 126 Nr 3</option>
+          <option key="http://localhost:8080/performance/WoO80-new.json"  value="http://localhost:8080/performance/WoO80-new.json"> WoO 80</option>
+          <option key="http://localhost:8080/performance/Op126Nr3.json"  value="http://localhost:8080/performance/Op126Nr3.json">Op 126 Nr 3</option>
         </select>
       </div>
     )

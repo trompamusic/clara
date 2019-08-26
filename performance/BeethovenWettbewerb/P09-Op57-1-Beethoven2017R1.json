@@ -1,0 +1,47 @@
+[
+  {
+    "@id": "http://localhost:8080/performance/BeethovenWettbewerb/P09-Op57-1-Beethoven2017R1.json#Signal",
+    "http://purl.org/ontology/mo/available_as": [
+      {
+        "@id": "http://localhost:8080/videos/BeethovenWettbewerb/R1_Fabian%20Mueller_MDW-1080_1.mp4"
+      }
+    ],
+    "http://purl.org/ontology/mo/time": [
+      {
+        "@id": "_:ub193bL19C13"
+      }
+    ]
+  },
+  {
+    "@id": "_:ub193bL19C13",
+    "@type": [
+      "http://purl.org/NET/c4dm/timeline.owl#Interval"
+    ],
+    "http://purl.org/NET/c4dm/timeline.owl#onTimeLine": [
+      {
+        "@id": "http://localhost:8080/timeline/BeethovenWettbewerb/09-Op57-1.json"
+      }
+    ]
+  },
+  {
+    "@id": "http://localhost:8080/performance/BeethovenWettbewerb/P09-Op57-1-Beethoven2017R1.json",
+    "@type": [
+      "http://purl.org/ontology/mo/Performance"
+    ],
+    "http://purl.org/ontology/mo/performance_of": [
+      {
+        "@id": "http://localhost:8080/score/Op57-1.json"
+      }
+    ],
+    "http://purl.org/ontology/mo/recorded_as": [
+      {
+        "@id": "http://localhost:8080/performance/BeethovenWettbewerb/P09-Op57-1-Beethoven2017R1.json#Signal"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Fabian Mueller - Op57-1"
+      }
+    ]
+  }
+]

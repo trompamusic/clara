@@ -1,0 +1,57 @@
+{
+  "@context": {
+    "frbr": "http://purl.org/vocab/frbr/core#",
+    "meld": "https://meld.linkedmusic.org/terms/",
+    "mo": "http://purl.org/ontology/mo/",
+    "perf": "http://localhost:8080/performance/BeethovenWettbewerb/",
+    "perftl": "http://localhost:8080/timeline/BeethovenWettbewerb/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "score": "http://localhost:8080/score/",
+    "so": "http://www.linkedmusic.org/ontologies/segment/",
+    "struct": "http://localhost:8080/structure/",
+    "tl": "http://purl.org/NET/c4dm/timeline.owl#",
+    "vid": "http://localhost:8080/videos/BeethovenWettbewerb/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@graph": [
+    {
+      "@id": "score:WoO80",
+      "@type": "mo:Score",
+      "meld:segments": {
+        "@id": "struct:WoO80.json"
+      },
+      "mo:published_as": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei"
+      }
+    },
+    {
+      "@id": "perf:P23.json",
+      "@type": "mo:Performance",
+      "meld:offset": "51.948",
+      "mo:performance_of": {
+        "@id": "score:WoO80"
+      },
+      "mo:recorded_as": {
+        "@id": "perf:P23Signal"
+      },
+      "rdfs:label": "Adela Liculescu: Round 1"
+    },
+    {
+      "@id": "_:ub2153bL19C11",
+      "@type": "tl:Interval",
+      "tl:onTimeLine": {
+        "@id": "perftl:P23-notes.json"
+      }
+    },
+    {
+      "@id": "perf:P23Signal",
+      "mo:available_as": {
+        "@id": "vid:R1_Adela%20Liculescu_MDW-1080_1.mp4"
+      },
+      "mo:time": {
+        "@id": "_:ub2153bL19C11"
+      }
+    }
+  ]
+}

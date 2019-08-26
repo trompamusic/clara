@@ -76,9 +76,14 @@ class Companion extends Component {
 
   componentDidMount() { 
     this.props.registerTraversal(this.props.uri, {
-      numHops:2, 
+      numHops:4, 
       objectPrefixWhitelist:["http://localhost:8080/"],
-      objectPrefixBlacklist:["http://localhost:8080/videos/", "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei"]
+      objectPrefixBlacklist:[
+        "http://localhost:8080/videos/", 
+        "http://localhost:8080/Beethoven_Op126Nr3.mei", 
+        "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei",
+        "http://localhost:8080/Beethoven_Op126Nr3#"
+      ]
     });
     document.addEventListener('keydown', this.monitorKeys);
   }
@@ -175,7 +180,9 @@ class Companion extends Component {
     // first, tidy up left-over deleted notes from previous invocations (e.g. on another performance)
     Array.prototype.map.call(document.querySelectorAll(".deleted"), (d) => { d.classList.remove("deleted") });
     if(this.state.selectedPerformance && this.state.showInsertedDeleted) { 
-      const thisTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+      //FIXME Skolemization bug currently causing two identical times (intervals), one for performance and one for signal. For now, pick the first
+      const thisTime = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
+      const thisTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
       const deletedNotesInstant = this.state.instantsByPerfTime[thisTimeline].filter( (i) => { 
         let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
         dur = parseInt(dur.substr(1, dur.length-2));
@@ -272,7 +279,7 @@ class Companion extends Component {
         console.log("On bounding box click, attempting to  seek to: ", nDur);
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         this.tick(this.state.selectedVideo, nDur);
-        this.player.seekTo(nDur); 
+        this.player.seekTo(Math.floor(nDur)); 
         // reset note velocities display for all notes after this one
         const notesOnPage = document.querySelectorAll(".note");
         const thisNote = document.querySelector("#" + noteId);
@@ -311,7 +318,7 @@ class Companion extends Component {
         n.onclick = (e) => { 
           console.log("On note click, attempting to  seek to: ", nDur);
           this.tick(this.state.selectedVideo, nDur);
-          this.player.seekTo(nDur);
+          this.player.seekTo(Math.floor(nDur));
         }
       }
     });
@@ -454,7 +461,7 @@ class Companion extends Component {
               onReady={ () => {
                 if(this.state.seekTo) { 
                   console.log("Render loop onReady: seeking to ", this.state.seekTo);
-                  this.player.seekTo(this.state.seekTo);
+                  this.player.seekTo(Math.floor(this.state.seekTo));
                   this.setState({seekTo: ""});
                 }
               }}
@@ -479,7 +486,7 @@ class Companion extends Component {
         // HACK: Offsets should be incorporated into data model through timeline maps
         startTime += parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         console.log("Trying to seek to: ", startTime, parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]));
-        this.player.seekTo(startTime);
+        this.player.seekTo(Math.floor(startTime));
         this.setState({currentSegment: selected[0]}); 
       }
     }
@@ -507,28 +514,31 @@ class Companion extends Component {
   }
 
   findInstantToSeekTo(segment, selectedPerformance = this.state.selectedPerformance) { 
-    const selectedTimeline = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+    //FIXME Skolemization bug currently causing two identical times (intervals), one for performance and one for signal. For now, pick the first
+    const thisTime = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
+    const selectedTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
     // find the time instant on the selected performance's timeline that corresponds to the
     // selected segment
     const timelineSegment = this.props.graph.outcomes[2]["@graph"].filter( (i) => { 
+      console.log("Inside filter. Looking at ", i)
       if(!("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in i) || 
          i["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]!==selectedTimeline) { 
         return false;
       }
       let segNotes = [];
         // do any of our instant's note embodiments match one of the segment's note embodiments?
+      console.log("Filtering on seg notes: ", segment["http://purl.org/vocab/frbr/core#embodiment"]["https://meld.linkedmusic.org/terms/notes"])
       segNotes = segment["http://purl.org/vocab/frbr/core#embodiment"]["https://meld.linkedmusic.org/terms/notes"].filter( (segNote) => {
         // ensure array (in chords, one timeline instance maps to multiple note instances)
-        i["http://purl.org/vocab/frbr/core#embodimentOf"] = Array.isArray(i["http://purl.org/vocab/frbr/core#embodimentOf"]) ? 
-          i["http://purl.org/vocab/frbr/core#embodimentOf"] :
-          [ i["http://purl.org/vocab/frbr/core#embodimentOf"] ] 
-        const embodimentFound = i["http://purl.org/vocab/frbr/core#embodimentOf"].filter( (e) => {
+        const embodiments = this.ensureArray(i["http://purl.org/vocab/frbr/core#embodimentOf"]) 
+        const embodimentFound = embodiments.filter( (e) => {
           return e["@id"] === segNote["@id"]
         })
         return embodimentFound.length // true if we found a matching embodiment
       })
       return segNotes.length; // true if we found a matching instance
     })
+
     // returned them in chronological order
     const sorted = timelineSegment.sort( (a, b) => { 
       let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
@@ -563,8 +573,10 @@ class Companion extends Component {
     this.props.tickTimedResource(id, t);
     if(this.state.selectedPerformance) { 
       // find closest corresponding instants (within a window of progressInterval milliseconds) on this timeline
-      const thisTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
-      const thisOffset = this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]
+      //FIXME Skolemization bug currently causing two identical times (intervals), one for performance and one for signal. For now, pick the first
+      const thisTime = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
+      const thisTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
+      const thisOffset = this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"];
       let closestInstantIndices = this.state.instantsByPerfTime[thisTimeline].reduce( (indices, instant, thisIndex) => { 
         let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
         dur = dur.substr(1, dur.length-2);
@@ -734,7 +746,10 @@ class Companion extends Component {
       // TODO this assumes all performances are of the same score - check that assumption;
       // to support multi-score, need to set state on every performance selection
       if(performances.length) { 
-        const currentScore = performances[0]["http://purl.org/ontology/mo/performance_of"]["http://purl.org/ontology/mo/published_as"]["@id"];
+        console.log("Performances:", performances)
+        const currentPerformance = this.ensureArray(performances[0]["http://purl.org/ontology/mo/performance_of"])[0]
+        console.log("Current performance: ", currentPerformance)
+        const currentScore = currentPerformance["http://purl.org/ontology/mo/published_as"]["@id"];
         this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
         this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore });
       }

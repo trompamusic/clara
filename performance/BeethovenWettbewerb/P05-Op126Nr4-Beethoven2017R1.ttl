@@ -1,0 +1,23 @@
+@prefix frbr: <http://purl.org/vocab/frbr/core#> .
+@prefix maps: <https://terms.trompamusic.eu/maps#> .
+@prefix meld: <https://meld.linkedmusic.org/terms/> .
+@prefix mo: <http://purl.org/ontology/mo/> .
+@prefix perftl: <http://localhost:8080/timeline/BeethovenWettbewerb/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix recording: <http://localhost:8080/videos/BeethovenWettbewerb/> .
+@prefix so: <http://www.linkedmusic.org/ontologies/segment/> .
+@prefix tl: <http://purl.org/NET/c4dm/timeline.owl#> .
+@prefix work: <http://localhost:8080/score/> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://localhost:8080/performance/BeethovenWettbewerb/P05-Op126Nr4-Beethoven2017R1.ttl> a mo:Performance ;
+    rdfs:label "Kyubin Chung - Op126Nr4" ;
+    mo:performance_of work:Op126Nr4.ttl ;
+    mo:recorded_as <http://localhost:8080/performance/BeethovenWettbewerb/P05-Op126Nr4-Beethoven2017R1.ttl#Signal> .
+
+<http://localhost:8080/performance/BeethovenWettbewerb/P05-Op126Nr4-Beethoven2017R1.ttl#Signal> mo:available_as <http://localhost:8080/videos/BeethovenWettbewerb/R1_Kyubin%20Chung_MDW-1080_1.mp4> ;
+    mo:time [ a tl:Interval ;
+            tl:onTimeLine <http://localhost:8080/timeline/BeethovenWettbewerb/05-Op126Nr4.ttl> ] .
+
