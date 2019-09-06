@@ -76,8 +76,8 @@ class Companion extends Component {
 
   componentDidMount() { 
     this.props.registerTraversal(this.props.uri, {
-      numHops:4, 
-      objectPrefixWhitelist:["http://localhost:8080/"],
+      numHops:5, 
+      objectPrefixWhitelist:["http://localhost:8080/", "http://localhost:4000"],
       objectPrefixBlacklist:[
         "http://localhost:8080/videos/", 
         "http://localhost:8080/Beethoven_Op126Nr3.mei", 

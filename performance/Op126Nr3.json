@@ -22,7 +22,15 @@
   ],
   "dcterm:title": "Performances of Sechs Bagatellen (Opus 126 Nr 3) at the International Beethoven Festival 2017",
   "ldp:contains": [
-    { "@id": "perf:P06-Op126Nr3-Beethoven2017R1.json" }
+    { "@id": "perf:P01-Op126Nr3-Beethoven2017R1.json" },
+    { "@id": "perf:P02-Op126Nr3-Beethoven2017R1.json" },
+    { "@id": "perf:P05-Op126Nr3-Beethoven2017R1.json" },
+    { "@id": "perf:P06-Op126Nr3-Beethoven2017R1.json" },
+    { "@id": "perf:P14-Op126Nr3-Beethoven2017R1.json" },
+    { "@id": "perf:P16-Op126Nr3-Beethoven2017R1.json" },
+    { "@id": "perf:P19-Op126Nr3-Beethoven2017R1.json" },
+    { "@id": "perf:P26-Op126Nr3-Beethoven2017R1.json" },
+    { "@id": "perf:P28-Op126Nr3-Beethoven2017R1.json" }
   ]
 }
 
