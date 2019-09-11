@@ -11,11 +11,13 @@ import Score from 'meld-clients-core/src/containers/score';
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/src/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
+const traversalUri = "http://localhost:8080/performance/CSchumann200.allgraph.json"
+
 
 const vrvOptions = {
 	scale: 45,
   adjustPageHeight: 1,
-	pageHeight: 1080,
+	pageHeight: 1150,
 	pageWidth: 2200,
 	noFooter: 1,
 	unit: 6
@@ -75,14 +77,15 @@ class Companion extends Component {
   }
 
   componentDidMount() { 
-    this.props.registerTraversal(this.props.uri, {
-      numHops:5, 
+    this.props.registerTraversal(traversalUri, {
+      numHops:0, 
       objectPrefixWhitelist:["http://localhost:8080/", "http://localhost:4000"],
       objectPrefixBlacklist:[
         "http://localhost:8080/videos/", 
         "http://localhost:8080/Beethoven_Op126Nr3.mei", 
         "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei",
-        "http://localhost:8080/Beethoven_Op126Nr3#"
+        "http://localhost:8080/Beethoven_Op126Nr3#",
+        "http://localhost:8080/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei"
       ]
     });
     document.addEventListener('keydown', this.monitorKeys);
@@ -93,7 +96,6 @@ class Companion extends Component {
       prevProps.traversalPool.running > 0 && this.props.traversalPool.running === 0) { 
       // finished all traversals
       this.setState({ "loading": false });
-      console.log("Attempting to process outcomes:", this.props.graph.outcomes);
       this.props.checkTraversalObjectives(this.props.graph.graph, this.props.graph.objectives);
     }
     if("graph" in prevProps) { 
@@ -146,7 +148,6 @@ class Companion extends Component {
   }
 
   monitorKeys(e) { 
-    console.log("got: ", e);
     if("score" in this.props) { 
       switch(e.which) { 
         case 37: // left arrow
@@ -189,7 +190,6 @@ class Companion extends Component {
         return dur === -1; // all deleted notes "occur" at this instant
       })
       if(deletedNotesInstant.length) { // could be 0 in a perfect performance...
-        console.log("deleted notes instant: ", deletedNotesInstant);
         const deletedNotes = deletedNotesInstant[0]["http://purl.org/vocab/frbr/core#embodimentOf"];
         deletedNotes.map( (n) => { 
           let noteOnPage = document.getElementById(n["@id"].substr(n["@id"].indexOf("#")+1));
@@ -296,8 +296,7 @@ class Companion extends Component {
         clickableBoundDiv.setAttribute("title", "This note was not sounded during the selected performance");
       } else { 
         clickableBoundDiv.setAttribute("title", "time: " + nDur.substr(1, nDur.length-2) + 
-        " velocity: " + parseFloat(this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#velocity"]) + 
-        " confidence: " + parseFloat(this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"]));
+        " velocity: " + parseFloat(this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#velocity"])); 
       }
       // only add confidence visualisation if user wants us to
       if(this.state.showConfidence) {
@@ -343,9 +342,9 @@ class Companion extends Component {
             ? <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
             : <div className="loadingMsg">Loading score, please wait...</div>
           }
-        <div id="pageControlsWrapper" ref="pageControlsWrapper">
+        <div id="pageControlsWrapper" ref="pageControlsWrapper" className="following">
           { this.props.score.pageNum > 1 
-            ? <div id="prev" ref="prev" onClick={() => {
+            ? <div id="prev" ref="prev" className="following" onClick={() => {
                 this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
               }}> <img src="/static/prev.svg" alt="Previous page"/></div>
             : <div id="prev" />
@@ -355,7 +354,7 @@ class Companion extends Component {
               : <span id="pageNum"/>
           }
           { this.props.score.pageCount === 0 || this.props.score.pageNum < this.props.score.pageCount
-          ? <div id="next" ref="next" onClick={(e) => {
+          ? <div id="next" ref="next" className="following" onClick={(e) => {
               this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
             }}> <img src="/static/next.svg" alt="Next page"/></div>
           : <div id="next" />
@@ -401,43 +400,6 @@ class Companion extends Component {
                     />
                     Score-following
                   </span>
-                  <span id="confidenceToggle">
-                      <input 
-                        type="checkbox" 
-                        ref="showConfidenceToggle"
-                        defaultChecked={ this.state.showConfidence }
-                        onChange={ () => { 
-                          this.setState({ showConfidence: !this.state.showConfidence});
-                        }}
-                      />
-                      Alignment confidence
-                  </span>
-                  <span id="velocitiesToggle">
-                      <input 
-                        type="checkbox" 
-                        ref="showVelocitiesToggle"
-                        defaultChecked={ this.state.showVelocities }
-                        onChange={ () => { 
-                          this.setState({ showVelocities: !this.state.showVelocities});
-                        }}
-                      />
-                      Note velocities
-                  </span>
-                  <span id="insertedDeletedToggle">
-                      <input 
-                        type="checkbox" 
-                        ref="showInsertedDeletedToggle"
-                        defaultChecked={ this.state.showInsertedDeleted}
-                        onChange={ () => { 
-                          if(this.state.showInsertedDeleted) { 
-                            // if we're unselecting, reset any deleted notes
-                            Array.prototype.map.call(document.querySelectorAll(".deleted"), (d) => { d.classList.remove("deleted") });
-                          } 
-                          this.setState({ showInsertedDeleted: !this.state.showInsertedDeleted}, () => { this.highlightDeletedNotes() });
-                        }}
-                      />
-                      Inserted / deleted notes
-                  </span>
                 </span>
               : <span>
                   <span id="scoreFollowToggle" className="hidden"/>
@@ -479,13 +441,11 @@ class Companion extends Component {
     // if a video is selected, jump to the beginning of this segment in its performance timeline
     if(this.state.selectedPerformance)  {
       const timelineSegment = this.findInstantToSeekTo(selected[0]);
-      console.log("timelineSegment: ", timelineSegment)
       if(timelineSegment.length) { 
         const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         // HACK: Offsets should be incorporated into data model through timeline maps
         startTime += parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
-        console.log("Trying to seek to: ", startTime, parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]));
         this.player.seekTo(Math.floor(startTime));
         this.setState({currentSegment: selected[0]}); 
       }
@@ -520,14 +480,12 @@ class Companion extends Component {
     // find the time instant on the selected performance's timeline that corresponds to the
     // selected segment
     const timelineSegment = this.props.graph.outcomes[2]["@graph"].filter( (i) => { 
-      console.log("Inside filter. Looking at ", i)
       if(!("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in i) || 
          i["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]!==selectedTimeline) { 
         return false;
       }
       let segNotes = [];
         // do any of our instant's note embodiments match one of the segment's note embodiments?
-      console.log("Filtering on seg notes: ", segment["http://purl.org/vocab/frbr/core#embodiment"]["https://meld.linkedmusic.org/terms/notes"])
       segNotes = segment["http://purl.org/vocab/frbr/core#embodiment"]["https://meld.linkedmusic.org/terms/notes"].filter( (segNote) => {
         // ensure array (in chords, one timeline instance maps to multiple note instances)
         const embodiments = this.ensureArray(i["http://purl.org/vocab/frbr/core#embodimentOf"]) 
@@ -563,7 +521,7 @@ class Companion extends Component {
 
   tick(id,t) {
     if(!("@id" in this.state.currentSegment)) { 
-      return // ignore unless segment selected
+//      return // ignore unless segment selected
     }
     t += this.state.videoOffset;
     let newState = { lastMediaTick: t }; // keep track of this time tick)
@@ -667,7 +625,7 @@ class Companion extends Component {
           //console.log("Found section: ", sibling, " measure: ", currentMeasure, " note: ", currentNoteElement);
           const sectionId = sibling ? sibling.getAttribute("id") : "";
         //  console.log("Note: ", currentNoteElement,  "Measure: ", currentMeasure, " Section ID: ", sectionId);
-          if(sectionId && sectionId  !== this.state.currentSegment["@id"].substr(this.state.currentSegment["@id"].lastIndexOf("#") + 1)) { 
+          if(sectionId && (!("@id" in this.state.currentSegment) || sectionId  !== this.state.currentSegment["@id"].substr(this.state.currentSegment["@id"].lastIndexOf("#") + 1))) { 
             // we've entered a new section (segment)
             // find the corresponding segment in our outcomes
             const newSeg = this.props.graph.outcomes[1]["@graph"].filter( (s) => {
