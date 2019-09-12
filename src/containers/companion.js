@@ -11,7 +11,7 @@ import Score from 'meld-clients-core/src/containers/score';
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/src/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
-const traversalUri = "http://localhost:8080/performance/CSchumann200.allgraph.json"
+const traversalUri = "http://localhost:8080/rdfcache/CSchumann200.min.json"
 
 
 const vrvOptions = {
@@ -82,10 +82,7 @@ class Companion extends Component {
       objectPrefixWhitelist:["http://localhost:8080/", "http://localhost:4000"],
       objectPrefixBlacklist:[
         "http://localhost:8080/videos/", 
-        "http://localhost:8080/Beethoven_Op126Nr3.mei", 
-        "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei",
-        "http://localhost:8080/Beethoven_Op126Nr3#",
-        "http://localhost:8080/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei"
+        "http://localhost:8080/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei"
       ]
     });
     document.addEventListener('keydown', this.monitorKeys);
@@ -334,8 +331,10 @@ class Companion extends Component {
       return(
         <div id="wrapper">
           <div id="logoWrapper">
-            <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" />
-            <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" />
+            <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" 
+              onClick={() => window.open("https://trompamusic.eu/", "_blank")} />
+            <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" 
+              onClick={() => window.open("http://www.mdw.ac.at/", "_blank")} />
           </div>
           <div id="instantBoundingBoxes" />
           { this.state.currentScore 
@@ -404,6 +403,7 @@ class Companion extends Component {
               : <span>
                   <span id="scoreFollowToggle" className="hidden"/>
                   <span id="confidenceToggle" className="hidden" />
+                  <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank">More information</a></span>
                 </span>
               }
               </div>
@@ -467,6 +467,7 @@ class Companion extends Component {
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         startTime += parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         newState["seekTo"] = startTime;
+        console.log("TimelineSegment: ", timelineSegment, "Current segment: ", this.state.currentSegment, ", seeking to: ", startTime);
       }
     }
     document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
@@ -475,7 +476,7 @@ class Companion extends Component {
 
   findInstantToSeekTo(segment, selectedPerformance = this.state.selectedPerformance) { 
     //FIXME Skolemization bug currently causing two identical times (intervals), one for performance and one for signal. For now, pick the first
-    const thisTime = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
+    const thisTime = this.ensureArray(selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
     const selectedTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
     // find the time instant on the selected performance's timeline that corresponds to the
     // selected segment
@@ -496,6 +497,8 @@ class Companion extends Component {
       })
       return segNotes.length; // true if we found a matching instance
     })
+
+    console.log("timeline segments found: ", timelineSegment)
 
     // returned them in chronological order
     const sorted = timelineSegment.sort( (a, b) => { 
