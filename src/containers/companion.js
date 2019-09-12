@@ -397,7 +397,7 @@ class Companion extends Component {
                         this.setState({ scoreFollowing: !this.state.scoreFollowing }) 
                       }}
                     />
-                    Score-following
+                    Automatic page turning
                   </span>
                 </span>
               : <span>
