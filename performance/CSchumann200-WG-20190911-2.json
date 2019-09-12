@@ -1,36 +1,12 @@
 [
   {
-    "@id": "http://localhost:8080/performance/CSchumann200-WG-20190911-2.json#Signal",
-    "http://purl.org/ontology/mo/available_as": [
-      {
-        "@id": "http://localhost:8080/videos/SchumannClara_Romanze-WG-20190911-2.mp4"
-      }
-    ],
-    "http://purl.org/ontology/mo/time": [
-      {
-        "@id": "_:ub5bL20C13"
-      }
-    ]
-  },
-  {
-    "@id": "_:ub5bL20C13",
-    "@type": [
-      "http://purl.org/NET/c4dm/timeline.owl#Interval"
-    ],
-    "http://purl.org/NET/c4dm/timeline.owl#onTimeLine": [
-      {
-        "@id": "http://localhost:8080/timeline/CSchumann200-WG-20190911-2.json"
-      }
-    ]
-  },
-  {
     "@id": "http://localhost:8080/performance/CSchumann200-WG-20190911-2.json",
     "@type": [
       "http://purl.org/ontology/mo/Performance"
     ],
     "http://purl.org/ontology/mo/performance_of": [
       {
-        "@id": "http://localhost:8080/score/OhneOpus.json"
+        "@id": "http://localhost:8080/score/SchumannClara_Romanze.json"
       }
     ],
     "http://purl.org/ontology/mo/recorded_as": [
@@ -40,12 +16,36 @@
     ],
     "http://www.w3.org/2000/01/rdf-schema#label": [
       {
-        "@value": "Goebl Werner - Take 2"
+        "@value": "Werner Goebl - Take 2"
       }
     ],
     "https://meld.linkedmusic.org/terms/offset": [
       {
-        "@value": "-6.823"
+        "@value": "-3.274"
+      }
+    ]
+  },
+  {
+    "@id": "http://localhost:8080/performance/CSchumann200-WG-20190911-2.json#Signal",
+    "http://purl.org/ontology/mo/available_as": [
+      {
+        "@id": "http://localhost:8080/videos/SchumannClara_Romanze-WG-Take2.mp4"
+      }
+    ],
+    "http://purl.org/ontology/mo/time": [
+      {
+        "@id": "_:ub3bL20C13"
+      }
+    ]
+  },
+  {
+    "@id": "_:ub3bL20C13",
+    "@type": [
+      "http://purl.org/NET/c4dm/timeline.owl#Interval"
+    ],
+    "http://purl.org/NET/c4dm/timeline.owl#onTimeLine": [
+      {
+        "@id": "http://localhost:8080/timeline/CSchumann200-WG-20190911-2.json"
       }
     ]
   }

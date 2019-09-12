@@ -403,9 +403,9 @@ class Companion extends Component {
               : <span>
                   <span id="scoreFollowToggle" className="hidden"/>
                   <span id="confidenceToggle" className="hidden" />
-                  <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank">More information</a></span>
                 </span>
               }
+                <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank">More information</a></span>
               </div>
           }
           <div className="videoWrapper">
@@ -428,6 +428,21 @@ class Companion extends Component {
                 }
               }}
             />
+          </div>
+          <div className="fundingStatement">
+            <table style={ {marginLeft: "20px"} }>
+              <tbody>
+                <tr>
+                  <td>
+                    <img src="https://ec.europa.eu/research/participants/docs/h2020-funding-guide/imgs/eu-flag.jpg" width="100px"/>
+                  </td>
+                  <td style={ {width: "830px", border: "0px"} }>
+                      <div style={ {marginLeft: "20px", fontSize: "0.8em"} }>This project has received funding from the&nbsp;European Union's Horizon 2020 research and innovation programme<i>&nbsp;</i><em>H2020-EU.3.6.3.1. - Study European heritage, memory, identity, integration and cultural interaction and translation, including its representations in cultural and scientific collections, archives and museums, to better inform and understand the present by richer interpretations of the past</em> under grant agreement No 770376.
+                      </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       )

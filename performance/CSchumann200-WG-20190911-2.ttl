@@ -1,0 +1,24 @@
+@prefix frbr: <http://purl.org/vocab/frbr/core#> .
+@prefix maps: <https://terms.trompamusic.eu/maps#> .
+@prefix meld: <https://meld.linkedmusic.org/terms/> .
+@prefix mo: <http://purl.org/ontology/mo/> .
+@prefix perftl: <http://localhost:8080/timeline/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix recording: <http://localhost:8080/videos/> .
+@prefix so: <http://www.linkedmusic.org/ontologies/segment/> .
+@prefix tl: <http://purl.org/NET/c4dm/timeline.owl#> .
+@prefix work: <http://localhost:8080/score/> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<http://localhost:8080/performance/CSchumann200-WG-20190911-2.ttl> a mo:Performance ;
+    rdfs:label "Werner Goebl - Take 2" ;
+    mo:performance_of work:SchumannClara_Romanze.ttl ;
+    mo:recorded_as <http://localhost:8080/performance/CSchumann200-WG-20190911-2.ttl#Signal> ;
+    meld:offset "-3.274" .
+
+<http://localhost:8080/performance/CSchumann200-WG-20190911-2.ttl#Signal> mo:available_as recording:SchumannClara_Romanze-WG-Take2.mp4 ;
+    mo:time [ a tl:Interval ;
+            tl:onTimeLine perftl:CSchumann200-WG-20190911-2.ttl ] .
+
