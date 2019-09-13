@@ -11,7 +11,7 @@ import Score from 'meld-clients-core/src/containers/score';
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/src/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
-const traversalUri = "https://trompa.mdw.ac.at/rdfcache/CSchumann200.min.json"
+const traversalUri = "http://localhost:8080/rdfcache/CSchumann200.min.json"
 
 
 const vrvOptions = {
@@ -79,10 +79,10 @@ class Companion extends Component {
   componentDidMount() { 
     this.props.registerTraversal(traversalUri, {
       numHops:0, 
-      objectPrefixWhitelist:["https://trompa.mdw.ac.at/"],
+      objectPrefixWhitelist:["http://localhost:8080/"],
       objectPrefixBlacklist:[
-        "https://trompa.mdw.ac.at/videos/", 
-        "https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei"
+        "http://localhost:8080/videos/", 
+        "http://localhost:8080/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei"
       ]
     });
     document.addEventListener('keydown', this.monitorKeys);
@@ -370,7 +370,7 @@ class Companion extends Component {
                     this.state.segments.map( (seg) => { 
                       return (
                         <option key={ seg["@id"] } value={ seg["@id"] }>
-                          { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("-") +1) }
+                          { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("#") +1) }
                         </option>
                       )
                     })
