@@ -41,8 +41,8 @@ body {
 }
 
 .scorepane { 
-  min-height: 500px;
-  max-height: 500px;
+  min-height: 360px;
+  max-height: 360px;
 }
 
 .errorDetected { 
@@ -91,9 +91,9 @@ body {
   cursor:pointer;
 }
 
-#pageControlsWrapper #prev.following, #pageControlsWrapper #next.following { 
-  visibility: hidden;
-}
+#pageControlsWrapper.following #prev, #pageControlsWrapper.following #next {
+ cursor:default;
+} 
 
 #selectWrapper { 
   clear:both;

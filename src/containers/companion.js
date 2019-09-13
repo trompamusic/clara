@@ -17,7 +17,7 @@ const traversalUri = "https://trompa.mdw.ac.at/rdfcache/CSchumann200.min.json"
 const vrvOptions = {
 	scale: 45,
   adjustPageHeight: 1,
-	pageHeight: 1150,
+	pageHeight: 880,
 	pageWidth: 2200,
 	noFooter: 1,
 	unit: 6
@@ -132,8 +132,6 @@ class Companion extends Component {
     }
     if(prevState.scoreFollowing !== this.state.scoreFollowing) { 
       this.refs.pageControlsWrapper.classList.toggle("following");
-      "next" in this.refs && this.refs.next.classList.toggle("following");
-      "prev" in this.refs && this.refs.prev.classList.toggle("following");
       this.refs.scoreFollowingToggle.checked = this.state.scoreFollowing;
     }
 
@@ -343,8 +341,10 @@ class Companion extends Component {
           }
         <div id="pageControlsWrapper" ref="pageControlsWrapper" className="following">
           { this.props.score.pageNum > 1 
-            ? <div id="prev" ref="prev" className="following" onClick={() => {
-                this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
+            ? <div id="prev" ref="prev" onClick={() => {
+                if(!this.state.scoreFollowing) { 
+                  this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
+                }
               }}> <img src="/static/prev.svg" alt="Previous page"/></div>
             : <div id="prev" />
           }
@@ -353,8 +353,10 @@ class Companion extends Component {
               : <span id="pageNum"/>
           }
           { this.props.score.pageCount === 0 || this.props.score.pageNum < this.props.score.pageCount
-          ? <div id="next" ref="next" className="following" onClick={(e) => {
-              this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
+          ? <div id="next" ref="next" onClick={() => {
+              if(!this.state.scoreFollowing) { 
+                this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
+              }
             }}> <img src="/static/next.svg" alt="Next page"/></div>
           : <div id="next" />
           }
@@ -386,8 +388,7 @@ class Companion extends Component {
                     })
                   }
                 </select>
-              { this.state.selectedPerformance 
-              ? <span> 
+                <span> 
                   <span id="scoreFollowToggle">
                     <input 
                       type="checkbox" 
@@ -400,11 +401,6 @@ class Companion extends Component {
                     Automatic page turning
                   </span>
                 </span>
-              : <span>
-                  <span id="scoreFollowToggle" className="hidden"/>
-                  <span id="confidenceToggle" className="hidden" />
-                </span>
-              }
                 <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank">More information</a></span>
               </div>
           }
