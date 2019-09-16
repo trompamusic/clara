@@ -515,7 +515,7 @@ class Companion extends Component {
 
   findInstantToSeekTo(segment, selectedPerformance = this.state.selectedPerformance) { 
     //FIXME Skolemization bug currently causing two identical times (intervals), one for performance and one for signal. For now, pick the first
-    const thisTime = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
+    const thisTime = this.ensureArray(selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
     const selectedTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
     // find the time instant on the selected performance's timeline that corresponds to the
     // selected segment
