@@ -1,37 +1,19 @@
 import React, { Component } from 'react';
-import Companion from './companion';
+import Companion from './realtimeCompanion';
 
 export default class PieceSelection extends Component {
   constructor(props) { 
     super(props);
     this.state = { 
-      selectedPiece: "",
-      test: ""
+      selectedPiece: ""
     }
     this.handlePieceSelected = this.handlePieceSelected.bind(this);
-    this.eventSource = new EventSource("http://localhost/sservant") // event source for real-time server-sent events (SSE)
   }
 
   handlePieceSelected(e) { 
     const selected = e.target.value;
     console.log("Piece selected: ", selected);
     this.setState({"selectedPiece": selected});
-  }
-
-  componentDidMount() {
-    this.eventSource.onopen = e => { 
-      console.log("Received SSE open: ", e)
-      //this.ingestInstantsToTimeline(JSON.parse(e.data));
-    }
-    this.eventSource.onmessage = e => { 
-      console.log("Received SSE message: ", e)
-      this.setState({test: this.state.test += " " +e.data});
-      //this.ingestInstantsToTimeline(JSON.parse(e.data));
-    }
-    this.eventSource.onerror = e => { 
-      console.log("Received SSE error: ", e)
-      //this.ingestInstantsToTimeline(JSON.parse(e.data));
-    }
   }
 
   render() { 
@@ -44,8 +26,9 @@ export default class PieceSelection extends Component {
         <div>Message: { this.state.test }</div>
         <select name="pieceSelect" onChange={ this.handlePieceSelected }>
           <option value="">Select a piece...</option>
-          <option key="http://localhost:8080/performance/WoO80-new.json"  value="http://localhost:8080/performance/WoO80-new.json"> WoO 80</option>
-          <option key="http://localhost:8080/performance/Op126Nr3.json"  value="http://localhost:8080/performance/Op126Nr3.json">Op 126 Nr 3</option>
+          <option key="http://localhost/performance/WoO80-realtime-container.json"  value="http://localhost/performance/WoO80-realtime-container.json">L. van Beethoven - WoO 80</option>
+          <option key="http://localhost/performance/Op126Nr3-realtime.json"  value="http://localhost/performance/Op126Nr3-realtime.json">L. van Beethoven - Op 126 Nr 3</option>
+          <option key="http://localhost/performance/CSchumann-Romanze-realtime.json"  value="http://localhost/performance/CSchumann-Romanze-realtime.json">C. Schumann - Romanze ohne Opuszahl</option>
         </select>
       </div>
     )
