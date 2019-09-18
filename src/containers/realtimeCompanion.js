@@ -92,15 +92,13 @@ class RealtimeCompanion extends Component {
     // Set up Server-Sent Event (SSE) handlers
     this.eventSource.onopen = e => { 
       console.log("Received SSE open: ", e)
-      //this.handleRealtimeInstant(JSON.parse(e.data));
     }
     this.eventSource.onmessage = e => { 
-      console.log("Received SSE message: ", e)
-      this.handleRealtimeInstant(JSON.parse(e.data));
+      console.log("Received SSE message: ", e.data)
+      this.handleRealtimeInstant(e.data);
     }
     this.eventSource.onerror = e => { 
       console.log("Received SSE error: ", e)
-      //this.handleRealtimeInstant(JSON.parse(e.data));
     }
     
     document.addEventListener('keydown', this.monitorKeys);
@@ -194,7 +192,7 @@ class RealtimeCompanion extends Component {
 
   handleRealtimeInstant(instant) { 
     // handle instants returned in latest SSE push
-    const instantJson = json.loads(instant);
+    const instantJson = JSON.parse(instant);
     console.log("Received JSON from SSE push: ", instantJson);
     const noteIds = this.ensureArray(instantJson["http://purl.org/vocab/frbr/core#embodimentOf"]);
     let noteToFlipTo = "";
@@ -203,7 +201,7 @@ class RealtimeCompanion extends Component {
     noteIds.map((n) => { 
       const currentNoteId =n["@id"].substr(n["@id"].lastIndexOf("#")+1);
     // highlight the current note if on current page
-      currentNoteElement = document.getElementById(currentNoteId);
+      let currentNoteElement = document.getElementById(currentNoteId);
       if(currentNoteElement) { 
         currentNoteElement.classList.add("active");
         if(this.state.showVelocities) { 
@@ -766,3 +764,4 @@ function mapDispatchToProps(dispatch) {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(RealtimeCompanion);
+
