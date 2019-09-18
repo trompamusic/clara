@@ -85,7 +85,8 @@ class RealtimeCompanion extends Component {
       objectPrefixBlacklist:[
         "http://localhost/videos/", 
         "http://localhost/mei/",
-        "http://localhost/structure/WoO80.json/genid/"
+        "http://localhost/structure/WoO80.json/genid/",
+        "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.json/genid/"
       ]
     });
 

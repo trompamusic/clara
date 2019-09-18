@@ -28,7 +28,7 @@ export default class PieceSelection extends Component {
           <option value="">Select a piece...</option>
           <option key="http://localhost/performance/WoO80-realtime-container.json"  value="http://localhost/performance/WoO80-realtime-container.json">L. van Beethoven - WoO 80</option>
           <option key="http://localhost/performance/Op126Nr3-realtime.json"  value="http://localhost/performance/Op126Nr3-realtime.json">L. van Beethoven - Op 126 Nr 3</option>
-          <option key="http://localhost/performance/CSchumann-Romanze-realtime.json"  value="http://localhost/performance/CSchumann-Romanze-realtime.json">C. Schumann - Romanze ohne Opuszahl</option>
+          <option key="http://localhost/performance/CSchumann-realtime-container.json"  value="http://localhost/performance/CSchumann-realtime-container.json">C. Schumann - Romanze ohne Opuszahl</option>
         </select>
       </div>
     )
