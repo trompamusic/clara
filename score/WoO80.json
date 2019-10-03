@@ -13,7 +13,7 @@
         "@id": "struct:WoO80.json"
       },
       "mo:published_as": {
-        "@id": "http://localhost:4000/724d5bff-11b2-4df3-a06d-8394a88092c3"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei"
       }
     }
   ]
