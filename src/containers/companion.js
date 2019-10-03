@@ -133,8 +133,6 @@ class Companion extends Component {
     }
     if(prevState.scoreFollowing !== this.state.scoreFollowing) { 
       this.refs.pageControlsWrapper.classList.toggle("following");
-      "next" in this.refs && this.refs.next.classList.toggle("following");
-      "prev" in this.refs && this.refs.prev.classList.toggle("following");
       this.refs.scoreFollowingToggle.checked = this.state.scoreFollowing;
     }
 
@@ -335,18 +333,22 @@ class Companion extends Component {
       return(
         <div id="wrapper">
           <div id="logoWrapper">
-            <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" />
-            <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" />
+            <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" 
+              onClick={() => window.open("https://trompamusic.eu/", "_blank")} />
+            <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" 
+              onClick={() => window.open("http://www.mdw.ac.at/", "_blank")} />
           </div>
           <div id="instantBoundingBoxes" />
           { this.state.currentScore 
             ? <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
             : <div className="loadingMsg">Loading score, please wait...</div>
           }
-        <div id="pageControlsWrapper" ref="pageControlsWrapper">
+        <div id="pageControlsWrapper" ref="pageControlsWrapper" className="following">
           { this.props.score.pageNum > 1 
             ? <div id="prev" ref="prev" onClick={() => {
-                this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
+                if(!this.state.scoreFollowing) { 
+                  this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
+                }
               }}> <img src="/static/prev.svg" alt="Previous page"/></div>
             : <div id="prev" />
           }
@@ -355,8 +357,10 @@ class Companion extends Component {
               : <span id="pageNum"/>
           }
           { this.props.score.pageCount === 0 || this.props.score.pageNum < this.props.score.pageCount
-          ? <div id="next" ref="next" onClick={(e) => {
-              this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
+          ? <div id="next" ref="next" onClick={() => {
+              if(!this.state.scoreFollowing) { 
+                this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
+              }
             }}> <img src="/static/next.svg" alt="Next page"/></div>
           : <div id="next" />
           }
@@ -388,8 +392,7 @@ class Companion extends Component {
                     })
                   }
                 </select>
-              { this.state.selectedPerformance 
-              ? <span> 
+              	<span> 
                   <span id="scoreFollowToggle">
                     <input 
                       type="checkbox" 
@@ -439,11 +442,7 @@ class Companion extends Component {
                       Inserted / deleted notes
                   </span>
                 </span>
-              : <span>
-                  <span id="scoreFollowToggle" className="hidden"/>
-                  <span id="confidenceToggle" className="hidden" />
-                </span>
-              }
+                <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank">More information</a></span>
               </div>
           }
           <div className="videoWrapper">
@@ -466,6 +465,21 @@ class Companion extends Component {
                 }
               }}
             />
+          </div>
+          <div className="fundingStatement">
+            <table style={ {marginLeft: "20px"} }>
+              <tbody>
+                <tr>
+                  <td>
+                    <img src="https://ec.europa.eu/research/participants/docs/h2020-funding-guide/imgs/eu-flag.jpg" width="100px"/>
+                  </td>
+                  <td style={ {width: "830px", border: "0px"} }>
+                      <div style={ {marginLeft: "20px", fontSize: "0.8em"} }>This project has received funding from the&nbsp;European Union's Horizon 2020 research and innovation programme<i>&nbsp;</i><em>H2020-EU.3.6.3.1. - Study European heritage, memory, identity, integration and cultural interaction and translation, including its representations in cultural and scientific collections, archives and museums, to better inform and understand the present by richer interpretations of the past</em> under grant agreement No 770376.
+                      </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       )
@@ -562,9 +576,6 @@ class Companion extends Component {
   }
 
   tick(id,t) {
-    if(!("@id" in this.state.currentSegment)) { 
-      return // ignore unless segment selected
-    }
     t += this.state.videoOffset;
     let newState = { lastMediaTick: t }; // keep track of this time tick)
     // dispatch a "TICK" action 
@@ -667,7 +678,7 @@ class Companion extends Component {
           //console.log("Found section: ", sibling, " measure: ", currentMeasure, " note: ", currentNoteElement);
           const sectionId = sibling ? sibling.getAttribute("id") : "";
         //  console.log("Note: ", currentNoteElement,  "Measure: ", currentMeasure, " Section ID: ", sectionId);
-          if(sectionId && sectionId  !== this.state.currentSegment["@id"].substr(this.state.currentSegment["@id"].lastIndexOf("#") + 1)) { 
+          if(sectionId && (!("@id" in this.state.currentSegment) || sectionId  !== this.state.currentSegment["@id"].substr(this.state.currentSegment["@id"].lastIndexOf("#") + 1))) { 
             // we've entered a new section (segment)
             // find the corresponding segment in our outcomes
             const newSeg = this.props.graph.outcomes[1]["@graph"].filter( (s) => {

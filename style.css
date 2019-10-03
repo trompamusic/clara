@@ -90,9 +90,9 @@ body {
   cursor:pointer;
 }
 
-#pageControlsWrapper #prev.following, #pageControlsWrapper #next.following { 
-  visibility: hidden;
-}
+#pageControlsWrapper.following #prev, #pageControlsWrapper.following #next {
+ cursor:default;
+} 
 
 #selectWrapper { 
   clear:both;
@@ -112,6 +112,7 @@ body {
   max-width: 950px;
   margin-left: 20px;
   z-index:-2;
+  cursor: pointer;
 }
 
 #logoWrapper #trompaLogo { 
