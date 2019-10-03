@@ -22,18 +22,14 @@
   ],
   "dcterm:title": "Performances of 32 Variations in C minor (WoO80) at the International Beethoven Festival 2017",
   "ldp:contains": [
-    { "@id": "perf:P23-performance.json" },
-    { "@id": "perf:P21-performance.json" },
-    { "@id": "perf:P12-performance.json" },
-    { "@id": "perf:P30-performance.json" },
-    { "@id": "perf:P15-performance.json" },
-    { "@id": "perf:P06-performance.json" },
-
-
-    { "@id": "perf:P11-performance.json" },
-    { "@id": "perf:P18-performance.json" },
-    { "@id": "perf:P03-performance.json" },
-    { "@id": "perf:P24-performance.json" },
-    { "@id": "perf:P07-performance.json" }
+    { "@id": "perf:P23-WoO80-Beethoven2017R1.json" },
+    { "@id": "perf:P21-WoO80-Beethoven2017R1.json" },
+    { "@id": "perf:P12-WoO80-Beethoven2017R1.json" },
+    { "@id": "perf:P30-WoO80-Beethoven2017R1.json" },
+    { "@id": "perf:P15-WoO80-Beethoven2017R1.json" },
+    { "@id": "perf:P06-WoO80-Beethoven2017R1.json" }
   ]
 }
+
+
+

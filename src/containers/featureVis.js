@@ -20,7 +20,7 @@ class FeatureVis extends Component {
       this.props.timelinesToVis.map( (tl) => { 
         // find the instants coresponding to notes on this page
         const instantsOnPage = this.props.notesOnPage.forEach( (note) => { 
-          console.log("Looking at note: ", note);
+          //console.log("Looking at note: ", note);
           return this.props.instantsByNoteId[tl][note.getAttribute("id")]
         })
         console.log("TL: ", tl, " Instants on page: ", instantsOnPage);

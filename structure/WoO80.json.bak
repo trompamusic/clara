@@ -1,0 +1,908 @@
+{
+  "@context": {
+    "WoO80": "http://localhost:8080/segment/WoO80/",
+    "frbr": "http://purl.org/vocab/frbr/core#",
+    "meld": "https://meld.linkedmusic.org/terms/",
+    "mo": "http://purl.org/ontology/mo/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "so": "http://www.linkedmusic.org/ontologies/segment/",
+    "struct": "http://localhost:8080/structure/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@graph": [
+    {
+      "@id": "_:ub1337bL210C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXVIII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL119C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXV"
+      }
+    },
+    {
+      "@id": "_:ub1337bL161C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXI"
+      }
+    },
+    {
+      "@id": "_:ub1337bL84C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarX"
+      }
+    },
+    {
+      "@id": "_:ub1337bL77C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarIX"
+      }
+    },
+    {
+      "@id": "_:ub1337bL112C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXIV"
+      }
+    },
+    {
+      "@id": "_:ub1337bL224C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXX"
+      }
+    },
+    {
+      "@id": "WoO80:VarXXXII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL238C18"
+      },
+      "rdfs:label": "Var. XXXII",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXXXI"
+      }
+    },
+    {
+      "@id": "WoO80:VarXXVIII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL210C18"
+      },
+      "rdfs:label": "Var. XXVIII",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXIX"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXXVII"
+      }
+    },
+    {
+      "@id": "WoO80:VarXVIII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL140C18"
+      },
+      "rdfs:label": "Var. XVIII",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXIX"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXVII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL189C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXV"
+      }
+    },
+    {
+      "@id": "_:ub1337bL91C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXI"
+      }
+    },
+    {
+      "@id": "WoO80:VarXIII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL105C18"
+      },
+      "rdfs:label": "Var. XIII",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXIV"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL42C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarIV"
+      }
+    },
+    {
+      "@id": "_:ub1337bL147C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXIX"
+      }
+    },
+    {
+      "@id": "WoO80:VarXXIII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL175C18"
+      },
+      "rdfs:label": "Var. XXIII",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXIV"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXXII"
+      }
+    },
+    {
+      "@id": "WoO80:VarXXX",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL224C18"
+      },
+      "rdfs:label": "Var. XXX",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXXI"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXXIX"
+      }
+    },
+    {
+      "@id": "WoO80:VarXII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL98C18"
+      },
+      "rdfs:label": "Var. XII",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXIII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXI"
+      }
+    },
+    {
+      "@id": "_:ub1337bL105C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXIII"
+      }
+    },
+    {
+      "@id": "WoO80:VarXXV",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL189C18"
+      },
+      "rdfs:label": "Var. XXV",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXVI"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXXIV"
+      }
+    },
+    {
+      "@id": "_:ub1337bL28C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL98C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXII"
+      }
+    },
+    {
+      "@id": "WoO80:VarXXII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL168C18"
+      },
+      "rdfs:label": "Var. XXII",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXIII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXXI"
+      }
+    },
+    {
+      "@id": "WoO80:VarXXIV",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL182C18"
+      },
+      "rdfs:label": "Var. XXIV",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXV"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXXIII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL231C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXXI"
+      }
+    },
+    {
+      "@id": "WoO80:VarXIV",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL112C18"
+      },
+      "rdfs:label": "Var. XIV",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXV"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXIII"
+      }
+    },
+    {
+      "@id": "WoO80:Thema",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL15C18"
+      },
+      "rdfs:label": "Thema",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarI"
+      }
+    },
+    {
+      "@id": "struct:WoO80",
+      "@type": "so:SegmentLine"
+    },
+    {
+      "@id": "WoO80:VarXXI",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL161C18"
+      },
+      "rdfs:label": "Var. XXI",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXX"
+      }
+    },
+    {
+      "@id": "WoO80:VarXXVI",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL196C18"
+      },
+      "rdfs:label": "Var. XXVI",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXVII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXXV"
+      }
+    },
+    {
+      "@id": "_:ub1337bL175C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXIII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL56C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarVI"
+      }
+    },
+    {
+      "@id": "_:ub1337bL238C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXXII"
+      }
+    },
+    {
+      "@id": "WoO80:VarXXXI",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL231C18"
+      },
+      "rdfs:label": "Var. XXXI",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXXII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXXX"
+      }
+    },
+    {
+      "@id": "WoO80:VarIII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL35C18"
+      },
+      "rdfs:label": "Var. III",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarIV"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarII"
+      }
+    },
+    {
+      "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei",
+      "@type": "mo:PublishedScore"
+    },
+    {
+      "@id": "WoO80:VarVI",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL56C18"
+      },
+      "rdfs:label": "Var. VI",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarVII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarV"
+      }
+    },
+    {
+      "@id": "WoO80:VarI",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL21C18"
+      },
+      "rdfs:label": "Var. I",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:Thema"
+      }
+    },
+    {
+      "@id": "WoO80:VarXXVII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL203C18"
+      },
+      "rdfs:label": "Var. XXVII",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXVIII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXXVI"
+      }
+    },
+    {
+      "@id": "WoO80:VarIV",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL42C18"
+      },
+      "rdfs:label": "Var. IV",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarV"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarIII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL35C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarIII"
+      }
+    },
+    {
+      "@id": "WoO80:VarIX",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL77C18"
+      },
+      "rdfs:label": "Var. IX",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarX"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarVIII"
+      }
+    },
+    {
+      "@id": "WoO80:VarXI",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL91C18"
+      },
+      "rdfs:label": "Var. XI",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarX"
+      }
+    },
+    {
+      "@id": "_:ub1337bL70C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarVIII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL126C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXVI"
+      }
+    },
+    {
+      "@id": "WoO80:VarX",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL84C18"
+      },
+      "rdfs:label": "Var. X",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXI"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarIX"
+      }
+    },
+    {
+      "@id": "WoO80:VarXV",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL119C18"
+      },
+      "rdfs:label": "Var. XV",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXVI"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXIV"
+      }
+    },
+    {
+      "@id": "WoO80:VarXIX",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL147C18"
+      },
+      "rdfs:label": "Var. XIX",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXX"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXVIII"
+      }
+    },
+    {
+      "@id": "WoO80:VarII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL28C18"
+      },
+      "rdfs:label": "Var. II",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarIII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarI"
+      }
+    },
+    {
+      "@id": "WoO80:VarXX",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL154C18"
+      },
+      "rdfs:label": "Var. XX",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXI"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXIX"
+      }
+    },
+    {
+      "@id": "WoO80:VarV",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL49C18"
+      },
+      "rdfs:label": "Var. V",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarVI"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarIV"
+      }
+    },
+    {
+      "@id": "WoO80:VarXVI",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL126C18"
+      },
+      "rdfs:label": "Var. XVI",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXVII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXV"
+      }
+    },
+    {
+      "@id": "_:ub1337bL154C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXX"
+      }
+    },
+    {
+      "@id": "WoO80:VarVII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL63C18"
+      },
+      "rdfs:label": "Var. VII",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarVIII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarVI"
+      }
+    },
+    {
+      "@id": "_:ub1337bL203C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXVII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL140C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXVIII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL217C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXIX"
+      }
+    },
+    {
+      "@id": "_:ub1337bL15C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-Thema"
+      }
+    },
+    {
+      "@id": "_:ub1337bL196C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXVI"
+      }
+    },
+    {
+      "@id": "_:ub1337bL133C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXVII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL49C18",
+      "@type": [
+        "rdfs:Bag",
+        "meld:MEIManifestation"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarV"
+      }
+    },
+    {
+      "@id": "WoO80:VarXXIX",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL217C18"
+      },
+      "rdfs:label": "Var. XXIX",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXXX"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXXVIII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL63C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarVII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL168C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXII"
+      }
+    },
+    {
+      "@id": "_:ub1337bL21C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarI"
+      }
+    },
+    {
+      "@id": "_:ub1337bL182C18",
+      "@type": [
+        "meld:MEIManifestation",
+        "rdfs:Bag"
+      ],
+      "rdfs:member": {
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#section-VarXXIV"
+      }
+    },
+    {
+      "@id": "WoO80:VarVIII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL70C18"
+      },
+      "rdfs:label": "Var. VIII",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarIX"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarVII"
+      }
+    },
+    {
+      "@id": "WoO80:VarXVII",
+      "@type": "so:Segment",
+      "frbr:embodiment": {
+        "@id": "_:ub1337bL133C18"
+      },
+      "rdfs:label": "Var. XVII",
+      "so:onSegmentLine": {
+        "@id": "struct:WoO80"
+      },
+      "so:segmentAfter": {
+        "@id": "WoO80:VarXVIII"
+      },
+      "so:segmentBefore": {
+        "@id": "WoO80:VarXVI"
+      }
+    }
+  ]
+}

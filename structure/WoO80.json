@@ -33,7 +33,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000626617595"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000626617595"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -882,7 +882,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001587113855"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001587113855"
       }
     ]
   },
@@ -920,7 +920,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000158190411"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000158190411"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -1625,7 +1625,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001192439682"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001192439682"
       }
     ]
   },
@@ -1663,7 +1663,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001650402231"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001650402231"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -2326,7 +2326,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001415551780"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001415551780"
       }
     ]
   },
@@ -2364,7 +2364,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000565886999"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000565886999"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -3021,7 +3021,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001557274386"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001557274386"
       }
     ]
   },
@@ -3059,7 +3059,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000921591523"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000921591523"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -3743,7 +3743,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000048850249"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000048850249"
       }
     ]
   },
@@ -3781,7 +3781,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000532872400"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000532872400"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -4102,7 +4102,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000932422550"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000932422550"
       }
     ]
   },
@@ -4140,7 +4140,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001419042100"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001419042100"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -4569,7 +4569,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001829892934"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001829892934"
       }
     ]
   },
@@ -4607,7 +4607,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000055770502"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000055770502"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -5372,7 +5372,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001883475648"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001883475648"
       }
     ]
   },
@@ -5410,7 +5410,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000369546741"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000369546741"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -6175,7 +6175,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000168139513"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000168139513"
       }
     ]
   },
@@ -6213,7 +6213,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000174584757"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000174584757"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -6567,7 +6567,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001716378540"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001716378540"
       }
     ]
   },
@@ -6605,7 +6605,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001001125527"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001001125527"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -7190,7 +7190,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001770896954"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001770896954"
       }
     ]
   },
@@ -7228,7 +7228,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001025639854"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001025639854"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -7945,7 +7945,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001984773952"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001984773952"
       }
     ]
   },
@@ -7983,7 +7983,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001254703185"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001254703185"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -8781,7 +8781,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001564238359"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001564238359"
       }
     ]
   },
@@ -8819,7 +8819,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000940136793"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000940136793"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -9044,7 +9044,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000134472448"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000134472448"
       }
     ]
   },
@@ -9082,7 +9082,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001113916065"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001113916065"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -9511,7 +9511,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000727777072"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000727777072"
       }
     ]
   },
@@ -9549,7 +9549,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000539646325"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000539646325"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -10683,7 +10683,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000002051489184"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000002051489184"
       }
     ]
   },
@@ -10721,7 +10721,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001600227203"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001600227203"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -11237,7 +11237,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000209674482"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000209674482"
       }
     ]
   },
@@ -11275,7 +11275,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000884762582"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000884762582"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -15562,7 +15562,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001078912710"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001078912710"
       }
     ]
   },
@@ -15600,7 +15600,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000894820325"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000894820325"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -16161,7 +16161,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001524324036"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001524324036"
       }
     ]
   },
@@ -16199,7 +16199,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001941524283"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001941524283"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -16934,7 +16934,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000045225116"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000045225116"
       }
     ]
   },
@@ -16972,7 +16972,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000626222858"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000626222858"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -17434,7 +17434,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001840626149"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001840626149"
       }
     ]
   },
@@ -17472,7 +17472,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001603971592"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001603971592"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -17865,7 +17865,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000856790260"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000856790260"
       }
     ]
   },
@@ -17903,7 +17903,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000668037532"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000668037532"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -18548,7 +18548,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001984962209"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001984962209"
       }
     ]
   },
@@ -18586,7 +18586,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000108981578"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000108981578"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -19303,7 +19303,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001495093012"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001495093012"
       }
     ]
   },
@@ -19341,7 +19341,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001372200338"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001372200338"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -19596,7 +19596,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000002078849472"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000002078849472"
       }
     ]
   },
@@ -19634,7 +19634,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000527201837"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000527201837"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -20018,7 +20018,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001844494837"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001844494837"
       }
     ]
   },
@@ -20056,7 +20056,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001142768009"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001142768009"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -20557,7 +20557,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001350795174"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001350795174"
       }
     ]
   },
@@ -20595,7 +20595,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001827756304"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001827756304"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -21465,7 +21465,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000942932237"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000942932237"
       }
     ]
   },
@@ -21503,7 +21503,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000118153190"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000118153190"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -22160,7 +22160,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001497507798"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001497507798"
       }
     ]
   },
@@ -22198,7 +22198,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000950766391"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000950766391"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -22705,7 +22705,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001464910038"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001464910038"
       }
     ]
   },
@@ -22743,7 +22743,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000257526163"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000257526163"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -23538,7 +23538,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000078414702"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000078414702"
       }
     ]
   },
@@ -23582,7 +23582,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001025238782"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001025238782"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -24131,7 +24131,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000040600276"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000040600276"
       }
     ]
   },
@@ -24175,7 +24175,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000000294013494"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000000294013494"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -24580,7 +24580,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost:8080/structure/note-0000001029313534"
+        "@id": "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei#note-0000001029313534"
       }
     ]
   }

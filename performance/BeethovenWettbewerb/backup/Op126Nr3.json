@@ -1,0 +1,27 @@
+{
+  "@context": {
+    "dcterm": "http://purl.org/dc/terms/",
+    "frbr": "http://purl.org/vocab/frbr/core#",
+    "ldp": "http://www.w3.org/ns/ldp#",
+    "meld": "https://meld.linkedmusic.org/terms/",
+    "mo": "http://purl.org/ontology/mo/",
+    "perf": "http://localhost:8080/performance/BeethovenWettbewerb/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "score": "http://localhost:8080/score/",
+    "so": "http://www.linkedmusic.org/ontologies/segment/",
+    "struct": "http://localhost:8080/structure/",
+    "tl": "http://purl.org/NET/c4dm/timeline.owl#",
+    "vid": "http://localhost:8080/videos/BeethovenWettbewerb/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "perf:Op126Nr3.json",
+  "@type": [
+    "ldp:BasicContainer",
+    "ldp:Container"
+  ],
+  "dcterm:title": "Performances of Opus 126 Nr. 3 at the International Beethoven Festival 2017",
+  "ldp:contains": [
+    { "@id": "
+  ]
+}

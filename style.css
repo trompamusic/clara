@@ -12,6 +12,30 @@ body {
   stroke:darkorange;
 }
 
+.deleted {
+  fill: #00aaff;
+  stroke: #00aaff;
+}
+
+.wasActive{ 
+  fill:black;
+  stroke:black;
+  -webkit-animation-name: wasActive; /* Safari 4.0 - 8.0 */
+  -webkit-animation-duration:0.3s; /* Safari 4.0 - 8.0 */
+  animation-name: wasActive;
+  animation-duration:0.43;
+}
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes wasActive { 
+  from{fill:darkorange; stroke:darkorange}
+  to{fill:black; stroke:black;}
+}
+
+@keyframes wasActive { 
+  from{fill:darkorange; stroke:darkorange}
+  to{fill:#663300; stroke:#663300;}
+}
+
 .clickableBoundedInstant{
   cursor:pointer;
 }
@@ -55,11 +79,7 @@ body {
   color: rgba(255, 102, 0);
 }
 
-#pageControlsWrapper.featureVis { 
-  max-width: 1745px;
-}
-
-#pageControlsWrapper.following {
+#pageControlsWrapper.following{
   background: rgb(255,102,0);
   background: linear-gradient(90deg, rgba(255,102,0,1) 0%, rgba(223,157,7,1) 50%, rgba(255,102,0,1) 100%);
   color:white;
@@ -70,9 +90,9 @@ body {
   cursor:pointer;
 }
 
-#pageControlsWrapper #prev.following, #pageControlsWrapper #next.following { 
-  visibility: hidden;
-}
+#pageControlsWrapper.following #prev, #pageControlsWrapper.following #next {
+ cursor:default;
+} 
 
 #selectWrapper { 
   clear:both;
@@ -92,6 +112,7 @@ body {
   max-width: 950px;
   margin-left: 20px;
   z-index:-2;
+  cursor:pointer;
 }
 
 #logoWrapper.featureVis { 
