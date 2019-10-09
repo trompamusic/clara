@@ -130,21 +130,29 @@ class Companion extends Component {
       this.props.traverse(nextTraversalUri, nextTraversalParams);
     }
 
+    if("score" in prevProps && 
+      prevProps.score.pageNum !== this.props.score.pageNum ||  // page flip
+      prevProps.score.pageCount !== this.props.score.pageCount // first load
+    ) { 
+      console.log(" Setting notesOnPage!")
+      this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note") });
+    }
+
     if("score" in prevProps && this.state.selectedPerformance &&
-       prevProps.score.pageNum !== this.props.score.pageNum) {
-      // page has been turned; reassign click handlers
-//      this.assignClickHandlersToNotes();
-      const notes = ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note");
-      this.setState( {notesOnPage: notes} );
-      this.createInstantBoundingRects(notes);
+       (prevProps.score.pageNum !== this.props.score.pageNum) // page flipped while performance selected
+    ) { 
+      this.createInstantBoundingRects();
       this.highlightDeletedNotes();
     }
+
     if("score" in prevProps && this.state.selectedPerformance &&
       prevState.selectedPerformance !== this.state.selectedPerformance) { 
       // performance has been changed; reassign click handlers
 //      this.assignClickHandlersToNotes();
       this.createInstantBoundingRects();
       this.highlightDeletedNotes();
+      console.log("Setting notesOnPage!")
+      this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note") });
     }
     if(prevState.showConfidence !== this.state.showConfidence) { 
       this.createInstantBoundingRects(); // showConfidence preference changed; redraw boxes
@@ -366,7 +374,7 @@ class Companion extends Component {
               onClick={() => window.open("http://www.mdw.ac.at/", "_blank")} />
           </div>
           <div id="instantBoundingBoxes" />
-          {this.state.mode === "featureVis" 
+          {this.state.mode === "featureVis" && this.state.notesOnPage.length
             ? <FeatureVis notesOnPage={ this.state.notesOnPage } instantsByNoteId={ this.state.instantsByNoteId } timelinesToVis = { Object.keys(this.state.instantsByNoteId) } />
             : ""
           }
