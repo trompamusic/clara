@@ -29,6 +29,7 @@ const vrvOptionsFeatureVis = {
 	pageHeight: 400,
 	pageWidth: 4000,
 	noFooter: 1,
+	noHeader: 1,
 	unit: 6
 };
 
