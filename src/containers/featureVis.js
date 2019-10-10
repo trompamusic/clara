@@ -207,7 +207,6 @@ class FeatureVis extends Component {
           return sumX + absolute.x;
         }, 0);
         let avgXPos = sumXPos / noteElementsAtQstamp.length;
-        console.log("noteElementsAtQstamp: ", noteElementsAtQstamp, qstamp);
         // calculate y position (default to 0 on first instant)
         let yPos = 0;
         if(ix > 0) { 
@@ -231,9 +230,9 @@ class FeatureVis extends Component {
           // calculate inter-instant-interval (change in performance time per change in score time)
           const iii = deltaT / deltaQ
           yPos = iii * 50 // TODO come up with a sensible mapping
-          console.log("iii: ", iii, deltaT, deltaQ, qstamp, avgXPos);
         }
         // return point data for this timeline and scoretime 
+        console.log(tl, avgXPos, qstamp);
         return {x: avgXPos, y: yPos, qstamp:qstamp};
       })
       pointsPerTimeline[tl] = pointsForThisTl;
@@ -256,8 +255,7 @@ class FeatureVis extends Component {
           prevY = tlPoints[ix-1].y;
         }
         lines.push(<line x1={prevX} x2={pt.x} y1={prevY} y2={pt.y} strokeWidth="1" stroke="black" key={"line-"+ix}/>)
-        rects.push(<rect x={pt.x-5} y={pt.y-5} width="10" height="10" id={pt.qstamp} fill="green" key={"rect-"+ix}/>)
-
+        rects.push(<ellipse cx={pt.x} cy={pt.y} rx="5" ry="3" id={pt.qstamp} stroke="black" fill="none" key={"rect-"+ix}/>)
       });
       return (
         <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1800.00px" height="100px" transform="scale(1,-1) translate(0, 50)">
