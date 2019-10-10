@@ -14,7 +14,8 @@ class FeatureVis extends Component {
       instantsOnPage: {},
       noteElementsByNoteId: {},
       timemap: [],
-      timemapByNoteId: {}
+      timemapByNoteId: {},
+      pointsPerTimeline: {}
     }
     this.setInstantsOnPage = this.setInstantsOnPage.bind(this);
     this.setNoteElementsByNoteId = this.setNoteElementsByNoteId.bind(this);
@@ -22,6 +23,7 @@ class FeatureVis extends Component {
     this.convertCoords = this.convertCoords.bind(this);
     this.calculateQStampForInstant = this.calculateQStampForInstant.bind(this);
     this.noteElementsForInstant = this.noteElementsForInstant.bind(this);
+    this.setPointsPerTimeline = this.setPointsPerTimeline.bind(this);
   }
 
 /*
@@ -46,7 +48,6 @@ class FeatureVis extends Component {
 */
   componentDidMount() { 
     this.setNoteElementsByNoteId();
-    this.setInstantsOnPage();
     this.setState({ timemap: this.props.score.vrvTk.renderToTimemap() }, () => {
       let timemapByNoteId = {};
       // generate "inverted" timemap (by note onset)
@@ -71,6 +72,10 @@ class FeatureVis extends Component {
       this.setNoteElementsByNoteId();
       this.setInstantsOnPage();
     }
+    if(Object.keys(prevState.instantsOnPage).length < Object.keys(this.state.instantsOnPage).length) { 
+      // new instants on page, set corresponding new points per timeline
+      this.setPointsPerTimeline();
+    }
   }
 
   setNoteElementsByNoteId() { 
@@ -78,7 +83,10 @@ class FeatureVis extends Component {
     Array.from(this.props.notesOnPage).map( (note) => {
       noteElementsByNoteId[note.getAttribute("id")] = note;
     })
-    this.setState({ noteElementsByNoteId });
+    this.setState({ noteElementsByNoteId }, () => {
+      // now set insants on page
+      this.setInstantsOnPage()
+    });
   }
 
   noteElementsForInstant(inst) { 
@@ -107,6 +115,14 @@ class FeatureVis extends Component {
           // filter out undefined instants (i.e. when note doesn't appear in timeline)
           return inst
 
+        })
+        instantsOnPage[tl].sort( (a, b) => {
+          // ensure order by performance time
+          return parseFloat(a["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, "")) - 
+          parseFloat(b["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, ""))  
+        }).filter( (i) => { 
+          // filter out deleted notes ("performed" at -1 by convention)
+          return i["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, "") >= 0
         })
       })
       this.setState({instantsOnPage})
@@ -142,49 +158,69 @@ class FeatureVis extends Component {
     return sumQ / noteElements.length;
   }
 
-  render() {
-    if(Object.keys(this.state.instantsOnPage).length &&
-       Object.keys(this.state.timemapByNoteId).length) { 
-      const rects = this.props.timelinesToVis.map( (tl, ix) => { 
-        // for each instant on this page ...
-        let rectsForThisTl = this.state.instantsOnPage[tl].map( (inst, ix) => { 
-          //$tmp.reduce((sumX, note) => sumX + parseFloat(note["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, "")),0) 
-          let noteElements = this.noteElementsForInstant(inst);
-          let sumXPos = noteElements.reduce((sumX, note) => { 
-            // sum the x-positions of the notes of this instant
-            let noteId = note.getAttribute("id");
-            noteId = noteId.substr(noteId.lastIndexOf("#")+1);
-            let absolute = this.convertCoords(this.state.noteElementsByNoteId[noteId]);
-            return sumX + absolute.x;
-          }, 0);
-          // find their average
-          let averageXPos = Math.floor(sumXPos / this.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"]).length)
-          // calculate y position (default to 0 on first instant)
-          let yPos = 0
-          if(ix > 0) { 
-            // calculate change in time performance (ms) between previous and current instant
-            const thisT = parseFloat(inst["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, ""))
-            const prevT = parseFloat(this.state.instantsOnPage[tl][ix-1]["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, ""))
-            const deltaT = thisT - prevT;
-            // calculate change in score time (quarternotes) between previous and curent instant
-            const thisQ = this.calculateQStampForInstant(inst);
-            const prevQ = this.calculateQStampForInstant(this.state.instantsOnPage[tl][ix-1]);
-            const deltaQ = thisQ - prevQ;
-            // calculate inter-instant-interval (performance time per score time)
-            const iii = deltaT / (deltaQ+0.00001); // prevent 0 division in case two instants share a qstamp
-            yPos = iii * 50 // TODO come up with a sensible mapping
-          };
-          
-          // return rectangle for this timeline adn instant
-          return <rect x={averageXPos} y={yPos} height="10" width="10" style={ {stroke:"#009900", fill: "#00cc00"} } id={ inst["@id"] } key = { inst["@id"]+"_" +ix }/>
-        })
-        return rectsForThisTl;
+  setPointsPerTimeline() { 
+    let pointsPerTimeline={};
+    this.props.timelinesToVis.map( (tl, ix) => { 
+      // for each instant on this page ...
+      let pointsForThisTl = this.state.instantsOnPage[tl].map( (inst, ix) => { 
+        //$tmp.reduce((sumX, note) => sumX + parseFloat(note["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, "")),0) 
+        let noteElements = this.noteElementsForInstant(inst);
+        let sumXPos = noteElements.reduce((sumX, note) => { 
+          // sum the x-positions of the notes of this instant
+          let noteId = note.getAttribute("id");
+          noteId = noteId.substr(noteId.lastIndexOf("#")+1);
+          let absolute = this.convertCoords(this.state.noteElementsByNoteId[noteId]);
+          return sumX + absolute.x;
+        }, 0);
+        // find their average
+        let averageXPos = Math.floor(sumXPos / this.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"]).length)
+        // calculate y position (default to 0 on first instant)
+        let yPos = 0
+        if(ix > 0) { 
+          // calculate change in time performance (ms) between previous and current instant
+          const thisT = parseFloat(inst["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, ""))
+          const prevT = parseFloat(this.state.instantsOnPage[tl][ix-1]["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, ""))
+          const deltaT = thisT - prevT;
+          // calculate change in score time (quarternotes) between previous and curent instant
+          const thisQ = this.calculateQStampForInstant(inst);
+          const prevQ = this.calculateQStampForInstant(this.state.instantsOnPage[tl][ix-1]);
+          const deltaQ = thisQ - prevQ;
+          // calculate inter-instant-interval (performance time per score time)
+          const iii = deltaQ / deltaT+0.00001; // prevent 0 division in case two instants share a qstamp
+          console.log("iii: ", iii, deltaT, deltaQ);
+          yPos = iii * 50 // TODO come up with a sensible mapping
+        };
+        // return rectangle for this timeline adn instant
+        return {x: averageXPos, y: yPos, instant:inst};
       })
-      console.log("Rects: ", rects);
+      // sort the points by their performed time
+      pointsPerTimeline[tl] = pointsForThisTl;
+    })
+    this.setState({ pointsPerTimeline });
+  }
+
+  render() {
+    if(Object.keys(this.state.pointsPerTimeline).length) {
+      // TODO for each timeline...
+      const tlPoints = this.state.pointsPerTimeline[Object.keys(this.state.pointsPerTimeline)[0]];
+      console.log(tlPoints);
+      let lines = [];
+      let rects = [];
+      tlPoints.map( (pt,ix) => { 
+        let prevX = 0;
+        let prevY = 0;
+        if(ix > 0) { 
+          prevX = tlPoints[ix-1].x;
+          prevY = tlPoints[ix-1].y;
+        }
+        lines.push(<line x1={prevX} x2={pt.x} y1={prevY} y2={pt.y} strokeWidth="1" stroke="black" key={"line-"+ix}/>)
+        rects.push(<rect x={pt.x-5} y={pt.y-5} width="10" height="10" id={pt.instant["@id"]} fill="green" key={"rect-"+ix}/>)
+
+      });
       return (
-        // for each timeline...
-        <svg xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1800.00px" height="150.00px" transform="scale(1,-1)" >
-              { rects[0] }
+        <svg xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1800.00px" height="100px" transform="scale(1,-1) translate(0, 50)" >
+              { rects }
+              { lines }
         </svg>
       )
     } else { 
