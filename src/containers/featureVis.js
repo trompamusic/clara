@@ -211,8 +211,8 @@ class FeatureVis extends Component {
           // calculate change in scoretime (qstamp) between this and the current one
           const deltaQ = parseFloat(qstamp) - parseFloat(scoretimeArray[ix-1])
 
-          // calculate inter-instant-interval (change in performance time per change in score time)
-          const iii = deltaT / deltaQ
+          // calculate inter-instant-interval (change in score time per change in performed time)
+          const iii = deltaQ / deltaT;
           yPos = iii * 50 // TODO come up with a sensible mapping
         }
         // return point data for this timeline and scoretime 
