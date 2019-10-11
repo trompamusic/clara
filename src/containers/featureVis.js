@@ -182,13 +182,6 @@ class FeatureVis extends Component {
         });
         let sumXPos = noteElementsAtQstamp.flat().reduce((sumX, note) => { 
           let absolute = this.convertCoords(note);
-          /*
-          if(qstamp == 22.5)  {
-            console.log("!!! relative: ", note.getBBox().x, ", absolute: ", absolute.x);
-          } else { 
-            console.log("relative: ", note.getBBox().x, ", absolute: ", absolute.x);
-          }*/
-
           return sumX + absolute.x;
         }, 0);
         let avgXPos = sumXPos / noteElementsAtQstamp.flat().length;
@@ -229,6 +222,13 @@ class FeatureVis extends Component {
     if(Object.keys(this.state.pointsPerTimeline).length) {
       let lines = [];
       let points = [];
+      let barlines = [];
+      // generate barlines
+      Array.from(this.props.barlinesOnPage).map((bl) => { 
+        const absolute = this.convertCoords(bl);
+        barlines.push(<line x1={absolute.x} x2={absolute.x} y1="0" y2="100" className="barLineAttr"/>);
+      })
+      // generate points and lines
       Object.keys(this.state.pointsPerTimeline).map((tl) => { 
         console.log("tl: ", tl, " currentTimeline: ", this.state.currentTimeline);
         // for each timeline...
@@ -246,23 +246,24 @@ class FeatureVis extends Component {
             // at the first point:
             // no line to previous (because no previous)
             // "steal" Y position from 2nd point (because no iii at first point)
-            points.push(<ellipse className = {className} cx={pt.x} cy={tlPoints[ix+1].y} rx="5" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+            points.push(<ellipse className = {className} cx={pt.x} cy={tlPoints[ix+1].y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
           } else if(ix === 1) { 
             // at the second point:
             // dotted horizontal line to previous (with stolen Y position)
             // "normal" point
             lines.push(<line className = {className} x1={prevX} x2={pt.x} y1={pt.y} y2={pt.y} strokeDasharray="2 1" key={"line-"+tl+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
-            points.push(<ellipse className = {className} cx={pt.x} cy={pt.y} rx="5" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+            points.push(<ellipse className = {className} cx={pt.x} cy={pt.y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
           } else {
             lines.push(<line className = {className} x1={prevX} x2={pt.x} y1={prevY} y2={pt.y} key={"line-"+tl+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
-            points.push(<ellipse className = {className} cx={pt.x} cy={pt.y} rx="5" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+            points.push(<ellipse className = {className} cx={pt.x} cy={pt.y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
           }
         });
       });
       return (
         <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1800.00px" height="100px" transform="scale(1,-1) translate(0, 50)">
-              { points }
+              { barlines }
               { lines }
+              { points }
         </svg>
       )
     } else { 

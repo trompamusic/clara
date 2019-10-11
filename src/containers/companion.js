@@ -43,6 +43,7 @@ class Companion extends Component {
       instantsByPerfTime: [],
       instantsByNoteId: [],
       notesOnPage: [],
+      barlinesOnPage: [],
       selectedVideo: "",
       selectedPerformance: "",
       lastMediaTick: 0,
@@ -135,8 +136,9 @@ class Companion extends Component {
       prevProps.score.pageNum !== this.props.score.pageNum ||  // page flip
       prevProps.score.pageCount !== this.props.score.pageCount // first load
     ) { 
-      console.log(" Setting notesOnPage!")
-      this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note") });
+      this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note"),
+                      barlinesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".barLineAttr")
+      });
     }
 
     if("score" in prevProps && this.state.selectedPerformance &&
@@ -379,7 +381,7 @@ class Companion extends Component {
           </div>
           <div id="instantBoundingBoxes" />
           {this.state.mode === "featureVis" && this.state.notesOnPage.length
-            ? <FeatureVis notesOnPage={ this.state.notesOnPage } instantsByNoteId={ this.state.instantsByNoteId } timelinesToVis = { Object.keys(this.state.instantsByNoteId) } currentTimeline = {currentTimeline} />
+            ? <FeatureVis notesOnPage={ this.state.notesOnPage } barlinesOnPage={ this.state.barlinesOnPage } instantsByNoteId={ this.state.instantsByNoteId } timelinesToVis = { Object.keys(this.state.instantsByNoteId) } currentTimeline = {currentTimeline} />
             : ""
           }
           { this.state.currentScore 

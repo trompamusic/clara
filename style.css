@@ -148,3 +148,8 @@ body {
   stroke-width:2px;
   z-index: 1;
 }
+
+#featureVis line.barLineAttr { 
+  stroke:lightgrey;
+  z-index:-1;
+}
