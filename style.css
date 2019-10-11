@@ -45,6 +45,11 @@ body {
   max-height: 460px;
 }
 
+.scorepane.featureVis { 
+  min-height: 230px;
+  max-height: 230px;
+}
+
 .errorDetected { 
   fill:black;
   stroke:black;
@@ -77,6 +82,10 @@ body {
   padding-right: .3em;
   font-weight: bold;
   color: rgba(255, 102, 0);
+}
+
+#pageControlsWrapper.featureVis { 
+  max-width: 1253px;
 }
 
 #pageControlsWrapper.following{

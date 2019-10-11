@@ -27,7 +27,7 @@ const vrvOptionsFeatureVis = {
 	scale: 45,
   adjustPageHeight: 1,
 	pageHeight: 400,
-	pageWidth: 4000,
+	pageWidth: 2900,
 	noFooter: 1,
 	noHeader: 1,
 	unit: 6
@@ -142,6 +142,11 @@ class Companion extends Component {
       }, () => {
         // update feature vis pageNum only once new notes have been retrieved from DOM
         this.setState({ featureVisPageNum: this.props.score.pageNum });
+        // reflect the current mode (pageView vs featureVis) onto the scorepane
+        let scorepane = ReactDOM.findDOMNode(this.scoreComponent)
+        let modes = ["pageView", "featureVis"]
+        scorepane.classList.remove(...modes);
+        scorepane.classList.add(this.state.mode);
       });
     }
 
