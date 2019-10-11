@@ -27,7 +27,7 @@ const vrvOptionsFeatureVis = {
 	scale: 45,
   adjustPageHeight: 1,
 	pageHeight: 400,
-	pageWidth: 2900,
+	pageWidth: 2800,
 	noFooter: 1,
 	noHeader: 1,
 	unit: 6
