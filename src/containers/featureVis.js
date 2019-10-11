@@ -224,9 +224,9 @@ class FeatureVis extends Component {
       let points = [];
       let barlines = [];
       // generate barlines
-      Array.from(this.props.barlinesOnPage).map((bl) => { 
+      Array.from(this.props.barlinesOnPage).map((bl,ix) => { 
         const absolute = this.convertCoords(bl);
-        barlines.push(<line x1={absolute.x} x2={absolute.x} y1="0" y2="100" className="barLineAttr"/>);
+        barlines.push(<line x1={absolute.x} x2={absolute.x} y1="0" y2="100" className="barLineAttr" key={"barline" + ix} />);
       })
       // generate points and lines
       Object.keys(this.state.pointsPerTimeline).map((tl) => { 
