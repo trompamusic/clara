@@ -235,7 +235,6 @@ class FeatureVis extends Component {
       })
       // generate points and lines
       Object.keys(this.state.pointsPerTimeline).map((tl) => { 
-        console.log("tl: ", tl, " currentTimeline: ", this.state.currentTimeline);
         // for each timeline...
         const tlPoints = this.state.pointsPerTimeline[tl];
         tlPoints.map( (pt,ix) => { 
