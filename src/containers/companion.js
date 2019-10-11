@@ -65,7 +65,8 @@ class Companion extends Component {
       maxMappedVelocity: 255, // max opacity (when note played at largest expected velocity)
       minExpectedVel: 0, // guesstimate as to a note played at pianissimo (unit: midi velocity)
       maxExpectedVel: 110, // guesstimate as to a note played at fortissimo (unit: midi velocity)
-      mode: "featureVis" // currently either pageView (portrait style) or featureVis (flattened single-system with visualisation)
+      mode: "featureVis", // currently either pageView (portrait style) or featureVis (flattened single-system with visualisation)
+      featureVisPageNum: 0 // like this.props.score.pageNum but only updated once new DOM elements are available 
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -138,6 +139,9 @@ class Companion extends Component {
     ) { 
       this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note"),
                       barlinesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".barLineAttr")
+      }, () => {
+        // update feature vis pageNum only once new notes have been retrieved from DOM
+        this.setState({ featureVisPageNum: this.props.score.pageNum });
       });
     }
 
@@ -380,7 +384,7 @@ class Companion extends Component {
               onClick={() => window.open("http://www.mdw.ac.at/", "_blank")} />
           </div>
           <div id="instantBoundingBoxes" />
-          {this.state.mode === "featureVis" && this.state.notesOnPage.length
+          {this.state.mode === "featureVis" && this.state.notesOnPage.length && this.props.score.pageNum === this.state.featureVisPageNum
             ? <FeatureVis notesOnPage={ this.state.notesOnPage } barlinesOnPage={ this.state.barlinesOnPage } instantsByNoteId={ this.state.instantsByNoteId } timelinesToVis = { Object.keys(this.state.instantsByNoteId) } currentTimeline = {currentTimeline} />
             : ""
           }
