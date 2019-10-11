@@ -66,7 +66,7 @@ class Companion extends Component {
       minExpectedVel: 0, // guesstimate as to a note played at pianissimo (unit: midi velocity)
       maxExpectedVel: 110, // guesstimate as to a note played at fortissimo (unit: midi velocity)
       mode: "featureVis", // currently either pageView (portrait style) or featureVis (flattened single-system with visualisation)
-      featureVisPageNum: 0 // like this.props.score.pageNum but only updated once new DOM elements are available 
+      featureVisPageNum: 0 // guards against race conditions between Vrv score and featureVis svg
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -105,10 +105,6 @@ class Companion extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) { 
-    if(prevState.loading && !this.state.loading) { 
-      //canvas
-    }
-
     if("traversalPool" in this.props && Object.keys(this.props.traversalPool.pool).length === 0 &&
       prevProps.traversalPool.running > 0 && this.props.traversalPool.running === 0) { 
       // finished all traversals
@@ -134,15 +130,19 @@ class Companion extends Component {
     }
 
     if("score" in prevProps && 
-      prevProps.score.pageNum !== this.props.score.pageNum ||  // page flip
-      prevProps.score.pageCount !== this.props.score.pageCount // first load
+      prevProps.score.latestRenderedPageNum !== this.props.score.latestRenderedPageNum // render has happened
     ) { 
+      if(this.props.score.pageNum !== this.props.score.latestRenderedPageNum) { 
+        console.warn("Warning: pageNum inconsistencies on initial update! ", this.props.score.pageNum, this.props.score.latestRenderedPageNum);
+      }
       this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note"),
                       barlinesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".barLineAttr")
       }, () => {
-        // update feature vis pageNum only once new notes have been retrieved from DOM
-        this.setState({ featureVisPageNum: this.props.score.pageNum });
         // reflect the current mode (pageView vs featureVis) onto the scorepane
+        if(this.props.score.pageNum !== this.props.score.latestRenderedPageNum) { 
+          console.warn("Warning: pageNum inconsistencies on secondary update! ", this.props.score.pageNum, this.props.score.latestRenderedPageNum);
+        }
+        this.setState({featureVisPageNum: this.props.score.latestRenderedPageNum});
         let scorepane = ReactDOM.findDOMNode(this.scoreComponent)
         let modes = ["pageView", "featureVis"]
         scorepane.classList.remove(...modes);
@@ -389,7 +389,8 @@ class Companion extends Component {
               onClick={() => window.open("http://www.mdw.ac.at/", "_blank")} />
           </div>
           <div id="instantBoundingBoxes" />
-          {this.state.mode === "featureVis" && this.state.notesOnPage.length && this.props.score.pageNum === this.state.featureVisPageNum
+          {this.state.mode === "featureVis" && 
+            this.props.score.latestRenderedPageNum === this.state.featureVisPageNum
             ? <FeatureVis notesOnPage={ this.state.notesOnPage } barlinesOnPage={ this.state.barlinesOnPage } instantsByNoteId={ this.state.instantsByNoteId } timelinesToVis = { Object.keys(this.state.instantsByNoteId) } currentTimeline = {currentTimeline} />
             : ""
           }
