@@ -204,7 +204,7 @@ class Companion extends Component {
     // n.b. per Nakamura alignment convention, deleted notes have a performance time of -1
     //
     // first, tidy up left-over deleted notes from previous invocations (e.g. on another performance)
-    Array.prototype.map.call(document.querySelectorAll(".deleted"), (d) => { d.classList.remove("deleted") });
+    Array.prototype.map.call(document.querySelectorAll(".note.deleted"), (d) => { d.classList.remove("deleted") });
     if(this.state.selectedPerformance && this.state.showInsertedDeleted) { 
       //FIXME Skolemization bug currently causing two identical times (intervals), one for performance and one for signal. For now, pick the first
       const thisTime = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
@@ -365,7 +365,10 @@ class Companion extends Component {
       } else { 
         vrvOptions = vrvOptionsFeatureVis;
       }
-        
+      let currentTimeline = "";
+      if(this.state.selectedPerformance) { 
+        currentTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"][0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] || ""; // FIXME skolemisation bug causing multiple copies of time entity 
+      }
       return(
         <div id="wrapper">
           <div id="logoWrapper" className = { this.state.mode } >
@@ -376,7 +379,7 @@ class Companion extends Component {
           </div>
           <div id="instantBoundingBoxes" />
           {this.state.mode === "featureVis" && this.state.notesOnPage.length
-            ? <FeatureVis notesOnPage={ this.state.notesOnPage } instantsByNoteId={ this.state.instantsByNoteId } timelinesToVis = { Object.keys(this.state.instantsByNoteId) } />
+            ? <FeatureVis notesOnPage={ this.state.notesOnPage } instantsByNoteId={ this.state.instantsByNoteId } timelinesToVis = { Object.keys(this.state.instantsByNoteId) } currentTimeline = {currentTimeline} />
             : ""
           }
           { this.state.currentScore 
@@ -474,7 +477,7 @@ class Companion extends Component {
                         onChange={ () => { 
                           if(this.state.showInsertedDeleted) { 
                             // if we're unselecting, reset any deleted notes
-                            Array.prototype.map.call(document.querySelectorAll(".deleted"), (d) => { d.classList.remove("deleted") });
+                            Array.prototype.map.call(document.querySelectorAll(".note.deleted"), (d) => { d.classList.remove("deleted") });
                           } 
                           this.setState({ showInsertedDeleted: !this.state.showInsertedDeleted}, () => { this.highlightDeletedNotes() });
                         }}
@@ -646,7 +649,7 @@ class Companion extends Component {
       // (i.e., closest without going over)
 //      closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
 //     if(closestInstantIx in this.state.instantsByPerfTime[thisTimeline]) {
-      const previouslyActive = document.getElementsByClassName("active")
+      const previouslyActive = document.querySelectorAll(".note.active")
       if(previouslyActive.length && closestInstantIndices.length) { 
         newState["previouslyActive"] = Array.from(previouslyActive);
         Array.from(previouslyActive).map( (n) => { 

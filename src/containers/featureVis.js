@@ -3,8 +3,6 @@ import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 
-//const {Raphael,Paper,Set,Circle,Ellipse,Image,Rect,Text,Path,Line} = require('react-raphael');
-
 class FeatureVis extends Component {
   constructor(props) {
     super(props);
@@ -16,7 +14,8 @@ class FeatureVis extends Component {
       noteElementsByNoteId: {},
       timemap: [],
       timemapByNoteId: {},
-      pointsPerTimeline: {}
+      pointsPerTimeline: {},
+      currentTimeline: this.props.currentTimeline
     }
     this.setInstantsOnPage = this.setInstantsOnPage.bind(this);
     this.setInstantsByScoretime = this.setInstantsByScoretime.bind(this);
@@ -52,6 +51,9 @@ class FeatureVis extends Component {
     if("score" in prevProps && prevProps.score.pageNum !== this.props.score.pageNum  // page flipped
     ) { 
       this.setNoteElementsByNoteId();
+    }
+    if(prevProps.currentTimeline !== this.props.currentTimeline) { 
+      this.setState({ currentTimeline: this.props.currentTimeline });
     }
   }
 
@@ -225,34 +227,46 @@ class FeatureVis extends Component {
 
   render() {
     if(Object.keys(this.state.pointsPerTimeline).length) {
-      // TODO for each timeline...
-      const tlPoints = this.state.pointsPerTimeline[Object.keys(this.state.pointsPerTimeline)[0]];
       let lines = [];
-      let rects = [];
-      tlPoints.map( (pt,ix) => { 
-        let instantsString = pt.instants.map((inst) => inst["@id"]).join(",");
-        let prevX = 0;
-        let prevY = 0;
-        if(ix > 0) { 
-          prevX = tlPoints[ix-1].x;
-          prevY = tlPoints[ix-1].y;
-        }
-        lines.push(<line x1={prevX} x2={pt.x} y1={prevY} y2={pt.y} stroke="black" key={"line-"+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
-        rects.push(<ellipse cx={pt.x} cy={pt.y} rx="5" ry="3" id={pt.qstamp} stroke="black" fill="none" key={"rect-"+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+      let points = [];
+      Object.keys(this.state.pointsPerTimeline).map((tl) => { 
+        console.log("tl: ", tl, " currentTimeline: ", this.state.currentTimeline);
+        // for each timeline...
+        const tlPoints = this.state.pointsPerTimeline[tl];
+        tlPoints.map( (pt,ix) => { 
+          let instantsString = pt.instants.map((inst) => inst["@id"]).join(",");
+          let className = tl === this.state.currentTimeline ? "active" : "";
+          let prevX = 0;
+          let prevY = 0;
+          if(ix > 0) { 
+            prevX = tlPoints[ix-1].x;
+            prevY = tlPoints[ix-1].y;
+          }
+          if(ix === 0) { 
+            // at the first point:
+            // no line to previous (because no previous)
+            // "steal" Y position from 2nd point (because no iii at first point)
+            points.push(<ellipse className = {className} cx={pt.x} cy={tlPoints[ix+1].y} rx="5" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+          } else if(ix === 1) { 
+            // at the second point:
+            // dotted horizontal line to previous (with stolen Y position)
+            // "normal" point
+            lines.push(<line className = {className} x1={prevX} x2={pt.x} y1={pt.y} y2={pt.y} strokeDasharray="2 1" key={"line-"+tl+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
+            points.push(<ellipse className = {className} cx={pt.x} cy={pt.y} rx="5" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+          } else {
+            lines.push(<line className = {className} x1={prevX} x2={pt.x} y1={prevY} y2={pt.y} key={"line-"+tl+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
+            points.push(<ellipse className = {className} cx={pt.x} cy={pt.y} rx="5" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+          }
+        });
       });
       return (
         <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1800.00px" height="100px" transform="scale(1,-1) translate(0, 50)">
-              { rects }
+              { points }
               { lines }
         </svg>
       )
     } else { 
-      return ( <div>No SVG or you!</div> )
-      //<Paper width={ this.state.width } height={ this.state.height }>
-      //  <Set>
-      //    <Rect x={30} y={148} width={240} height={150} attr={{"fill":"#10a54a","stroke":"#f0c620","stroke-width":5}}/>
-      //  </Set>
-      //</Paper>
+      return ( <div>Cannot render feature SVG!</div> )
     }
   }
 }
