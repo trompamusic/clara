@@ -144,7 +144,7 @@ body {
 }
 
 #featureVis line.active, #featureVis ellipse.active {
-  stroke:darkorange;
+  stroke:red;
   stroke-width:2px;
   z-index: 1;
 }
