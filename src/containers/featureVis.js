@@ -28,26 +28,6 @@ class FeatureVis extends Component {
     this.setPointsPerTimeline = this.setPointsPerTimeline.bind(this);
   }
 
-/*
-  componentDidMount(){ 
-    if(Object.keys(this.props.instantsByNoteId).length) { 
-      const notes = this.props.notes;
-      let instantsOnPage = {};
-      // for each timeline we need to visualise:
-      this.props.timelinesToVis.map( (tl) => { 
-//        console.log("Notes on page: ", this.props.notesOnPage);
-        // find the instants coresponding to notes on this page
-        instantsOnPage[tl] = Array.from(this.props.notesOnPage).map( (note) => { 
-          //console.log("Looking at note: ", note);
-          return this.props.instantsByNoteId[tl][note.getAttribute("id")]
-        })
-      })
-      console.log("Instants on page: ", instantsOnPage);
-    } else { 
-      console.log("FeatureVis mounted without notesOnPage")
-    }
-  }
-*/
   componentDidMount() { 
     this.setNoteElementsByNoteId();
     this.setState({ timemap: this.props.score.vrvTk.renderToTimemap() }, () => {
@@ -76,7 +56,6 @@ class FeatureVis extends Component {
   }
 
   setInstantsByScoretime() { 
-    console.log("enter setInstantsByScoretime")
     let instantsByScoretime = {};
     // for each timeline we need to visualise:
     this.props.timelinesToVis.map( (tl) => { 
@@ -100,7 +79,6 @@ class FeatureVis extends Component {
         }
       })
     })
-    console.log("setting instantsByScoretime: ", instantsByScoretime);
     this.setState({ instantsByScoretime }, () => {
       // now set points per timeline
       this.setPointsPerTimeline()
@@ -147,11 +125,9 @@ class FeatureVis extends Component {
           return parseFloat(a["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, "")) - 
           parseFloat(b["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, ""))  
         });
-        console.log("Num instants before duplicate filter:", instantsOnPage[tl].length);
         instantsOnPage[tl] = instantsOnPage[tl].filter( (inst, ix) => { 
           return ix > 0 && inst["@id"] !== instantsOnPage[tl][ix-1]["@id"];
         })
-        console.log("Num instants after duplicate filter:", instantsOnPage[tl].length);
       })
       this.setState({instantsOnPage}, () => { 
         // now set instantsByScoretime
@@ -204,9 +180,17 @@ class FeatureVis extends Component {
         });
         let sumXPos = noteElementsAtQstamp.flat().reduce((sumX, note) => { 
           let absolute = this.convertCoords(note);
+          /*
+          if(qstamp == 22.5)  {
+            console.log("!!! relative: ", note.getBBox().x, ", absolute: ", absolute.x);
+          } else { 
+            console.log("relative: ", note.getBBox().x, ", absolute: ", absolute.x);
+          }*/
+
           return sumX + absolute.x;
         }, 0);
-        let avgXPos = sumXPos / noteElementsAtQstamp.length;
+        let avgXPos = sumXPos / noteElementsAtQstamp.flat().length;
+        
         // calculate y position (default to 0 on first instant)
         let yPos = 0;
         if(ix > 0) { 
@@ -232,8 +216,7 @@ class FeatureVis extends Component {
           yPos = iii * 50 // TODO come up with a sensible mapping
         }
         // return point data for this timeline and scoretime 
-        console.log(tl, avgXPos, qstamp);
-        return {x: avgXPos, y: yPos, qstamp:qstamp};
+        return {x: avgXPos, y: yPos, qstamp:qstamp, instants:this.state.instantsByScoretime[tl][qstamp]};
       })
       pointsPerTimeline[tl] = pointsForThisTl;
     })
@@ -244,18 +227,18 @@ class FeatureVis extends Component {
     if(Object.keys(this.state.pointsPerTimeline).length) {
       // TODO for each timeline...
       const tlPoints = this.state.pointsPerTimeline[Object.keys(this.state.pointsPerTimeline)[0]];
-      console.log(tlPoints);
       let lines = [];
       let rects = [];
       tlPoints.map( (pt,ix) => { 
+        let instantsString = pt.instants.map((inst) => inst["@id"]).join(",");
         let prevX = 0;
         let prevY = 0;
         if(ix > 0) { 
           prevX = tlPoints[ix-1].x;
           prevY = tlPoints[ix-1].y;
         }
-        lines.push(<line x1={prevX} x2={pt.x} y1={prevY} y2={pt.y} strokeWidth="1" stroke="black" key={"line-"+ix}/>)
-        rects.push(<ellipse cx={pt.x} cy={pt.y} rx="5" ry="3" id={pt.qstamp} stroke="black" fill="none" key={"rect-"+ix}/>)
+        lines.push(<line x1={prevX} x2={pt.x} y1={prevY} y2={pt.y} stroke="black" key={"line-"+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
+        rects.push(<ellipse cx={pt.x} cy={pt.y} rx="5" ry="3" id={pt.qstamp} stroke="black" fill="none" key={"rect-"+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
       });
       return (
         <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1800.00px" height="100px" transform="scale(1,-1) translate(0, 50)">
