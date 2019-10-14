@@ -48,6 +48,7 @@ class Companion extends Component {
       selectedPerformance: "",
       lastMediaTick: 0,
       previouslyActive: [],
+      currentlyActiveNoteIds: [],
       currentPerfSegment: {},
       currentSegment: {},
       currentScore: "",
@@ -404,7 +405,14 @@ class Companion extends Component {
           <div id="instantBoundingBoxes" />
           {this.state.mode === "featureVis" && 
             this.props.score.latestRenderedPageNum === this.state.featureVisPageNum
-            ? <FeatureVis notesOnPage={ this.state.notesOnPage } barlinesOnPage={ this.state.barlinesOnPage } instantsByNoteId={ this.state.instantsByNoteId } timelinesToVis = { Object.keys(this.state.instantsByNoteId) } currentTimeline = {currentTimeline} ref = {(featureVis) => { this.featureVis = featureVis }}/>
+            ? <FeatureVis 
+            notesOnPage={ this.state.notesOnPage } 
+            barlinesOnPage={ this.state.barlinesOnPage } 
+            instantsByNoteId={ this.state.instantsByNoteId } 
+            timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
+            currentTimeline = {currentTimeline} 
+            currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
+            ref = {(featureVis) => { this.featureVis = featureVis } } />
             : ""
           }
           { this.state.currentScore 
@@ -657,23 +665,12 @@ class Companion extends Component {
         let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
         dur = dur.substr(1, dur.length-2);
         const offsetDur = parseFloat(dur) + parseFloat(thisOffset);
-        //console.log("offsetDur: ", offsetDur, " t: ", t, " pI: ", this.state.progressInterval);
         if(offsetDur > (t - this.state.activeWindow) && offsetDur <= t) { 
           indices.push(thisIndex);
         }
         return indices;
       }, []);
 
-//      let closestInstantIx = this.state.instantsByPerfTime[thisTimeline].findIndex( (i) => { 
-//        let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
-//        dur = dur.substr(1, dur.length-2);
-//        return parseFloat(dur) + parseFloat(thisOffset) > t;
-//      });
-//      //console.log("Got closest instant IX: ", closestInstantIx, " lastMediaTick: ", this.state.lastMediaTick);
-      // if we're at 0 use that, otherwise use the one before this one 
-      // (i.e., closest without going over)
-//      closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
-//     if(closestInstantIx in this.state.instantsByPerfTime[thisTimeline]) {
       const previouslyActive = document.querySelectorAll(".note.active")
       if(previouslyActive.length && closestInstantIndices.length) { 
         newState["previouslyActive"] = Array.from(previouslyActive);
@@ -720,6 +717,7 @@ class Companion extends Component {
             noteToFlipTo = n;
           }
         }, this)
+        newState["currentlyActiveNoteIds"] = currentNotes.flat().map((n) => n["@id"].substr(n["@id"].indexOf("#")+1));
         if(noteToFlipTo && closestInstantIx > 0) { 
           // a note wasn't on this page -- if we are score-following, flip to its page
           // (the closestInstantIx > 0 check is to avoid flipping to first page each time we swap performance)

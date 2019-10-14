@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 
@@ -14,7 +15,8 @@ class FeatureVis extends Component {
       timemap: [],
       timemapByNoteId: {},
       pointsPerTimeline: {},
-      currentTimeline: this.props.currentTimeline
+      currentTimeline: this.props.currentTimeline,
+      currentQstamp: ""
     }
     this.setInstantsOnPage = this.setInstantsOnPage.bind(this);
     this.setInstantsByScoretime = this.setInstantsByScoretime.bind(this);
@@ -24,6 +26,7 @@ class FeatureVis extends Component {
     this.calculateQStampForInstant = this.calculateQStampForInstant.bind(this);
     this.noteElementsForInstant = this.noteElementsForInstant.bind(this);
     this.setPointsPerTimeline = this.setPointsPerTimeline.bind(this);
+    this.calculateAvgQstampFromNoteIds = this.calculateAvgQstampFromNoteIds.bind(this);
   }
 
   componentDidMount() { 
@@ -54,7 +57,31 @@ class FeatureVis extends Component {
     if(prevProps.currentTimeline !== this.props.currentTimeline) { 
       this.setState({ currentTimeline: this.props.currentTimeline });
     }
+    
+    if("currentlyActiveNoteIds" in prevProps &&
+      prevProps.currentlyActiveNoteIds.join("") !== this.props.currentlyActiveNoteIds.join("")) { 
+      this.setState({ currentQstamp: this.calculateAvgQstampFromNoteIds(this.props.currentlyActiveNoteIds) }, () => {
+        // clear previously active
+        const previouslyActive = ReactDOM.findDOMNode(this.featureSvg).querySelectorAll(".active");
+        Array.from(previouslyActive).map((p) => p.classList.remove("active"));
+        // grab elements on current timeline
+        const currentTlElements = ReactDOM.findDOMNode(this.featureSvg).querySelectorAll(".currentTl");
+        // make those active with a qstamp at or before the currentQstamp
+        Array.from(currentTlElements).map((e) => { 
+          if(parseFloat(e.getAttribute("data-qstamp")) <= this.state.currentQstamp) { 
+            e.classList.add("active");
+          }
+        })
+      })
+    }
   }
+
+  calculateAvgQstampFromNoteIds(noteIds) { 
+    return noteIds.reduce((sumQ, noteId) => { 
+          return sumQ += this.state.timemapByNoteId[noteId].qstamp;
+        }, 0) / noteIds.length;
+  }
+
 
   setInstantsByScoretime() { 
     let instantsByScoretime = {};
@@ -68,9 +95,7 @@ class FeatureVis extends Component {
         let noteIdsAtInstant = embodimentsAtInstant.map((n) => { 
           return n["@id"].substr(n["@id"].lastIndexOf("#")+1);
         })
-        let avgQstamp = noteIdsAtInstant.reduce((sumQ, noteId) => { 
-          return sumQ += this.state.timemapByNoteId[noteId].qstamp;
-        }, 0) / noteIdsAtInstant.length;
+        const avgQstamp = this.calculateAvgQstampFromNoteIds(noteIdsAtInstant);
         // conceivable that distinct performed instants share a scoretime
         // so, maintain an array of instants at each scoretime
         if(avgQstamp in instantsByScoretime[tl]) { 
@@ -214,8 +239,10 @@ class FeatureVis extends Component {
           const iii = deltaQ / deltaT;
           yPos = iii * 50 // TODO come up with a sensible mapping
         }
+        // if our point is on the current timeline and before or equal to the current qstamp, we are "active"
+        const isActive = tl === this.props.currentTimeline && qstamp <= this.state.currentQstamp;
         // return point data for this timeline and scoretime 
-        return {x: avgXPos, y: yPos, qstamp:qstamp, instants:this.state.instantsByScoretime[tl][qstamp]};
+        return {x: avgXPos, y: yPos, qstamp:qstamp, instants:this.state.instantsByScoretime[tl][qstamp], isActive };
       })
       pointsPerTimeline[tl] = pointsForThisTl;
     })
@@ -238,7 +265,9 @@ class FeatureVis extends Component {
         const tlPoints = this.state.pointsPerTimeline[tl];
         tlPoints.map( (pt,ix) => { 
           let instantsString = pt.instants.map((inst) => inst["@id"]).join(",");
-          let className = tl === this.state.currentTimeline ? "active" : "";
+          // determine CSS class: "currentTl" if timeline corresponds to selected performance
+          // "active" if point is before or equal to the currently active qstamp (in playback)
+          let className = tl === this.state.currentTimeline ? "currentTl" : "";
           let prevX = 0;
           let prevY = 0;
           if(ix > 0) { 
@@ -249,21 +278,21 @@ class FeatureVis extends Component {
             // at the first point:
             // no line to previous (because no previous)
             // "steal" Y position from 2nd point (because no iii at first point)
-            points.push(<ellipse className = {className} cx={pt.x} cy={tlPoints[ix+1].y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+            points.push(<ellipse className = {className} data-qstamp = {pt.qstamp} cx={pt.x} cy={tlPoints[ix+1].y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
           } else if(ix === 1) { 
             // at the second point:
             // dotted horizontal line to previous (with stolen Y position)
             // "normal" point
-            lines.push(<line className = {className} x1={prevX} x2={pt.x} y1={pt.y} y2={pt.y} strokeDasharray="2 1" key={"line-"+tl+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
-            points.push(<ellipse className = {className} cx={pt.x} cy={pt.y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+            lines.push(<line className = {className} data-qstamp = {pt.qstamp} x1={prevX} x2={pt.x} y1={pt.y} y2={pt.y} strokeDasharray="2 1" key={"line-"+tl+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
+            points.push(<ellipse className = {className} data-qstamp = {pt.qstamp} cx={pt.x} cy={pt.y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
           } else {
-            lines.push(<line className = {className} x1={prevX} x2={pt.x} y1={prevY} y2={pt.y} key={"line-"+tl+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
-            points.push(<ellipse className = {className} cx={pt.x} cy={pt.y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+            lines.push(<line className = {className} data-qstamp = {pt.qstamp} x1={prevX} x2={pt.x} y1={prevY} y2={pt.y} key={"line-"+tl+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
+            points.push(<ellipse className = {className} data-qstamp = {pt.qstamp} cx={pt.x} cy={pt.y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
           }
         });
       });
       return (
-        <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1800.00px" height="100px" transform="scale(1,-1) translate(0, 50)">
+        <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1800.00px" height="100px" transform="scale(1,-1) translate(0, 50)" ref = {(featureSvg) => { this.featureSvg = featureSvg } }>
               { barlines }
               { lines }
               { points }

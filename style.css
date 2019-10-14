@@ -154,10 +154,15 @@ body {
   fill: none;
 }
 
-#featureVis line.active, #featureVis ellipse.active {
+#featureVis line.currentTl, #featureVis ellipse.currentTl{
   stroke:red;
   stroke-width:2px;
   z-index: 1;
+}
+
+#featureVis line.active, #featureVis ellipse.active{
+  stroke:orange !important;
+  fill:orange !important;
 }
 
 #featureVis line.barLineAttr { 
