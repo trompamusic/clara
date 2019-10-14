@@ -442,7 +442,7 @@ class Companion extends Component {
                     this.state.segments.map( (seg) => { 
                       return (
                         <option key={ seg["@id"] } value={ seg["@id"] }>
-                          { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("-") +1) }
+                          { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("#") +1) }
                         </option>
                       )
                     })
