@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 
@@ -271,7 +270,7 @@ class FeatureVis extends Component {
         </svg>
       )
     } else { 
-      return ( <div>Cannot render feature SVG!</div> )
+      return ( <div id="featureVisLoading" >Rendering feature SVG...</div> )
     }
   }
 }

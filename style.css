@@ -141,10 +141,12 @@ body {
   visibility:hidden;
 }
 
-#featureVis {
+#featureVis, #featureVisLoading {
   margin-top: 100px;
   margin-bottom:-100px;
   overflow:visible;
+  height:100px;
+  width:1800px;
 }
 
 #featureVis line, #featureVis ellipse { 
@@ -161,4 +163,13 @@ body {
 #featureVis line.barLineAttr { 
   stroke:lightgrey;
   z-index:-1;
+}
+
+.clickableBoundedInstant { 
+  margin-top:100px;
+}
+
+/* if we have feature visualisation (featureVis) rendered on page, need to nudge notes down */
+.clickableBoundedInstant.featureVis, .confidenceBoundedInstant.featureVis { 
+  margin-top:0px;
 }

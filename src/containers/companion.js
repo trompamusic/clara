@@ -151,7 +151,7 @@ class Companion extends Component {
     }
 
     if("score" in prevProps && this.state.selectedPerformance &&
-       (prevProps.score.pageNum !== this.props.score.pageNum) // page flipped while performance selected
+       (prevProps.score.latestRenderedPageNum!== this.props.score.latestRenderedPageNum) // page flipped while performance selected
     ) { 
       this.createInstantBoundingRects();
       this.highlightDeletedNotes();
@@ -269,6 +269,13 @@ class Companion extends Component {
       let boxRight= 0 
       let boxBottom= 0;
       let noteId;
+
+      // if we have feature visualisation (featureVis) rendered on page, need to nudge notes down
+      let nudgeForFeatureVis = false;
+      if(this.featureVis && ReactDOM.findDOMNode(this.featureVis).matches("svg")) { 
+        nudgeForFeatureVis = true;
+      }
+
       notesOnPagePerInstant[i].map( (n) => { 
         // to contain all notes, we want to minimise left and top, 
         // and maximise right and bottom
@@ -287,6 +294,9 @@ class Companion extends Component {
       const clickableBoundDiv= document.createElement("div");
       confidenceBoundDiv.setAttribute("id", "conf-" + i);
       confidenceBoundDiv.classList.add("confidenceBoundedInstant");
+      if(nudgeForFeatureVis) { 
+        confidenceBoundDiv.classList.add("featureVis");
+      }
       confidenceBoundDiv.setAttribute("style", 
          "position:absolute;" + 
          "left:"    + Math.floor(boxLeft) + "px;" + 
@@ -298,6 +308,9 @@ class Companion extends Component {
       );
       clickableBoundDiv.setAttribute("id", "conf-" + i);
       clickableBoundDiv.classList.add("clickableBoundedInstant");
+      if(nudgeForFeatureVis) { 
+        clickableBoundDiv.classList.add("featureVis");
+      }
       clickableBoundDiv.setAttribute("style", 
          "position:absolute;" + 
          "left:"    + Math.floor(boxLeft) + "px;" + 
@@ -391,7 +404,7 @@ class Companion extends Component {
           <div id="instantBoundingBoxes" />
           {this.state.mode === "featureVis" && 
             this.props.score.latestRenderedPageNum === this.state.featureVisPageNum
-            ? <FeatureVis notesOnPage={ this.state.notesOnPage } barlinesOnPage={ this.state.barlinesOnPage } instantsByNoteId={ this.state.instantsByNoteId } timelinesToVis = { Object.keys(this.state.instantsByNoteId) } currentTimeline = {currentTimeline} />
+            ? <FeatureVis notesOnPage={ this.state.notesOnPage } barlinesOnPage={ this.state.barlinesOnPage } instantsByNoteId={ this.state.instantsByNoteId } timelinesToVis = { Object.keys(this.state.instantsByNoteId) } currentTimeline = {currentTimeline} ref = {(featureVis) => { this.featureVis = featureVis }}/>
             : ""
           }
           { this.state.currentScore 
