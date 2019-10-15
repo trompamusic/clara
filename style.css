@@ -146,12 +146,17 @@ body {
   margin-bottom:-100px;
   overflow:visible;
   height:100px;
-  width:1800px;
+  width:1280px;
+}
+
+#featureVis { 
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(180, 180, 180, .2) 5%, rgba(180, 180, 180, .2) 95%, rgba(255, 255, 255, .2) 100%)
 }
 
 #featureVis line, #featureVis ellipse { 
   stroke:black;
-  fill: none;
+  fill: #ffffff00;
+  cursor: pointer;
 }
 
 #featureVis line.currentTl, #featureVis ellipse.currentTl{
@@ -167,6 +172,10 @@ body {
 
 #featureVis line.barLineAttr { 
   stroke:lightgrey;
+}
+
+#featureVis line.estimated { 
+  stroke-dasharray: 1.5;
 }
 
 .clickableBoundedInstant { 

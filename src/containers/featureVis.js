@@ -27,6 +27,9 @@ class FeatureVis extends Component {
     this.noteElementsForInstant = this.noteElementsForInstant.bind(this);
     this.setPointsPerTimeline = this.setPointsPerTimeline.bind(this);
     this.calculateAvgQstampFromNoteIds = this.calculateAvgQstampFromNoteIds.bind(this);
+    this.makePoint = this.makePoint.bind(this);
+    this.makeLine = this.makeLine.bind(this);
+    this.handleClick = this.handleClick.bind(this);
   }
 
   componentDidMount() { 
@@ -249,13 +252,55 @@ class FeatureVis extends Component {
     this.setState({ pointsPerTimeline });
   }
 
+  makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString) { 
+    // return SVG for a "point" (e.g. ellipse) on the visualisation
+    return <ellipse 
+      className={className} 
+      data-qstamp={qstamp} 
+      cx={cx} cy={cy} 
+      rx={rx} ry={ry} 
+      id={qstamp} 
+      key={key}
+      onClick={ () => this.handleClick(qstamp,tl) }>
+        <title>{titleString}</title>
+      </ellipse>;
+  }
+
+  makeLine(className, qstamp, tl, x1, y1, x2, y2, key, titleString) { 
+    // return SVG for a line segment on the visualisation
+    return <line 
+    className={className} 
+    data-qstamp={qstamp} 
+    x1={x1} y1={y1} 
+    x2={x2} y2={y2} 
+    key={key}
+    onClick={ () => this.handleClick(qstamp,tl) }>
+      <title>{titleString}</title>
+    </line>;
+  }
+
+  handleClick(qstamp,tl) { 
+    // seek to earliest instant on the clicked timeline at the clicked scoretime
+    this.props.seekToInstant(this.state.instantsByScoretime[tl][qstamp][0]);
+  }
+   
+
   render() {
     if(Object.keys(this.state.pointsPerTimeline).length) {
       let svgElements = [];
       // generate barlines
       Array.from(this.props.barlinesOnPage).map((bl,ix) => { 
         const absolute = this.convertCoords(bl);
-        svgElements.push(<line x1={absolute.x} x2={absolute.x} y1="0" y2="100" className="barLineAttr" key={"barline" + ix} />);
+        svgElements.push(
+          this.makeLine(
+            "barLineAttr", // className,
+            null, // qstamp - barlines don't need one!
+            null, // timeline - barlines don't need one!
+            absolute.x, "0", absolute.x, "100", // x1, y1, x2, y2
+            "barline-"+ix, // react key
+            null  // titleString - barlines don't need one!
+          ) 
+        )
       })
       // generate points and lines for each timeline
       // ensure that the currently active timeline (if any) is painted last, to paint over the others
@@ -292,16 +337,62 @@ class FeatureVis extends Component {
             // at the first point:
             // no line to previous (because no previous)
             // "steal" Y position from 2nd point (because no iii at first point)
-            points.push(<ellipse className = {className} data-qstamp = {pt.qstamp} cx={pt.x} cy={tlPoints[ix+1].y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+            points.push(
+              this.makePoint(
+                className, 
+                pt.qstamp, 
+                tl, // timeline
+                pt.x, tlPoints[ix+1].y, "3", "3",  //cx, cy, rx, ry
+                "point-"+tl+ix, // react key
+                "Point: " + instantsString +" qstamp: " + pt.qstamp // titleString
+              )
+            )
           } else if(ix === 1) { 
             // at the second point:
-            // dotted horizontal line to previous (with stolen Y position)
-            // "normal" point
-            lines.push(<line className = {className} data-qstamp = {pt.qstamp} x1={prevX} x2={pt.x} y1={pt.y} y2={pt.y} strokeDasharray="2 1" key={"line-"+tl+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
-            points.push(<ellipse className = {className} data-qstamp = {pt.qstamp} cx={pt.x} cy={pt.y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+            // connect line to "estimated" first point (with stolen Y position)
+            // and draw a "normal" point
+            lines.push(
+              this.makeLine(
+                className + " estimated",
+                pt.qstamp,
+                tl, //timeline
+                prevX, pt.y, pt.x, pt.y, // x1, y1, x2, y2
+                "line-"+tl+ix, // react key
+                "Line: " + instantsString + " qstamp: " + pt.qstamp // titleString
+              )
+            )
+            points.push(
+              this.makePoint(
+                className, 
+                pt.qstamp, 
+                tl, //timeline
+                pt.x, pt.y, "3", "3",  //cx, cy, rx, ry
+                "point-"+tl+ix, // react key
+                "Point: " + instantsString +" qstamp: " + pt.qstamp + " iii: " + (pt.y / 50).toFixed(2) // titleString
+              )
+            )
           } else {
-            lines.push(<line className = {className} data-qstamp = {pt.qstamp} x1={prevX} x2={pt.x} y1={prevY} y2={pt.y} key={"line-"+tl+ix}><title>Line: {instantsString} qstamp: {pt.qstamp} </title></line>);
-            points.push(<ellipse className = {className} data-qstamp = {pt.qstamp} cx={pt.x} cy={pt.y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
+            // "normal" line and point
+            lines.push(
+              this.makeLine(
+                className,
+                pt.qstamp,
+                tl, //timeline
+                prevX, prevY, pt.x, pt.y, // x1, y1, x2, y2
+                "line-"+tl+ix, // react key
+                "Line: " + instantsString + " qstamp: " + pt.qstamp + " iii: " + (pt.y / 50).toFixed(2)// titleString
+              )
+            )
+            points.push(
+              this.makePoint(
+                className, 
+                pt.qstamp, 
+                tl, //timeline
+                pt.x, pt.y, "3", "3",  //cx, cy, rx, ry
+                "point-"+tl+ix, // react key
+                "Point: " + instantsString +" qstamp: " + pt.qstamp + " iii: " + (pt.y / 50).toFixed(2)// titleString
+              )
+            )
           }
         });
         // SVGs don't support CSS z-index, so we need to be careful with our ordering:

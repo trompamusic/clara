@@ -81,6 +81,7 @@ class Companion extends Component {
     this.monitorKeys= this.monitorKeys.bind(this);
     this.mapVelocity = this.mapVelocity.bind(this);
     this.ensureArray = this.ensureArray.bind(this);
+    this.seekToInstant = this.seekToInstant.bind(this);
   }
 
   componentWillMount() { 
@@ -164,7 +165,6 @@ class Companion extends Component {
 //      this.assignClickHandlersToNotes();
       this.createInstantBoundingRects();
       this.highlightDeletedNotes();
-      console.log("Setting notesOnPage!")
       this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note") });
     }
     if(prevState.showConfidence !== this.state.showConfidence) { 
@@ -410,8 +410,9 @@ class Companion extends Component {
             barlinesOnPage={ this.state.barlinesOnPage } 
             instantsByNoteId={ this.state.instantsByNoteId } 
             timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
-            currentTimeline = {currentTimeline} 
+            currentTimeline = { currentTimeline } 
             currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
+            seekToInstant = { this.seekToInstant }
             ref = {(featureVis) => { this.featureVis = featureVis } } />
             : ""
           }
@@ -456,7 +457,7 @@ class Companion extends Component {
                     })
                   }
                 </select>
-                <select name="perfSelect" onChange={ this.handlePerformanceSelected }>
+                <select name="perfSelect" defaultValue="none" value={this.state.selectedPerformance["@id"]} onChange={ (e) => this.handlePerformanceSelected(e.target.value) }>
                   <option value="none">Select a rendition...</option>
                   {
                     this.state.performances.map( (perf) => { 
@@ -581,10 +582,31 @@ class Companion extends Component {
       }
     }
   }
+
+  seekToInstant(instant) { 
+    // seek to a specific instant on a particular timeline
+    // (switching to the performance of that timeline if necessary)
+    const performances = this.state.performances.filter((p) => p["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"][0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] === instant["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]);
+    if(!performances.length) { 
+      console.warn("Tried to seek to instant on timeline of non-existant performance: ", instant);
+    } else { 
+      const selectedPerformance = performances[0];
+      const selectedVideo = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
+      let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+      dur = parseFloat(dur.substr(1, dur.length-2));
+      let seekTo = dur + parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
+      document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
+      this.setState({ selectedVideo, selectedPerformance, seekTo }, () => { 
+        this.props.registerClock(selectedVideo);
+        this.player.seekTo(seekTo);
+      })
+
+    }
+  }
   
-  handlePerformanceSelected(e) { 
-    console.log("Rendition selected: ", e.target);
-    const selected = this.state.performances.filter( (perf) => { return perf["@id"] === e.target.value });
+  handlePerformanceSelected(perfId) { 
+    console.log("Rendition selected: ", perfId);
+    const selected = this.state.performances.filter( (perf) => { return perf["@id"] === perfId });
     const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
     const selectedPerformance = selected[0];
 		this.props.registerClock(selectedVideo);
