@@ -251,17 +251,31 @@ class FeatureVis extends Component {
 
   render() {
     if(Object.keys(this.state.pointsPerTimeline).length) {
-      let lines = [];
-      let points = [];
-      let barlines = [];
+      let svgElements = [];
       // generate barlines
       Array.from(this.props.barlinesOnPage).map((bl,ix) => { 
         const absolute = this.convertCoords(bl);
-        barlines.push(<line x1={absolute.x} x2={absolute.x} y1="0" y2="100" className="barLineAttr" key={"barline" + ix} />);
+        svgElements.push(<line x1={absolute.x} x2={absolute.x} y1="0" y2="100" className="barLineAttr" key={"barline" + ix} />);
       })
-      // generate points and lines
-      Object.keys(this.state.pointsPerTimeline).map((tl) => { 
+      // generate points and lines for each timeline
+      // ensure that the currently active timeline (if any) is painted last, to paint over the others
+      // (no z-index CSS for SVGs...)
+      let timelinesInOrder = this.props.timelinesToVis;
+      if(this.props.currentTimeline) {
+        const currentTlIndex = timelinesInOrder.indexOf(this.props.currentTimeline);
+        if(currentTlIndex > -1) { 
+          timelinesInOrder.splice(currentTlIndex,1);
+          timelinesInOrder.push(this.props.currentTimeline);
+
+        }
+        else { 
+          console.warn("FeatureVis: Cannot find current timeline in timelinesToVis");
+        }
+      }
+      timelinesInOrder.map((tl) => { 
         // for each timeline...
+        let lines = [];
+        let points = [];
         const tlPoints = this.state.pointsPerTimeline[tl];
         tlPoints.map( (pt,ix) => { 
           let instantsString = pt.instants.map((inst) => inst["@id"]).join(",");
@@ -290,12 +304,14 @@ class FeatureVis extends Component {
             points.push(<ellipse className = {className} data-qstamp = {pt.qstamp} cx={pt.x} cy={pt.y} rx="3" ry="3" id={pt.qstamp} fill="none" key={"point-"+tl+ix}><title>Point: {instantsString} qstamp: { pt.qstamp }</title></ellipse>);
           }
         });
+        // SVGs don't support CSS z-index, so we need to be careful with our ordering:
+        // We want whole timelines to be consistent in their z-axis ordering
+        // But on a given timeline, we want points to paint over lines.
+        svgElements = [...svgElements, lines, points];
       });
       return (
         <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1800.00px" height="100px" transform="scale(1,-1) translate(0, 50)" ref = {(featureSvg) => { this.featureSvg = featureSvg } }>
-              { barlines }
-              { lines }
-              { points }
+              { svgElements }
         </svg>
       )
     } else { 

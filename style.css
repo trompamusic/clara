@@ -156,8 +156,8 @@ body {
 
 #featureVis line.currentTl, #featureVis ellipse.currentTl{
   stroke:red;
+  fill:red;
   stroke-width:2px;
-  z-index: 1;
 }
 
 #featureVis line.active, #featureVis ellipse.active{
@@ -167,7 +167,6 @@ body {
 
 #featureVis line.barLineAttr { 
   stroke:lightgrey;
-  z-index:-1;
 }
 
 .clickableBoundedInstant { 
