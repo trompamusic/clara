@@ -7,8 +7,8 @@ class FeatureVis extends Component {
   constructor(props) {
     super(props);
     this.state = { 
-      width: this.props.width || 100,
-      height: this.props.height || 100,
+      width: this.props.width || "1280",
+      height: this.props.height || "120",
       instantsOnPage: {},
       instantsByScoretime: {},
       noteElementsByNoteId: {},
@@ -16,7 +16,7 @@ class FeatureVis extends Component {
       timemapByNoteId: {},
       pointsPerTimeline: {},
       currentTimeline: this.props.currentTimeline,
-      currentQstamp: ""
+      currentQstamp: "",
     }
     this.setInstantsOnPage = this.setInstantsOnPage.bind(this);
     this.setInstantsByScoretime = this.setInstantsByScoretime.bind(this);
@@ -187,7 +187,7 @@ class FeatureVis extends Component {
   }
 
   calculateQStampForInstant(inst) { 
-    // qstamp == time in quarter notes (as per verovio timemap)
+    // qstamp == time in quarter notes (as per verovio timemap
     // as multiple notes (with potentially different qstamps) could share a performed
     // instant, calculate an (average) qstamp per instant here
     const noteElements = this.noteElementsForInstant(inst);
@@ -296,11 +296,46 @@ class FeatureVis extends Component {
             "barLineAttr", // className,
             null, // qstamp - barlines don't need one!
             null, // timeline - barlines don't need one!
-            absolute.x, "0", absolute.x, "100", // x1, y1, x2, y2
+            absolute.x, "0", absolute.x, this.state.height, // x1, y1, x2, y2
             "barline-"+ix, // react key
             null  // titleString - barlines don't need one!
           ) 
         )
+      })
+
+      // generate bpm markers
+      const bpmMarkersToDraw = [20, 40, 60,80,100,120,140];
+      bpmMarkersToDraw.map((bpm, ix) => {
+        svgElements.push(
+          this.makeLine(
+            "bpmMarker", // className
+            null, // qstamp - bpmMarker doesn't need one!
+            null, // timeline - bpmMarker doesn't need one!
+            "0", Math.round(bpm * 50 / 60), this.state.width, Math.round(bpm * 50 / 60), // x1, y1, x2, y2
+            "bpm-" + bpm, // reactKey
+            bpm + " b.p.m." // title string
+          )
+        )
+        svgElements.push(
+            <text key={ bpm + "label" } 
+              style={ {fontSize:8, fill:"darkgrey"} }
+              // black magic transform... (to compensate for flipped svg coord system)
+              transform={ "scale(1, -1) translate(0, -" + Math.round(bpm*0.7 + bpm - 0.9*ix) + ")"}
+              x="0" y={ Math.round(bpm*50/60) } 
+              classList="bpmLabel">
+                {bpm + " b.p.m."}
+           </text>
+        );
+        svgElements.push(
+            <text key={ bpm + "label2" } 
+              style={ {fontSize:8, fill:"darkgrey"} }
+              // black magic transform... (to compensate for flipped svg coord system)
+              transform={ "scale(1, -1) translate(0, -" + Math.round(bpm*0.7 + bpm - 0.9*ix) + ")"}
+              x={ this.state.width - 40} y={ Math.round(bpm*50/60) } 
+              classList="bpmLabel">
+                {bpm + " b.p.m."}
+           </text>
+        );
       })
       // generate points and lines for each timeline
       // ensure that the currently active timeline (if any) is painted last, to paint over the others
@@ -368,7 +403,7 @@ class FeatureVis extends Component {
                 tl, //timeline
                 pt.x, pt.y, "3", "3",  //cx, cy, rx, ry
                 "point-"+tl+ix, // react key
-                "Point: " + instantsString +" qstamp: " + pt.qstamp + " iii: " + (pt.y / 50).toFixed(2) // titleString
+                "Point: " + instantsString +" qstamp: " + pt.qstamp + " b.p.m.: " + (pt.y / 50 * 60).toFixed(2) // titleString
               )
             )
           } else {
@@ -380,7 +415,7 @@ class FeatureVis extends Component {
                 tl, //timeline
                 prevX, prevY, pt.x, pt.y, // x1, y1, x2, y2
                 "line-"+tl+ix, // react key
-                "Line: " + instantsString + " qstamp: " + pt.qstamp + " iii: " + (pt.y / 50).toFixed(2)// titleString
+                "Line: " + instantsString + " qstamp: " + pt.qstamp + " b.p.m.: " + (pt.y / 50 * 60).toFixed(2)// titleString
               )
             )
             points.push(
@@ -390,7 +425,7 @@ class FeatureVis extends Component {
                 tl, //timeline
                 pt.x, pt.y, "3", "3",  //cx, cy, rx, ry
                 "point-"+tl+ix, // react key
-                "Point: " + instantsString +" qstamp: " + pt.qstamp + " iii: " + (pt.y / 50).toFixed(2)// titleString
+                "Point: " + instantsString +" qstamp: " + pt.qstamp + " b.p.m.: " + (pt.y / 50 * 60).toFixed(2)// titleString
               )
             )
           }
@@ -401,7 +436,7 @@ class FeatureVis extends Component {
         svgElements = [...svgElements, lines, points];
       });
       return (
-        <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1800.00px" height="100px" transform="scale(1,-1) translate(0, 50)" ref = {(featureSvg) => { this.featureSvg = featureSvg } }>
+        <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = {(featureSvg) => { this.featureSvg = featureSvg } }>
               { svgElements }
         </svg>
       )

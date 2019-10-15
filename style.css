@@ -142,10 +142,10 @@ body {
 }
 
 #featureVis, #featureVisLoading {
-  margin-top: 100px;
-  margin-bottom:-100px;
+  margin-top: 80px;
+  margin-bottom:-80px;
   overflow:visible;
-  height:100px;
+  height:120px;
   width:1280px;
 }
 
@@ -174,8 +174,18 @@ body {
   stroke:lightgrey;
 }
 
+#featureVis line.bpmMarker { 
+  stroke-dasharray:1;
+  stroke:lightgrey;
+}
+
 #featureVis line.estimated { 
   stroke-dasharray: 1.5;
+}
+
+#featureVis text.bpmLabel {
+  font-size: 6px;
+  fill: lightgrey;
 }
 
 .clickableBoundedInstant { 
@@ -186,3 +196,5 @@ body {
 .clickableBoundedInstant.featureVis, .confidenceBoundedInstant.featureVis { 
   margin-top:0px;
 }
+
+
