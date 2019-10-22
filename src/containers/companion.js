@@ -24,10 +24,10 @@ const vrvOptionsPageView = {
 };
 
 const vrvOptionsFeatureVis = {
-	scale: 45,
+	scale: 25,
   adjustPageHeight: 1,
 	pageHeight: 400,
-	pageWidth: 2800,
+	pageWidth:  5000,
 	noFooter: 1,
 	noHeader: 1,
 	unit: 6
@@ -175,7 +175,6 @@ class Companion extends Component {
       this.refs.pageControlsWrapper.classList.toggle("following");
       this.refs.scoreFollowingToggle.checked = this.state.scoreFollowing;
     }
-
   }
   
   componentWillUnmount() { 
@@ -517,6 +516,21 @@ class Companion extends Component {
                         }}
                       />
                       Inserted / deleted notes
+                  </span>
+                  <span id="modeToggle">
+                      <input 
+                        type="checkbox" 
+                        ref="modeToggle"
+                        defaultChecked={ this.state.mode === "featureVis" }
+                        onChange={ () => { 
+                          if(this.state.mode === "featureVis") { 
+                            this.setState({ mode: "pageView" });
+                          } else { 
+                            this.setState({ mode: "featureVis" });
+                          }
+                        }}
+                      />
+                      Visualise tempo curves 
                   </span>
                 </span>
                 <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank">More information</a></span>

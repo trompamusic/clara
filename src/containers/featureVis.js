@@ -65,16 +65,19 @@ class FeatureVis extends Component {
       prevProps.currentlyActiveNoteIds.join("") !== this.props.currentlyActiveNoteIds.join("")) { 
       this.setState({ currentQstamp: this.calculateAvgQstampFromNoteIds(this.props.currentlyActiveNoteIds) }, () => {
         // clear previously active
-        const previouslyActive = ReactDOM.findDOMNode(this.featureSvg).querySelectorAll(".active");
-        Array.from(previouslyActive).map((p) => p.classList.remove("active"));
-        // grab elements on current timeline
-        const currentTlElements = ReactDOM.findDOMNode(this.featureSvg).querySelectorAll(".currentTl");
-        // make those active with a qstamp at or before the currentQstamp
-        Array.from(currentTlElements).map((e) => { 
-          if(parseFloat(e.getAttribute("data-qstamp")) <= this.state.currentQstamp) { 
-            e.classList.add("active");
-          }
-        })
+        const featureSvgElement = ReactDOM.findDOMNode(this.featureSvg);
+        if(featureSvgElement) { 
+          const previouslyActive = ReactDOM.findDOMNode(this.featureSvg).querySelectorAll(".active");
+          Array.from(previouslyActive).map((p) => p.classList.remove("active"));
+          // grab elements on current timeline
+          const currentTlElements = ReactDOM.findDOMNode(this.featureSvg).querySelectorAll(".currentTl");
+          // make those active with a qstamp at or before the currentQstamp
+          Array.from(currentTlElements).map((e) => { 
+            if(parseFloat(e.getAttribute("data-qstamp")) <= this.state.currentQstamp) { 
+              e.classList.add("active");
+            }
+          })
+        }
       })
     }
   }
@@ -165,21 +168,27 @@ class FeatureVis extends Component {
     }
   }
 
-    // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group  
   convertCoords(elem) {
-    if(document.getElementById(elem.getAttribute("id"))) { 
-      const x = elem.getBBox().x;
-      const y = elem.getBBox().y;
-      const offset = elem.closest("svg").parentElement.getBoundingClientRect();
-      const matrix = elem.getScreenCTM();
-      return {
-          x: (matrix.a * x) + (matrix.c * y) + matrix.e - offset.left,
-          y: (matrix.b * x) + (matrix.d * y) + matrix.f - offset.top
-      };
+    if(elem) {
+      const elemOnPage = document.getElementById(elem.getAttribute("id")); 
+      if(elemOnPage) { 
+        const x = elemOnPage.getBBox().x;
+        const y = elemOnPage.getBBox().y;
+        const offset = elem.closest("svg").parentElement.getBoundingClientRect();
+        const matrix = elem.getScreenCTM();
+        return {
+            x: (matrix.a * x) + (matrix.c * y) + matrix.e - offset.left,
+            y: (matrix.b * x) + (matrix.d * y) + matrix.f - offset.top
+        };
+      } else {
+        console.warn("Element unavailable on page: ", elem.getAttribute("id"));
+        return { x:0, y:0 }
+      }
     } else {
-      console.warn("Element unavailable on page: ", elem.getAttribute("id"));
+      console.error("Requesting convertCoorts of undefined element");
       return { x:0, y:0 }
     }
+
   }
   
   ensureArray(val) { 
