@@ -1,6 +1,6 @@
 # CLARA Rehearsal companion for instrumental players
 
-CLARA is a rehearsal companion for instrumental players developed as part of the TROMPA Project: Towards Richer Online Music Public-domain Archives
+CLARA is a rehearsal companion for instrumental players under development as part of the TROMPA Project: Towards Richer Online Music Public-domain Archives
 
 Public demo available here: https://trompa.mdw.ac.at
 
