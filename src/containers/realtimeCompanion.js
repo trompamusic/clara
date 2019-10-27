@@ -17,8 +17,8 @@ const SSE_PROVIDER = "http://localhost/sservant";
 const vrvOptions = {
 	scale: 45,
   adjustPageHeight: 1,
-	pageHeight: 1200,
-	pageWidth: 2200,
+	pageHeight: 1100,
+	pageWidth: 2000,
 	noFooter: 1,
 	unit: 6
 };

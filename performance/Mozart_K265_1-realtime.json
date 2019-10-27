@@ -1,0 +1,49 @@
+[
+  {
+    "@id": "http://localhost/performance/Mozart_K265_1-realtime.json",
+    "@type": [
+      "http://purl.org/ontology/mo/Performance"
+    ],
+    "http://purl.org/ontology/mo/performance_of": [
+      {
+        "@id": "http://localhost/score/Mozart_K265_1-realtime.json"
+      }
+    ],
+    "http://purl.org/ontology/mo/recorded_as": [
+      {
+        "@id": "http://localhost/performance/Mozart_K265_1-realtime.json#Signal"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Realtime performance demo: WoO 80"
+      }
+    ],
+    "https://meld.linkedmusic.org/terms/offset": [
+      {
+        "@value": "0"
+      }
+    ]
+  },
+  {
+    "@id": "http://localhost/performance/Mozart_K265_1-realtime.json#Signal",
+    "http://purl.org/ontology/mo/available_as": [
+    ],
+    "http://purl.org/ontology/mo/time": [
+      {
+        "@id": "_:ub3bL20C13"
+      }
+    ]
+  },
+  {
+    "@id": "_:ub3bL20C13",
+    "@type": [
+      "http://purl.org/NET/c4dm/timeline.owl#Interval"
+    ],
+    "http://purl.org/NET/c4dm/timeline.owl#onTimeLine": [
+      {
+        "@id": "http://localhost/timeline/Mozart_K265_1-realtime.json"
+      }
+    ]
+  }
+]

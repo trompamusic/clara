@@ -1,0 +1,20 @@
+{
+  "@context": {
+    "meld": "https://meld.linkedmusic.org/terms/",
+    "mo": "http://purl.org/ontology/mo/",
+    "score": "http://localhost/score/",
+    "struct": "http://localhost/structure/"
+  },
+  "@graph": [
+    {
+      "@id": "score:Mozart_K265_1-realtime.json",
+      "@type": "mo:Score",
+      "meld:segments": {
+        "@id": "struct:Mozart_K265_1.json"
+      },
+      "mo:published_as": {
+        "@id": "http://localhost/mei/Mozart_Variations_K265_1_w_repetitions.mei"
+      }
+    }
+  ]
+}
