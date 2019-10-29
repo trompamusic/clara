@@ -1,6 +1,6 @@
 # CLARA Rehearsal companion for instrumental players
 
-CLARA (Companion for Longterm Analysis of Rehearsal Attempts) is a rehearsal companion for instrumental players under development as part of the TROMPA Project: Towards Richer Online Music Public-domain Archives
+CLARA (Companion for Long-term Analysis of Rehearsal Attempts) is a rehearsal companion for instrumental players under development as part of the TROMPA Project: Towards Richer Online Music Public-domain Archives
 
 Public demo available here: https://trompa.mdw.ac.at
 
