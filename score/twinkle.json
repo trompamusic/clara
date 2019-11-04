@@ -1,0 +1,20 @@
+{
+  "@context": {
+    "meld": "https://meld.linkedmusic.org/terms/",
+    "mo": "http://purl.org/ontology/mo/",
+    "score": "http://localhost/score/",
+    "struct": "http://localhost/structure/"
+  },
+  "@graph": [
+    {
+      "@id": "score:twinkle.json",
+      "@type": "mo:Score",
+      "meld:segments": {
+        "@id": "struct:twinkleStructure.json"
+      },
+      "mo:published_as": {
+        "@id": "http://localhost/mei/twinkle.mei"
+      }
+    }
+  ]
+}
