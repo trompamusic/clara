@@ -100,6 +100,7 @@ class RealtimeCompanion extends Component {
     }
     this.eventSource.onerror = e => { 
       console.log("Received SSE error: ", e)
+      window.location.reload();
     }
     
     document.addEventListener('keydown', this.monitorKeys);
