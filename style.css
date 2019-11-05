@@ -41,8 +41,7 @@ body {
 }
 
 .scorepane { 
-  min-height: 460px;
-  max-height: 460px;
+  height: 170px;
 }
 
 .errorDetected { 
@@ -109,7 +108,7 @@ body {
   margin-bottom: -15px;
   display: flex;
   justify-content: space-between;
-  max-width: 950px;
+  max-width: 95%;
   margin-left: 20px;
   z-index:-2;
 }

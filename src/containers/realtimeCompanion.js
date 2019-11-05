@@ -12,13 +12,14 @@ import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObje
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
 const SSE_PROVIDER = "http://localhost/sservant";
+const traversalUri = "http://localhost/performance/twinkle-realtime-container.json";
 
 
 const vrvOptions = {
-	scale: 45,
+	scale: 65,
   adjustPageHeight: 1,
 	pageHeight: 1100,
-	pageWidth: 2000,
+	pageWidth: 3800,
 	noFooter: 1,
 	unit: 6
 };
@@ -79,14 +80,13 @@ class RealtimeCompanion extends Component {
   }
 
   componentDidMount() { 
-    this.props.registerTraversal(this.props.uri, {
+    this.props.registerTraversal(traversalUri, {
       numHops:4, 
       objectPrefixWhitelist:["http://localhost/"],
       objectPrefixBlacklist:[
         "http://localhost/videos/", 
         "http://localhost/mei/",
-        "http://localhost/structure/WoO80.json/genid/",
-        "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.json/genid/"
+        "http://localhost/structure/twinkleStructure.json/genid/"
       ]
     });
 
@@ -99,8 +99,8 @@ class RealtimeCompanion extends Component {
       this.handleRealtimeInstant(e.data);
     }
     this.eventSource.onerror = e => { 
-      console.log("Received SSE error: ", e)
-      window.location.reload();
+      console.log("Received SSE error, reloading: ", e);
+      setTimeout(window.location.reload(), 1000);
     }
     
     document.addEventListener('keydown', this.monitorKeys);
@@ -400,6 +400,7 @@ class RealtimeCompanion extends Component {
             ? <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
             : <div className="loadingMsg">Loading score, please wait...</div>
           }
+        {/*
           <div id="pageControlsWrapper" ref="pageControlsWrapper">
           { this.props.score.pageNum > 1 
             ? <div id="prev" ref="prev" onClick={() => {
@@ -418,7 +419,7 @@ class RealtimeCompanion extends Component {
           : <div id="next" />
           }
           </div>
-          <span id="scoreFollowToggle">
+        <span id="scoreFollowToggle">
             <input 
               type="checkbox" 
               ref="scoreFollowingToggle"
@@ -454,7 +455,22 @@ class RealtimeCompanion extends Component {
                 }}
               />
               Show errors 
-          </span>
+          </span>*/}
+        <div className="fundingStatement">
+            <table style={ {marginLeft: "20px"} }>
+              <tbody>
+                <tr>
+                  <td>
+                    <img src="https://ec.europa.eu/research/participants/docs/h2020-funding-guide/imgs/eu-flag.jpg" width="100px"/>
+                  </td>
+                  <td style={ {width: "830px", border: "0px"} }>
+                      <div style={ {marginLeft: "20px", fontSize: "0.8em"} }>This project has received funding from the&nbsp;European Union's Horizon 2020 research and innovation programme<i>&nbsp;</i><em>H2020-EU.3.6.3.1. - Study European heritage, memory, identity, integration and cultural interaction and translation, including its representations in cultural and scientific collections, archives and museums, to better inform and understand the present by richer interpretations of the past</em> under grant agreement No 770376.
+                      </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       )
     }
