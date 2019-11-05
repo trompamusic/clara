@@ -7,14 +7,14 @@ import ReduxPromise from 'redux-promise';
 import { Router, Route, browserHistory } from 'react-router'
 
 import { reducers } from 'meld-clients-core/src/reducers';
-import PieceSelection from './containers/pieceSelection';
+import Companion from './containers/companion';
 
 const createStoreWithMiddleware = applyMiddleware(thunk, ReduxPromise)(createStore);
 
 ReactDOM.render(
 	<Provider store={createStoreWithMiddleware(reducers)}>
 		<Router history={browserHistory}> 
-			<Route path="/" component={PieceSelection} />
+			<Route path="/" component={Companion} />
 		</Router>
 	</Provider>
 		, document.querySelector('.container')

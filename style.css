@@ -85,7 +85,7 @@ body {
 }
 
 #pageControlsWrapper.featureVis { 
-  max-width: 1253px;
+  max-width: 100%;
 }
 
 #pageControlsWrapper.following{
@@ -125,7 +125,7 @@ body {
 }
 
 #logoWrapper.featureVis { 
-  max-width: 1765px;
+  max-width: 100%;
 }
 
 #logoWrapper #trompaLogo { 
@@ -146,7 +146,7 @@ body {
   margin-bottom:-80px;
   overflow:visible;
   height:120px;
-  width:1280px;
+  width:100%;
 }
 
 #featureVis { 

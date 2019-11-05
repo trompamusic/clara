@@ -13,6 +13,7 @@ import Score from 'meld-clients-core/src/containers/score';
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/src/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
+const traversalUri = "http://localhost:8080/rdfcache/WoO80cache.json";
 
 const vrvOptionsPageView = {
 	scale: 45,
@@ -24,10 +25,10 @@ const vrvOptionsPageView = {
 };
 
 const vrvOptionsFeatureVis = {
-	scale: 45,
+	scale: 43,
   adjustPageHeight: 1,
 	pageHeight: 400,
-	pageWidth: 2800,
+	pageWidth: 5800,
 	noFooter: 1,
 	noHeader: 1,
 	unit: 6
@@ -93,7 +94,7 @@ class Companion extends Component {
   }
 
   componentDidMount() { 
-    this.props.registerTraversal(this.props.uri, {
+    this.props.registerTraversal(traversalUri, {
       numHops:0, 
       objectPrefixWhitelist:["http://localhost:8080/", "http://localhost:4000"],
       objectPrefixBlacklist:[
@@ -413,6 +414,7 @@ class Companion extends Component {
             currentTimeline = { currentTimeline } 
             currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
             seekToInstant = { this.seekToInstant }
+            width = "2500"
             ref = {(featureVis) => { this.featureVis = featureVis } } />
             : ""
           }
