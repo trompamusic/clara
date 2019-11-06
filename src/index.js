@@ -16,7 +16,7 @@ ReactDOM.render(
 	<Provider store={createStoreWithMiddleware(reducers)}>
 		<Router history={browserHistory}> 
 			<Route path="/" component={RealtimeCompanion} />
-			<Route path="/vis" component={featureVisCompanion} />
+			<Route path="/vis" component={FeatureVisCompanion} />
 		</Router>
 	</Provider>
 		, document.querySelector('.container')

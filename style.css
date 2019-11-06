@@ -44,6 +44,11 @@ body {
   height: 170px;
 }
 
+.scorepane.featureVis { 
+  min-height: 230px;
+  max-height: 230px;
+}
+
 .errorDetected { 
   fill:black;
   stroke:black;
@@ -76,6 +81,10 @@ body {
   padding-right: .3em;
   font-weight: bold;
   color: rgba(255, 102, 0);
+}
+
+#pageControlsWrapper.featureVis { 
+  max-width: 100%;
 }
 
 #pageControlsWrapper.following{
@@ -113,6 +122,11 @@ body {
   z-index:-2;
 }
 
+#logoWrapper.featureVis { 
+  max-width: 100%;
+}
+
+
 #logoWrapper #trompaLogo { 
   height:32px;
   margin-top:20px;
@@ -125,3 +139,61 @@ body {
 .hidden {
   visibility:hidden;
 }
+
+#featureVis, #featureVisLoading {
+  margin-top: 80px;
+  margin-bottom:-80px;
+  overflow:visible;
+  height:120px;
+  width:100%;
+}
+
+#featureVis { 
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(180, 180, 180, .2) 5%, rgba(180, 180, 180, .2) 95%, rgba(255, 255, 255, .2) 100%)
+}
+
+#featureVis line, #featureVis ellipse { 
+  stroke:black;
+  fill: #ffffff00;
+  cursor: pointer;
+}
+
+#featureVis line.currentTl, #featureVis ellipse.currentTl{
+  stroke:red;
+  fill:red;
+  stroke-width:2px;
+}
+
+#featureVis line.active, #featureVis ellipse.active{
+  stroke:orange !important;
+  fill:orange !important;
+}
+
+#featureVis line.barLineAttr { 
+  stroke:lightgrey;
+}
+
+#featureVis line.bpmMarker { 
+  stroke-dasharray:1;
+  stroke:lightgrey;
+}
+
+#featureVis line.estimated { 
+  stroke-dasharray: 1.5;
+}
+
+#featureVis text.bpmLabel {
+  font-size: 6px;
+  fill: lightgrey;
+}
+
+.clickableBoundedInstant { 
+  margin-top:120px;
+}
+
+/* if we have feature visualisation (featureVis) rendered on page, need to nudge notes down */
+.clickableBoundedInstant.featureVis, .confidenceBoundedInstant.featureVis { 
+  margin-top:0px;
+}
+
+

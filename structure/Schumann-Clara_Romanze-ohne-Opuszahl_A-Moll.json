@@ -6,7 +6,7 @@
     ]
   },
   {
-    "@id": "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll#B",
+    "@id": "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.json#B",
     "@type": [
       "http://www.linkedmusic.org/ontologies/segment/Segment"
     ],
@@ -17,7 +17,7 @@
     ],
     "http://www.linkedmusic.org/ontologies/segment/onSegmentLine": [
       {
-        "@id": "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll"
+        "@id": "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.json"
       }
     ],
     "https://meld.linkedmusic.org/terms/order": [
@@ -39,7 +39,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost/structure/note-0000002109532284"
+        "@id": "http://localhost/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#-0000002109532284"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -1419,12 +1419,12 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost/structure/note-0000000520905166"
+        "@id": "http://localhost/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#-0000000520905166"
       }
     ]
   },
   {
-    "@id": "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll",
+    "@id": "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.json",
     "@type": [
       "http://www.linkedmusic.org/ontologies/segment/SegmentLine"
     ]
@@ -1441,7 +1441,7 @@
     ],
     "http://www.linkedmusic.org/ontologies/segment/onSegmentLine": [
       {
-        "@id": "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll"
+        "@id": "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.json"
       }
     ],
     "https://meld.linkedmusic.org/terms/order": [
@@ -1463,7 +1463,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost/structure/note-0000001910938733"
+        "@id": "http://localhost/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#-0000001910938733"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -2672,7 +2672,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost/structure/note-0000001038383042"
+        "@id": "http://localhost/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#-0000001038383042"
       }
     ]
   },
@@ -2688,7 +2688,7 @@
     ],
     "http://www.linkedmusic.org/ontologies/segment/onSegmentLine": [
       {
-        "@id": "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll"
+        "@id": "http://localhost/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.json"
       }
     ],
     "https://meld.linkedmusic.org/terms/order": [
@@ -2710,7 +2710,7 @@
     ],
     "https://meld.linkedmusic.org/terms/endsWith": [
       {
-        "@id": "http://localhost/structure/note-0000000678424209"
+        "@id": "http://localhost/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#-0000000678424209"
       }
     ],
     "https://meld.linkedmusic.org/terms/measures": [
@@ -4186,7 +4186,7 @@
     ],
     "https://meld.linkedmusic.org/terms/startsWith": [
       {
-        "@id": "http://localhost/structure/note-0000001952736127"
+        "@id": "http://localhost/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#-0000001952736127"
       }
     ]
   }

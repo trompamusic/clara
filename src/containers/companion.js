@@ -26,10 +26,10 @@ const vrvOptionsPageView = {
 };
 
 const vrvOptionsFeatureVis = {
-	scale: 45,
+	scale: 43,
   adjustPageHeight: 1,
 	pageHeight: 400,
-	pageWidth: 2800,
+	pageWidth: 5800,
 	noFooter: 1,
 	noHeader: 1,
 	unit: 6
@@ -96,13 +96,14 @@ class Companion extends Component {
 
   componentDidMount() { 
     this.props.registerTraversal(traversalUri, {
-      numHops:4, 
+      numHops:5, 
       objectPrefixWhitelist:["http://localhost"],
       objectPrefixBlacklist:[
         "http://localhost/videos/", 
         "http://localhost/Beethoven_Op126Nr3.mei", 
         "http://localhost/Beethoven_WoO80-32-Variationen-c-Moll.mei",
-        "http://localhost/Beethoven_Op126Nr3#"
+        "http://localhost/Beethoven_Op126Nr3#",
+        "http://localhost/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei"
       ]
     });
     document.addEventListener('keydown', this.monitorKeys);
@@ -415,6 +416,7 @@ class Companion extends Component {
             currentTimeline = { currentTimeline } 
             currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
             seekToInstant = { this.seekToInstant }
+            width = "2500"
             ref = {(featureVis) => { this.featureVis = featureVis } } />
             : ""
           }

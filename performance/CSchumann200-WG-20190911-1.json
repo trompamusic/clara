@@ -1,17 +1,17 @@
 [
   {
-    "@id": "https://trompa.mdw.ac.at/performance/CSchumann200-WG-20190911-1.json",
+    "@id": "http://localhost/performance/CSchumann200-WG-20190911-1.json",
     "@type": [
       "http://purl.org/ontology/mo/Performance"
     ],
     "http://purl.org/ontology/mo/performance_of": [
       {
-        "@id": "https://trompa.mdw.ac.at/score/SchumannClara_Romanze.json"
+        "@id": "http://localhost/score/SchumannClara_Romanze.json"
       }
     ],
     "http://purl.org/ontology/mo/recorded_as": [
       {
-        "@id": "https://trompa.mdw.ac.at/performance/CSchumann200-WG-20190911-1.json#Signal"
+        "@id": "http://localhost/performance/CSchumann200-WG-20190911-1.json#Signal"
       }
     ],
     "http://www.w3.org/2000/01/rdf-schema#label": [
@@ -26,10 +26,10 @@
     ]
   },
   {
-    "@id": "https://trompa.mdw.ac.at/performance/CSchumann200-WG-20190911-1.json#Signal",
+    "@id": "http://localhost/performance/CSchumann200-WG-20190911-1.json#Signal",
     "http://purl.org/ontology/mo/available_as": [
       {
-        "@id": "https://trompa.mdw.ac.at/videos/SchumannClara_Romanze-WG-Take1.mp4"
+        "@id": "http://localhost/videos/SchumannClara_Romanze-WG-Take1.mp4"
       }
     ],
     "http://purl.org/ontology/mo/time": [
@@ -45,7 +45,7 @@
     ],
     "http://purl.org/NET/c4dm/timeline.owl#onTimeLine": [
       {
-        "@id": "https://trompa.mdw.ac.at/timeline/CSchumann200-WG-20190911-1.json"
+        "@id": "http://localhost/timeline/CSchumann200-WG-20190911-1.json"
       }
     ]
   }

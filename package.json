@@ -4,7 +4,7 @@
    "description": "Exploratory viewing app for performances of Beethoven's 32 Variations (WoO 80)",
    "main": "index.js",
    "scripts": {
-      "start": "node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js -d"
+      "start": "node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js -d --port 8080"
    },
    "author": "David M. Weigl, IWK, University of Music and Performing Arts Vienna",
    "license": "BSD-3-Clause",
@@ -17,7 +17,7 @@
    "dependencies": {
       "axios": "^0.15.3",
       "babel-preset-stage-1": "^6.1.18",
-      "meld-clients-core": "oerc-music/meld-clients-core",
+      "meld-clients-core": "oerc-music/meld-clients-core#trackVrvChanges",
       "react": "^0.14.3",
       "react-dom": "^0.14.3",
       "react-player": "^1.11.0",

@@ -15,14 +15,19 @@
     "vid": "http://localhost/videos/BeethovenWettbewerb/",
     "xsd": "http://www.w3.org/2001/XMLSchema#"
   },
-  "@id": "perf:Op126Nr3.json",
+  "@id": "perf:CSchumann-realtime-container.json",
   "@type": [
     "ldp:BasicContainer",
     "ldp:Container"
   ],
   "dcterm:title": "Container for realtime performance demo of Clara Schumann - Romanze ohne Opuszahl",
   "ldp:contains": [
-    { "@id": "perf:CSchumann-realtime.json" }
+    { 
+      "@id": "perf:CSchumann200-WG-20190911-1.json",
+      "@id": "perf:CSchumann200-WG-20190911-2.json",
+      "@id": "perf:CSchumann200-WG-sightread.json"
+   
+    }
   ]
 }
 
