@@ -1,0 +1,24 @@
+@prefix frbr: <http://purl.org/vocab/frbr/core#> .
+@prefix maps: <https://terms.trompamusic.eu/maps#> .
+@prefix meld: <https://meld.linkedmusic.org/terms/> .
+@prefix mo: <http://purl.org/ontology/mo/> .
+@prefix perftl: <https://trompa.mdw.ac.at/timeline/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix recording: <https://trompa.mdw.ac.at/videos/> .
+@prefix so: <http://www.linkedmusic.org/ontologies/segment/> .
+@prefix tl: <http://purl.org/NET/c4dm/timeline.owl#> .
+@prefix work: <https://trompa.mdw.ac.at/score/> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<https://trompa.mdw.ac.at/performance/CSchumann200-WG-sightread.ttl> a mo:Performance ;
+    rdfs:label "Werner Goebl (sight reading)" ;
+    mo:performance_of work:SchumannClara_Romanze.ttl ;
+    mo:recorded_as <https://trompa.mdw.ac.at/performance/CSchumann200-WG-sightread.ttl#Signal> ;
+    meld:offset "1.748" .
+
+<https://trompa.mdw.ac.at/performance/CSchumann200-WG-sightread.ttl#Signal> mo:available_as recording:SchumannClara_Romanze-WG-sightreading.mp4 ;
+    mo:time [ a tl:Interval ;
+            tl:onTimeLine perftl:CSchumann200-WG-sightread.ttl ] .
+

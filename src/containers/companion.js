@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 import ReactPlayer from 'react-player'
+import FeatureVis from './featureVis';
+
 //import { Media, Player, controls, utils, withMediaProps } from 'react-media-player'
 //const { PlayPause, CurrentTime, Progress, SeekBar, Duration, MuteUnmute, Volume, Fullscreen } = controls
 //const { formatTime } = utils
@@ -12,12 +14,24 @@ import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObje
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
 
-const vrvOptions = {
+const traversalUri = "http://localhost/performance/CSchumann-realtime-container.json";
+
+const vrvOptionsPageView = {
 	scale: 45,
   adjustPageHeight: 1,
 	pageHeight: 1080,
 	pageWidth: 2200,
 	noFooter: 1,
+	unit: 6
+};
+
+const vrvOptionsFeatureVis = {
+	scale: 45,
+  adjustPageHeight: 1,
+	pageHeight: 400,
+	pageWidth: 2800,
+	noFooter: 1,
+	noHeader: 1,
 	unit: 6
 };
 
@@ -30,10 +44,13 @@ class Companion extends Component {
       instants: [],
       instantsByPerfTime: [],
       instantsByNoteId: [],
+      notesOnPage: [],
+      barlinesOnPage: [],
       selectedVideo: "",
       selectedPerformance: "",
       lastMediaTick: 0,
       previouslyActive: [],
+      currentlyActiveNoteIds: [],
       currentPerfSegment: {},
       currentSegment: {},
       currentScore: "",
@@ -50,7 +67,9 @@ class Companion extends Component {
       minMappedVelocity: 0, // minimum opacity (when note played at smallest expected velocity
       maxMappedVelocity: 255, // max opacity (when note played at largest expected velocity)
       minExpectedVel: 0, // guesstimate as to a note played at pianissimo (unit: midi velocity)
-      maxExpectedVel: 110 // guesstimate as to a note played at fortissimo (unit: midi velocity)
+      maxExpectedVel: 110, // guesstimate as to a note played at fortissimo (unit: midi velocity)
+      mode: "featureVis", // currently either pageView (portrait style) or featureVis (flattened single-system with visualisation)
+      featureVisPageNum: 0 // guards against race conditions between Vrv score and featureVis svg
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -64,6 +83,7 @@ class Companion extends Component {
     this.monitorKeys= this.monitorKeys.bind(this);
     this.mapVelocity = this.mapVelocity.bind(this);
     this.ensureArray = this.ensureArray.bind(this);
+    this.seekToInstant = this.seekToInstant.bind(this);
   }
 
   componentWillMount() { 
@@ -75,14 +95,14 @@ class Companion extends Component {
   }
 
   componentDidMount() { 
-    this.props.registerTraversal(this.props.uri, {
-      numHops:5, 
-      objectPrefixWhitelist:["http://localhost:8080/", "http://localhost:4000"],
+    this.props.registerTraversal(traversalUri, {
+      numHops:4, 
+      objectPrefixWhitelist:["http://localhost"],
       objectPrefixBlacklist:[
-        "http://localhost:8080/videos/", 
-        "http://localhost:8080/Beethoven_Op126Nr3.mei", 
-        "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei",
-        "http://localhost:8080/Beethoven_Op126Nr3#"
+        "http://localhost/videos/", 
+        "http://localhost/Beethoven_Op126Nr3.mei", 
+        "http://localhost/Beethoven_WoO80-32-Variationen-c-Moll.mei",
+        "http://localhost/Beethoven_Op126Nr3#"
       ]
     });
     document.addEventListener('keydown', this.monitorKeys);
@@ -113,19 +133,41 @@ class Companion extends Component {
       this.props.traverse(nextTraversalUri, nextTraversalParams);
     }
 
+    if("score" in prevProps && 
+      prevProps.score.latestRenderedPageNum !== this.props.score.latestRenderedPageNum // render has happened
+    ) { 
+      if(this.props.score.pageNum !== this.props.score.latestRenderedPageNum) { 
+        console.warn("Warning: pageNum inconsistencies on initial update! ", this.props.score.pageNum, this.props.score.latestRenderedPageNum);
+      }
+      this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note"),
+                      barlinesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".barLineAttr")
+      }, () => {
+        // reflect the current mode (pageView vs featureVis) onto the scorepane
+        if(this.props.score.pageNum !== this.props.score.latestRenderedPageNum) { 
+          console.warn("Warning: pageNum inconsistencies on secondary update! ", this.props.score.pageNum, this.props.score.latestRenderedPageNum);
+        }
+        this.setState({featureVisPageNum: this.props.score.latestRenderedPageNum});
+        let scorepane = ReactDOM.findDOMNode(this.scoreComponent)
+        let modes = ["pageView", "featureVis"]
+        scorepane.classList.remove(...modes);
+        scorepane.classList.add(this.state.mode);
+      });
+    }
+
     if("score" in prevProps && this.state.selectedPerformance &&
-       prevProps.score.pageNum !== this.props.score.pageNum) {
-      // page has been turned; reassign click handlers
-//      this.assignClickHandlersToNotes();
+       (prevProps.score.latestRenderedPageNum!== this.props.score.latestRenderedPageNum) // page flipped while performance selected
+    ) { 
       this.createInstantBoundingRects();
       this.highlightDeletedNotes();
     }
+
     if("score" in prevProps && this.state.selectedPerformance &&
       prevState.selectedPerformance !== this.state.selectedPerformance) { 
       // performance has been changed; reassign click handlers
 //      this.assignClickHandlersToNotes();
       this.createInstantBoundingRects();
       this.highlightDeletedNotes();
+      this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note") });
     }
     if(prevState.showConfidence !== this.state.showConfidence) { 
       this.createInstantBoundingRects(); // showConfidence preference changed; redraw boxes
@@ -133,8 +175,6 @@ class Companion extends Component {
     }
     if(prevState.scoreFollowing !== this.state.scoreFollowing) { 
       this.refs.pageControlsWrapper.classList.toggle("following");
-      "next" in this.refs && this.refs.next.classList.toggle("following");
-      "prev" in this.refs && this.refs.prev.classList.toggle("following");
       this.refs.scoreFollowingToggle.checked = this.state.scoreFollowing;
     }
 
@@ -178,7 +218,7 @@ class Companion extends Component {
     // n.b. per Nakamura alignment convention, deleted notes have a performance time of -1
     //
     // first, tidy up left-over deleted notes from previous invocations (e.g. on another performance)
-    Array.prototype.map.call(document.querySelectorAll(".deleted"), (d) => { d.classList.remove("deleted") });
+    Array.prototype.map.call(document.querySelectorAll(".note.deleted"), (d) => { d.classList.remove("deleted") });
     if(this.state.selectedPerformance && this.state.showInsertedDeleted) { 
       //FIXME Skolemization bug currently causing two identical times (intervals), one for performance and one for signal. For now, pick the first
       const thisTime = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
@@ -232,6 +272,13 @@ class Companion extends Component {
       let boxRight= 0 
       let boxBottom= 0;
       let noteId;
+
+      // if we have feature visualisation (featureVis) rendered on page, need to nudge notes down
+      let nudgeForFeatureVis = false;
+      if(this.featureVis && ReactDOM.findDOMNode(this.featureVis).matches("svg")) { 
+        nudgeForFeatureVis = true;
+      }
+
       notesOnPagePerInstant[i].map( (n) => { 
         // to contain all notes, we want to minimise left and top, 
         // and maximise right and bottom
@@ -250,6 +297,9 @@ class Companion extends Component {
       const clickableBoundDiv= document.createElement("div");
       confidenceBoundDiv.setAttribute("id", "conf-" + i);
       confidenceBoundDiv.classList.add("confidenceBoundedInstant");
+      if(nudgeForFeatureVis) { 
+        confidenceBoundDiv.classList.add("featureVis");
+      }
       confidenceBoundDiv.setAttribute("style", 
          "position:absolute;" + 
          "left:"    + Math.floor(boxLeft) + "px;" + 
@@ -261,6 +311,9 @@ class Companion extends Component {
       );
       clickableBoundDiv.setAttribute("id", "conf-" + i);
       clickableBoundDiv.classList.add("clickableBoundedInstant");
+      if(nudgeForFeatureVis) { 
+        clickableBoundDiv.classList.add("featureVis");
+      }
       clickableBoundDiv.setAttribute("style", 
          "position:absolute;" + 
          "left:"    + Math.floor(boxLeft) + "px;" + 
@@ -329,24 +382,52 @@ class Companion extends Component {
   }
 
   render() { 
+    let vrvOptions;
     if(this.state.loading) { 
       return(<div id="wrapper">Loading, please wait</div>);
     } else {
+      // set up score according to mode -- either pageView (portait) or featureVis (flat, single-system)
+      if(this.state.mode === "pageView") { 
+        vrvOptions = vrvOptionsPageView;
+      } else { 
+        vrvOptions = vrvOptionsFeatureVis;
+      }
+      let currentTimeline = "";
+      if(this.state.selectedPerformance) { 
+        currentTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"][0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] || ""; // FIXME skolemisation bug causing multiple copies of time entity 
+      }
       return(
         <div id="wrapper">
-          <div id="logoWrapper">
-            <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" />
-            <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" />
+          <div id="logoWrapper" className = { this.state.mode } >
+            <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" 
+              onClick={() => window.open("https://trompamusic.eu/", "_blank")} />
+            <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" 
+              onClick={() => window.open("http://www.mdw.ac.at/", "_blank")} />
           </div>
           <div id="instantBoundingBoxes" />
+          {this.state.mode === "featureVis" && 
+            this.props.score.latestRenderedPageNum === this.state.featureVisPageNum
+            ? <FeatureVis 
+            notesOnPage={ this.state.notesOnPage } 
+            barlinesOnPage={ this.state.barlinesOnPage } 
+            instantsByNoteId={ this.state.instantsByNoteId } 
+            timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
+            currentTimeline = { currentTimeline } 
+            currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
+            seekToInstant = { this.seekToInstant }
+            ref = {(featureVis) => { this.featureVis = featureVis } } />
+            : ""
+          }
           { this.state.currentScore 
             ? <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
             : <div className="loadingMsg">Loading score, please wait...</div>
           }
-        <div id="pageControlsWrapper" ref="pageControlsWrapper">
+        <div id="pageControlsWrapper" ref="pageControlsWrapper" className={ this.state.mode + " following" }>
           { this.props.score.pageNum > 1 
             ? <div id="prev" ref="prev" onClick={() => {
-                this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
+                if(!this.state.scoreFollowing) { 
+                  this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
+                }
               }}> <img src="/static/prev.svg" alt="Previous page"/></div>
             : <div id="prev" />
           }
@@ -355,8 +436,10 @@ class Companion extends Component {
               : <span id="pageNum"/>
           }
           { this.props.score.pageCount === 0 || this.props.score.pageNum < this.props.score.pageCount
-          ? <div id="next" ref="next" onClick={(e) => {
-              this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
+          ? <div id="next" ref="next" onClick={() => {
+              if(!this.state.scoreFollowing) { 
+                this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
+              }
             }}> <img src="/static/next.svg" alt="Next page"/></div>
           : <div id="next" />
           }
@@ -370,13 +453,13 @@ class Companion extends Component {
                     this.state.segments.map( (seg) => { 
                       return (
                         <option key={ seg["@id"] } value={ seg["@id"] }>
-                          { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("-") +1) }
+                          { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("#") +1) }
                         </option>
                       )
                     })
                   }
                 </select>
-                <select name="perfSelect" onChange={ this.handlePerformanceSelected }>
+                <select name="perfSelect" defaultValue="none" value={this.state.selectedPerformance["@id"]} onChange={ (e) => this.handlePerformanceSelected(e.target.value) }>
                   <option value="none">Select a rendition...</option>
                   {
                     this.state.performances.map( (perf) => { 
@@ -388,8 +471,7 @@ class Companion extends Component {
                     })
                   }
                 </select>
-              { this.state.selectedPerformance 
-              ? <span> 
+              	<span> 
                   <span id="scoreFollowToggle">
                     <input 
                       type="checkbox" 
@@ -431,7 +513,7 @@ class Companion extends Component {
                         onChange={ () => { 
                           if(this.state.showInsertedDeleted) { 
                             // if we're unselecting, reset any deleted notes
-                            Array.prototype.map.call(document.querySelectorAll(".deleted"), (d) => { d.classList.remove("deleted") });
+                            Array.prototype.map.call(document.querySelectorAll(".note.deleted"), (d) => { d.classList.remove("deleted") });
                           } 
                           this.setState({ showInsertedDeleted: !this.state.showInsertedDeleted}, () => { this.highlightDeletedNotes() });
                         }}
@@ -439,11 +521,7 @@ class Companion extends Component {
                       Inserted / deleted notes
                   </span>
                 </span>
-              : <span>
-                  <span id="scoreFollowToggle" className="hidden"/>
-                  <span id="confidenceToggle" className="hidden" />
-                </span>
-              }
+                <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank">More information</a></span>
               </div>
           }
           <div className="videoWrapper">
@@ -466,6 +544,21 @@ class Companion extends Component {
                 }
               }}
             />
+          </div>
+          <div className="fundingStatement">
+            <table style={ {marginLeft: "20px"} }>
+              <tbody>
+                <tr>
+                  <td>
+                    <img src="https://ec.europa.eu/research/participants/docs/h2020-funding-guide/imgs/eu-flag.jpg" width="100px"/>
+                  </td>
+                  <td style={ {width: "830px", border: "0px"} }>
+                      <div style={ {marginLeft: "20px", fontSize: "0.8em"} }>This project has received funding from the&nbsp;European Union's Horizon 2020 research and innovation programme<i>&nbsp;</i><em>H2020-EU.3.6.3.1. - Study European heritage, memory, identity, integration and cultural interaction and translation, including its representations in cultural and scientific collections, archives and museums, to better inform and understand the present by richer interpretations of the past</em> under grant agreement No 770376.
+                      </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       )
@@ -491,10 +584,31 @@ class Companion extends Component {
       }
     }
   }
+
+  seekToInstant(instant) { 
+    // seek to a specific instant on a particular timeline
+    // (switching to the performance of that timeline if necessary)
+    const performances = this.state.performances.filter((p) => p["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"][0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] === instant["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]);
+    if(!performances.length) { 
+      console.warn("Tried to seek to instant on timeline of non-existant performance: ", instant);
+    } else { 
+      const selectedPerformance = performances[0];
+      const selectedVideo = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
+      let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+      dur = parseFloat(dur.substr(1, dur.length-2));
+      let seekTo = dur + parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
+      document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
+      this.setState({ selectedVideo, selectedPerformance, seekTo }, () => { 
+        this.props.registerClock(selectedVideo);
+        this.player.seekTo(seekTo);
+      })
+
+    }
+  }
   
-  handlePerformanceSelected(e) { 
-    console.log("Rendition selected: ", e.target);
-    const selected = this.state.performances.filter( (perf) => { return perf["@id"] === e.target.value });
+  handlePerformanceSelected(perfId) { 
+    console.log("Rendition selected: ", perfId);
+    const selected = this.state.performances.filter( (perf) => { return perf["@id"] === perfId });
     const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
     const selectedPerformance = selected[0];
 		this.props.registerClock(selectedVideo);
@@ -520,14 +634,12 @@ class Companion extends Component {
     // find the time instant on the selected performance's timeline that corresponds to the
     // selected segment
     const timelineSegment = this.props.graph.outcomes[2]["@graph"].filter( (i) => { 
-      console.log("Inside filter. Looking at ", i)
       if(!("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in i) || 
          i["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]!==selectedTimeline) { 
         return false;
       }
       let segNotes = [];
         // do any of our instant's note embodiments match one of the segment's note embodiments?
-      console.log("Filtering on seg notes: ", segment["http://purl.org/vocab/frbr/core#embodiment"]["https://meld.linkedmusic.org/terms/notes"])
       segNotes = segment["http://purl.org/vocab/frbr/core#embodiment"]["https://meld.linkedmusic.org/terms/notes"].filter( (segNote) => {
         // ensure array (in chords, one timeline instance maps to multiple note instances)
         const embodiments = this.ensureArray(i["http://purl.org/vocab/frbr/core#embodimentOf"]) 
@@ -538,7 +650,6 @@ class Companion extends Component {
       })
       return segNotes.length; // true if we found a matching instance
     })
-
     // returned them in chronological order
     const sorted = timelineSegment.sort( (a, b) => { 
       let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
@@ -562,9 +673,6 @@ class Companion extends Component {
   }
 
   tick(id,t) {
-    if(!("@id" in this.state.currentSegment)) { 
-      return // ignore unless segment selected
-    }
     t += this.state.videoOffset;
     let newState = { lastMediaTick: t }; // keep track of this time tick)
     // dispatch a "TICK" action 
@@ -581,24 +689,13 @@ class Companion extends Component {
         let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
         dur = dur.substr(1, dur.length-2);
         const offsetDur = parseFloat(dur) + parseFloat(thisOffset);
-        //console.log("offsetDur: ", offsetDur, " t: ", t, " pI: ", this.state.progressInterval);
         if(offsetDur > (t - this.state.activeWindow) && offsetDur <= t) { 
           indices.push(thisIndex);
         }
         return indices;
       }, []);
 
-//      let closestInstantIx = this.state.instantsByPerfTime[thisTimeline].findIndex( (i) => { 
-//        let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
-//        dur = dur.substr(1, dur.length-2);
-//        return parseFloat(dur) + parseFloat(thisOffset) > t;
-//      });
-//      //console.log("Got closest instant IX: ", closestInstantIx, " lastMediaTick: ", this.state.lastMediaTick);
-      // if we're at 0 use that, otherwise use the one before this one 
-      // (i.e., closest without going over)
-//      closestInstantIx = closestInstantIx===0 ? closestInstantIx : closestInstantIx - 1;
-//     if(closestInstantIx in this.state.instantsByPerfTime[thisTimeline]) {
-      const previouslyActive = document.getElementsByClassName("active")
+      const previouslyActive = document.querySelectorAll(".note.active")
       if(previouslyActive.length && closestInstantIndices.length) { 
         newState["previouslyActive"] = Array.from(previouslyActive);
         Array.from(previouslyActive).map( (n) => { 
@@ -644,6 +741,7 @@ class Companion extends Component {
             noteToFlipTo = n;
           }
         }, this)
+        newState["currentlyActiveNoteIds"] = currentNotes.flat().map((n) => n["@id"].substr(n["@id"].indexOf("#")+1));
         if(noteToFlipTo && closestInstantIx > 0) { 
           // a note wasn't on this page -- if we are score-following, flip to its page
           // (the closestInstantIx > 0 check is to avoid flipping to first page each time we swap performance)
@@ -667,7 +765,7 @@ class Companion extends Component {
           //console.log("Found section: ", sibling, " measure: ", currentMeasure, " note: ", currentNoteElement);
           const sectionId = sibling ? sibling.getAttribute("id") : "";
         //  console.log("Note: ", currentNoteElement,  "Measure: ", currentMeasure, " Section ID: ", sectionId);
-          if(sectionId && sectionId  !== this.state.currentSegment["@id"].substr(this.state.currentSegment["@id"].lastIndexOf("#") + 1)) { 
+          if(sectionId && (!("@id" in this.state.currentSegment) || sectionId  !== this.state.currentSegment["@id"].substr(this.state.currentSegment["@id"].lastIndexOf("#") + 1))) { 
             // we've entered a new section (segment)
             // find the corresponding segment in our outcomes
             const newSeg = this.props.graph.outcomes[1]["@graph"].filter( (s) => {

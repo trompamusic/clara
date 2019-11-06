@@ -1,0 +1,52 @@
+[
+  {
+    "@id": "https://trompa.mdw.ac.at/performance/CSchumann200-WG-sightread.json",
+    "@type": [
+      "http://purl.org/ontology/mo/Performance"
+    ],
+    "http://purl.org/ontology/mo/performance_of": [
+      {
+        "@id": "https://trompa.mdw.ac.at/score/SchumannClara_Romanze.json"
+      }
+    ],
+    "http://purl.org/ontology/mo/recorded_as": [
+      {
+        "@id": "https://trompa.mdw.ac.at/performance/CSchumann200-WG-sightread.json#Signal"
+      }
+    ],
+    "http://www.w3.org/2000/01/rdf-schema#label": [
+      {
+        "@value": "Werner Goebl (sight reading)"
+      }
+    ],
+    "https://meld.linkedmusic.org/terms/offset": [
+      {
+        "@value": "1.748"
+      }
+    ]
+  },
+  {
+    "@id": "https://trompa.mdw.ac.at/performance/CSchumann200-WG-sightread.json#Signal",
+    "http://purl.org/ontology/mo/available_as": [
+      {
+        "@id": "https://trompa.mdw.ac.at/videos/SchumannClara_Romanze-WG-sightreading.mp4"
+      }
+    ],
+    "http://purl.org/ontology/mo/time": [
+      {
+        "@id": "_:ub5bL20C13"
+      }
+    ]
+  },
+  {
+    "@id": "_:ub5bL20C13",
+    "@type": [
+      "http://purl.org/NET/c4dm/timeline.owl#Interval"
+    ],
+    "http://purl.org/NET/c4dm/timeline.owl#onTimeLine": [
+      {
+        "@id": "https://trompa.mdw.ac.at/timeline/CSchumann200-WG-sightread.json"
+      }
+    ]
+  }
+]

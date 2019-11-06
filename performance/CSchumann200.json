@@ -1,0 +1,32 @@
+{
+  "@context": {
+    "dcterm": "http://purl.org/dc/terms/",
+    "frbr": "http://purl.org/vocab/frbr/core#",
+    "ldp": "http://www.w3.org/ns/ldp#",
+    "meld": "https://meld.linkedmusic.org/terms/",
+    "mo": "http://purl.org/ontology/mo/",
+    "perf": "https://trompa.mdw.ac.at/performance/",
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "score": "https://trompa.mdw.ac.at/score/",
+    "so": "http://www.linkedmusic.org/ontologies/segment/",
+    "struct": "https://trompa.mdw.ac.at/structure/",
+    "tl": "http://purl.org/NET/c4dm/timeline.owl#",
+    "vid": "https://trompa.mdw.ac.at/videos/BeethovenWettbewerb/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@id": "perf:CSchumann200.json",
+  "@type": [
+    "ldp:BasicContainer",
+    "ldp:Container"
+  ],
+  "dcterm:title": "Performances of Clara Schumann's Romanze (ohne Opuszahl)",
+  "ldp:contains": [
+    { "@id": "perf:CSchumann200-WG-20190911-1.json" },
+    { "@id": "perf:CSchumann200-WG-20190911-2.json" },
+    { "@id": "perf:CSchumann200-WG-sightread.json" }
+  ]
+}
+
+
+
