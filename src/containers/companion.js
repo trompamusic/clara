@@ -4,6 +4,7 @@ import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 import ReactPlayer from 'react-player'
 import FeatureVis from './featureVis';
+import axios from 'axios';
 
 //import { Media, Player, controls, utils, withMediaProps } from 'react-media-player'
 //const { PlayPause, CurrentTime, Progress, SeekBar, Duration, MuteUnmute, Volume, Fullscreen } = controls
@@ -84,6 +85,7 @@ class Companion extends Component {
     this.mapVelocity = this.mapVelocity.bind(this);
     this.ensureArray = this.ensureArray.bind(this);
     this.seekToInstant = this.seekToInstant.bind(this);
+    this.pollPerformances = this.pollPerformances.bind(this);
   }
 
   componentWillMount() { 
@@ -96,7 +98,7 @@ class Companion extends Component {
 
   componentDidMount() { 
     this.props.registerTraversal(traversalUri, {
-      numHops:5, 
+      numHops:4, 
       objectPrefixWhitelist:["http://localhost"],
       objectPrefixBlacklist:[
         "http://localhost/videos/", 
@@ -107,7 +109,30 @@ class Companion extends Component {
       ]
     });
     document.addEventListener('keydown', this.monitorKeys);
+    this.pollPerformances(traversalUri)
   }
+
+  pollPerformances(uri) { 
+    setTimeout( () => { 
+      const promise = axios.get(uri, { 
+        headers: {'If-None-Match': this.state.etag},
+        validateStatus: function(stat) { 
+          // only complain if code is greater or equal to 400
+          // this is to not treat 304's as errors}
+          return stat < 400;
+        }
+      });
+      promise.then( (response) => {
+        if(response.headers.etag !== this.state.etag) { 
+          console.log("NEW ETAG!!!!!!!!")
+          this.setState({etag: response.headers.etag}, () => this.pollPerformances(uri))
+        } else { 
+          this.pollPerformances(uri);
+        }
+      });
+    }, 1000, this);
+  }
+
 
   componentDidUpdate(prevProps, prevState) { 
     if("traversalPool" in this.props && Object.keys(this.props.traversalPool.pool).length === 0 &&
