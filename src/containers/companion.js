@@ -124,12 +124,23 @@ class Companion extends Component {
       });
       promise.then( (response) => {
         if(response.headers.etag !== this.state.etag) { 
-          console.log("NEW ETAG!!!!!!!!")
-          this.setState({etag: response.headers.etag}, () => this.pollPerformances(uri))
+          if(this.state.etag) { 
+            // this isn't initial load, and we've seen a change
+            // => reload page
+            window.location.reload();
+          } else { 
+            // this is initial load, remember the etag
+            this.setState({etag: response.headers.etag}, () => this.pollPerformances(uri))
+          }
         } else { 
+          // no change, check again in a bit
           this.pollPerformances(uri);
         }
-      });
+      }).catch( (err) => { 
+        console.warn("Couldn't poll performances! Trying again", err);
+        this.pollPerformances(uri);
+      })
+
     }, 1000, this);
   }
 
