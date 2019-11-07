@@ -304,7 +304,7 @@ class FeatureVis extends Component {
       })
 
       // generate bpm markers
-      const bpmMarkersToDraw = [20, 40, 60,80,100,120,140];
+      const bpmMarkersToDraw = [0, 40, 80, 120, 160, 200, 240,280];
       bpmMarkersToDraw.map((bpm, ix) => {
         svgElements.push(
           this.makeLine(

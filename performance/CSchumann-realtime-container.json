@@ -22,9 +22,9 @@
   ],
   "dcterm:title": "Container for realtime performance demo of Clara Schumann - Romanze ohne Opuszahl",
   "ldp:contains": [
-    { "@id": "perf:CSchumann200-WG-20190911-1.json" },
+    { "@id": "perf:CSchumann200-WG-20190911-2.json" } ,
     { "@id": "perf:CSchumann200-WG-sightread.json" },
-    { "@id": "perf:CSchumann200-WG-20190911-2.json" }
+    { "@id": "perf:CSchumann200-WG-20190911-1.json" }
   ]
 }
 

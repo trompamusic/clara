@@ -15,7 +15,7 @@ import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObje
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
 
-const traversalUri = "http://localhost/performance/CSchumann-realtime-container.json";
+const traversalUri = "http://localhost/performance/twinkle-realtime-container.json";
 
 const vrvOptionsPageView = {
 	scale: 45,
@@ -27,7 +27,7 @@ const vrvOptionsPageView = {
 };
 
 const vrvOptionsFeatureVis = {
-	scale: 43,
+	scale: 72,
   adjustPageHeight: 1,
 	pageHeight: 400,
 	pageWidth: 5800,
@@ -105,7 +105,8 @@ class Companion extends Component {
         "http://localhost/Beethoven_Op126Nr3.mei", 
         "http://localhost/Beethoven_WoO80-32-Variationen-c-Moll.mei",
         "http://localhost/Beethoven_Op126Nr3#",
-        "http://localhost/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei"
+        "http://localhost/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei",
+        "http://localhost/mei/twinkle.mei"
       ]
     });
     document.addEventListener('keydown', this.monitorKeys);
@@ -292,7 +293,7 @@ class Companion extends Component {
     const notes = ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note");
     Array.prototype.map.call(notes, (n) => { 
       // associate notes on this page with their instant duration
-      if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
+      if(selectedTimeline in this.state.instantsByNoteId && n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
         let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
         if(nDur in notesOnPagePerInstant) { 
@@ -453,6 +454,7 @@ class Companion extends Component {
             currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
             seekToInstant = { this.seekToInstant }
             width = "2500"
+            height= "260"
             ref = {(featureVis) => { this.featureVis = featureVis } } />
             : ""
           }
@@ -631,36 +633,48 @@ class Companion extends Component {
       console.warn("Tried to seek to instant on timeline of non-existant performance: ", instant);
     } else { 
       const selectedPerformance = performances[0];
-      const selectedVideo = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
-      let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
-      dur = parseFloat(dur.substr(1, dur.length-2));
-      let seekTo = dur + parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
+      const availableAs = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"];
+      if(availableAs) { 
+        const selectedVideo = availableAs["@id"];
+        let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        dur = parseFloat(dur.substr(1, dur.length-2));
+        let seekTo = dur + parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
+        this.setState({ selectedVideo, selectedPerformance, seekTo }, () => { 
+          this.props.registerClock(selectedVideo);
+          this.player.seekTo(seekTo);
+        })
+      } else { 
+        this.setState({ selectedPerformance });
+      }
       document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
-      this.setState({ selectedVideo, selectedPerformance, seekTo }, () => { 
-        this.props.registerClock(selectedVideo);
-        this.player.seekTo(seekTo);
-      })
-
     }
   }
   
   handlePerformanceSelected(perfId) { 
     console.log("Rendition selected: ", perfId);
+    let selectedVideo = "";
+    let newState;
     const selected = this.state.performances.filter( (perf) => { return perf["@id"] === perfId });
-    const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
     const selectedPerformance = selected[0];
-		this.props.registerClock(selectedVideo);
-    let newState = { selectedVideo, selectedPerformance };
-    if("@id" in this.state.currentSegment) { 
-      // set up a jump to the currently selected segment in this performance
-      const timelineSegment = this.findInstantToSeekTo(this.state.currentSegment, selectedPerformance);
-      if(timelineSegment.length) {
-        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
-        let startTime = parseFloat(dur.substr(1, dur.length-2));
-        startTime += parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
-        newState["seekTo"] = startTime;
+    const availableAs = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"];
+    if(availableAs) { 
+      selectedVideo = available["@id"];
+      this.props.registerClock(selectedVideo);
+      newState = { selectedVideo, selectedPerformance };
+      if("@id" in this.state.currentSegment) { 
+        // set up a jump to the currently selected segment in this performance
+        const timelineSegment = this.findInstantToSeekTo(this.state.currentSegment, selectedPerformance);
+        if(timelineSegment.length) {
+          const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+          let startTime = parseFloat(dur.substr(1, dur.length-2));
+          startTime += parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
+          newState["seekTo"] = startTime;
+        }
       }
+    } else { 
+      newState = { selectedPerformance }
     }
+
     document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
     this.setState(newState);
   }
@@ -887,7 +901,13 @@ class Companion extends Component {
         console.log("Current performance: ", currentPerformance)
         const currentScore = currentPerformance["http://purl.org/ontology/mo/published_as"]["@id"];
         this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
-        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore });
+        // FOR ISMIR DEMO - preselect most recent (=> last in container array) performance
+        let sortedPerformances = performances;
+        sortedPerformances.sort((a, b) => { 
+          return parseFloat(a["@id"].replace(/[:_-]/g, "")) - parseFloat(b["@id"].replace(/[:_-]/g, "")) 
+        })
+        const selectedPerformance = sortedPerformances[sortedPerformances.length-1];
+        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore, selectedPerformance });
       }
     }
   }
