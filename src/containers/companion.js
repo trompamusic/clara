@@ -13,7 +13,7 @@ import Score from 'meld-clients-core/src/containers/score';
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/src/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
 
-const traversalUri = "http://localhost:8080/rdfcache/WoO80cache.json";
+const traversalUri = "http://localhost:8080/rdfcache/CSchumann200.min.json";
 
 const vrvOptionsPageView = {
 	scale: 45,
