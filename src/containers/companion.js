@@ -483,6 +483,7 @@ class Companion extends Component {
                     />
                     Score-following
                   </span>
+            {/*
                   <span id="confidenceToggle">
                       <input 
                         type="checkbox" 
@@ -505,6 +506,7 @@ class Companion extends Component {
                       />
                       Note velocities
                   </span>
+                  */}
                   <span id="insertedDeletedToggle">
                       <input 
                         type="checkbox" 
