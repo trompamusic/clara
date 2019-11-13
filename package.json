@@ -1,7 +1,7 @@
 {
-   "name": "variations",
+   "name": "CLARA",
    "version": "0.0.1",
-   "description": "Exploratory viewing app for performances of Beethoven's 32 Variations (WoO 80)",
+   "description": "Companion for Long-term Analyses of Rehearsal Attempts",
    "main": "index.js",
    "scripts": {
       "start": "node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js -d"
