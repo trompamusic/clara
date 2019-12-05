@@ -104,6 +104,7 @@ class Companion extends Component {
       ]
     });
     document.addEventListener('keydown', this.monitorKeys);
+    this.setState({vrvOptions: this.state.mode === "featureVis" ? vrvOptionsFeatureVis : vrvOptionsPageView});
   }
 
   componentDidUpdate(prevProps, prevState) { 
@@ -205,6 +206,12 @@ class Companion extends Component {
           if(this.state.selectedPerformance) { 
             this.setState({ scoreFollowing: !this.state.scoreFollowing });
           }
+          break;
+        case 80: // 'p'  => "pageView"
+          this.setState({ mode: "pageView", vrvOptions: vrvOptionsPageView});
+          break;
+        case 86: // 'v'  => "featureVis"
+          this.setState({ mode: "featureVis", vrvOptions: vrvOptionsFeatureVis });
           break;
       }
     }
@@ -379,16 +386,10 @@ class Companion extends Component {
   }
 
   render() { 
-    let vrvOptions;
     if(this.state.loading) { 
       return(<div id="wrapper">Loading, please wait</div>);
     } else {
       // set up score according to mode -- either pageView (portait) or featureVis (flat, single-system)
-      if(this.state.mode === "pageView") { 
-        vrvOptions = vrvOptionsPageView;
-      } else { 
-        vrvOptions = vrvOptionsFeatureVis;
-      }
       let currentTimeline = "";
       if(this.state.selectedPerformance) { 
         currentTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"][0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] || ""; // FIXME skolemisation bug causing multiple copies of time entity 
@@ -416,7 +417,12 @@ class Companion extends Component {
             : ""
           }
           { this.state.currentScore 
-            ? <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
+            ? <Score 
+                uri={ this.state.currentScore } 
+                key = { this.state.currentScore } 
+                options = { this.state.vrvOptions } 
+                mode={ this.state.mode }
+                ref={(score) => { this.scoreComponent = score}}/>
             : <div className="loadingMsg">Loading score, please wait...</div>
           }
         <div id="pageControlsWrapper" ref="pageControlsWrapper" className={ this.state.mode + " following" }>
@@ -524,9 +530,9 @@ class Companion extends Component {
                         defaultChecked={ this.state.mode === "featureVis" }
                         onChange={ () => { 
                           if(this.state.mode === "featureVis") { 
-                            this.setState({ mode: "pageView" });
+                            this.setState({ mode: "pageView", vrvOptions: vrvOptionsPageView });
                           } else { 
-                            this.setState({ mode: "featureVis" });
+                            this.setState({ mode: "featureVis", vrvOptions: vrvOptionsFeatureVis });
                           }
                         }}
                       />
