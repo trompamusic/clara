@@ -419,9 +419,9 @@ class Companion extends Component {
           { this.state.currentScore 
             ? <Score 
                 uri={ this.state.currentScore } 
-                key = { this.state.currentScore } 
+                key = { this.state.currentScore + "_" + this.state.mode } 
                 options = { this.state.vrvOptions } 
-                mode={ this.state.mode }
+                mode= { this.state.mode }
                 ref={(score) => { this.scoreComponent = score}}/>
             : <div className="loadingMsg">Loading score, please wait...</div>
           }
