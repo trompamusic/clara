@@ -9,9 +9,9 @@ import FeatureVis from './featureVis';
 //const { PlayPause, CurrentTime, Progress, SeekBar, Duration, MuteUnmute, Volume, Fullscreen } = controls
 //const { formatTime } = utils
 
-import Score from 'meld-clients-core/src/containers/score';
-import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/src/actions/index';
-import { registerClock, tickTimedResource } from 'meld-clients-core/src/actions/index'
+import Score from 'meld-clients-core/lib/containers/score';
+import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
+import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/index';
 
 
 const vrvOptionsPageView = {

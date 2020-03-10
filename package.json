@@ -1,34 +1,46 @@
 {
-   "name": "variations",
-   "version": "0.0.1",
-   "description": "Exploratory viewing app for performances of Beethoven's 32 Variations (WoO 80)",
-   "main": "index.js",
-   "scripts": {
-      "start": "node ./node_modules/webpack-dev-server/bin/webpack-dev-server.js -d"
-   },
-   "author": "David M. Weigl, IWK, University of Music and Performing Arts Vienna",
-   "license": "BSD-3-Clause",
-   "devDependencies": {
-      "babel-core": "^6.2.1",
-      "babel-loader": "^6.2.0",
-      "babel-preset-es2015": "^6.1.18",
-      "babel-preset-react": "^6.1.18"
-   },
-   "dependencies": {
-      "axios": "^0.15.3",
-      "babel-preset-stage-1": "^6.1.18",
-      "meld-clients-core": "oerc-music/meld-clients-core",
-      "react": "^0.14.3",
-      "react-dom": "^0.14.3",
-      "react-player": "^1.11.0",
-      "react-redux": "^4.0.0",
-      "react-router": "^2.8.1",
-      "redux": "^3.0.4",
-      "redux-promise": "^0.5.3",
-      "redux-thunk": "~2.2.0",
-      "svg-inline-react": "~1.0.3",
-      "verovio-dev": "^2.0.0-46",
-      "webpack": "^1.12.9",
-      "webpack-dev-server": "^1.14.0"
-   }
+  "name": "clara",
+  "version": "0.1.0",
+  "description": "Companion for Long-term Analyses of Rehearsal Attempts ",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "babel src --out-dir lib",
+    "build-dev": "babel src --out-dir lib --source-maps inline"
+  },
+  "author": "David M. Weigl, IWK, University of Music and Performing Arts Vienna",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "@babel/cli": "^7.6.0",
+    "@babel/core": "^7.6.0",
+    "@babel/preset-react": "^7.0.0",
+    "chai": "^3.5.0",
+    "jsdom": "^8.1.0",
+    "mocha": "^2.4.5",
+    "react-addons-test-utils": "^0.14.7"
+  },
+  "dependencies": {
+    "axios": "^0.19.0",
+    "meld-clients-core": "oerc-music/meld-clients-core",
+    "react": "^16.4.1",
+    "react-dom": "^16.4.1",
+    "react-router-dom": "^4.3.1",
+    "react-player": "^1.11.0",
+    "redux": "^3.0.4",
+    "redux-promise": "^0.5.3",
+    "redux-thunk": "^2.3.0",
+    "react-scripts": "^3.1.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
 }
