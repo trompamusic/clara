@@ -4,7 +4,7 @@
   "description": "Companion for Long-term Analyses of Rehearsal Attempts ",
   "main": "index.js",
   "scripts": {
-    "start": "react-scripts start",
+    "start": "PORT=8080 react-scripts start",
     "build": "babel src --out-dir lib",
     "build-dev": "babel src --out-dir lib --source-maps inline"
   },
@@ -22,8 +22,8 @@
   "dependencies": {
     "axios": "^0.19.0",
     "meld-clients-core": "oerc-music/meld-clients-core",
-    "react": "^16.4.1",
-    "react-dom": "^16.4.1",
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0",
     "react-router-dom": "^4.3.1",
     "react-player": "^1.11.0",
     "redux": "^3.0.4",

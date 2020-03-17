@@ -40,8 +40,8 @@ class FeatureVis extends Component {
       this.state.timemap.filter((t) => {
         // only care about times with onsets
         return "on" in t;
-      }).map((t) => { 
-        t.on.map((id) => { 
+      }).forEach((t) => { 
+        t.on.forEach((id) => { 
           timemapByNoteId[id] = {
             qstamp: t.qstamp,
             tstamp: t.tstamp
@@ -70,7 +70,7 @@ class FeatureVis extends Component {
         // grab elements on current timeline
         const currentTlElements = ReactDOM.findDOMNode(this.featureSvg).querySelectorAll(".currentTl");
         // make those active with a qstamp at or before the currentQstamp
-        Array.from(currentTlElements).map((e) => { 
+        Array.from(currentTlElements).forEach((e) => { 
           if(parseFloat(e.getAttribute("data-qstamp")) <= this.state.currentQstamp) { 
             e.classList.add("active");
           }
@@ -89,10 +89,10 @@ class FeatureVis extends Component {
   setInstantsByScoretime() { 
     let instantsByScoretime = {};
     // for each timeline we need to visualise:
-    this.props.timelinesToVis.map( (tl) => { 
+    this.props.timelinesToVis.forEach( (tl) => { 
       instantsByScoretime[tl] = {};
       // for each timeline instant 
-      this.state.instantsOnPage[tl].map( (inst) => { 
+      this.state.instantsOnPage[tl].forEach( (inst) => { 
         // average qstamps of note onsets at this instant
         let embodimentsAtInstant = this.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"])
         let noteIdsAtInstant = embodimentsAtInstant.map((n) => { 
@@ -116,7 +116,7 @@ class FeatureVis extends Component {
 
   setNoteElementsByNoteId() { 
     let noteElementsByNoteId = {};
-    Array.from(this.props.notesOnPage).map( (note) => {
+    Array.from(this.props.notesOnPage).forEach( (note) => {
       noteElementsByNoteId[note.getAttribute("id")] = note;
     })
     this.setState({ noteElementsByNoteId }, () => {
@@ -141,7 +141,7 @@ class FeatureVis extends Component {
     if(Object.keys(this.props.instantsByNoteId).length) { 
       let instantsOnPage = {};
       // for each timeline we need to visualise:
-      this.props.timelinesToVis.map( (tl) => { 
+      this.props.timelinesToVis.forEach( (tl) => { 
         // find the instants coresponding to notes on this page
         instantsOnPage[tl] = Array.from(this.props.notesOnPage).map( (note) => { 
           return this.props.instantsByNoteId[tl][note.getAttribute("id")]
@@ -201,7 +201,7 @@ class FeatureVis extends Component {
 
   setPointsPerTimeline() { 
     let pointsPerTimeline={};
-    this.props.timelinesToVis.map( (tl, ix) => { 
+    this.props.timelinesToVis.forEach( (tl, ix) => { 
       let scoretimeArray = Object.keys(this.state.instantsByScoretime[tl]).sort((a,b) => { 
         return parseFloat(a) - parseFloat(b)
       })
@@ -209,7 +209,7 @@ class FeatureVis extends Component {
       let pointsForThisTl = scoretimeArray.map( (qstamp, ix) =>  { 
       // xpos should be average x position for note elements at this qstamp
         let noteElementsAtQstamp = [];
-        this.state.instantsByScoretime[tl][qstamp].map((inst) => {
+        this.state.instantsByScoretime[tl][qstamp].forEach((inst) => {
           noteElementsAtQstamp.push(this.noteElementsForInstant(inst));
         });
         let sumXPos = noteElementsAtQstamp.flat().reduce((sumX, note) => { 
@@ -281,7 +281,9 @@ class FeatureVis extends Component {
 
   handleClick(qstamp,tl) { 
     // seek to earliest instant on the clicked timeline at the clicked scoretime
-    this.props.seekToInstant(this.state.instantsByScoretime[tl][qstamp][0]);
+    if(tl in this.state.instantsByScoretime) { 
+      this.props.seekToInstant(this.state.instantsByScoretime[tl][qstamp][0]);
+    }
   }
    
 
@@ -289,7 +291,7 @@ class FeatureVis extends Component {
     if(Object.keys(this.state.pointsPerTimeline).length) {
       let svgElements = [];
       // generate barlines
-      Array.from(this.props.barlinesOnPage).map((bl,ix) => { 
+      Array.from(this.props.barlinesOnPage).forEach((bl,ix) => { 
         const absolute = this.convertCoords(bl);
         svgElements.push(
           this.makeLine(
@@ -305,7 +307,7 @@ class FeatureVis extends Component {
 
       // generate bpm markers
       const bpmMarkersToDraw = [20, 40, 60,80,100,120,140];
-      bpmMarkersToDraw.map((bpm, ix) => {
+      bpmMarkersToDraw.forEach((bpm, ix) => {
         svgElements.push(
           this.makeLine(
             "bpmMarker", // className
@@ -352,12 +354,12 @@ class FeatureVis extends Component {
           console.warn("FeatureVis: Cannot find current timeline in timelinesToVis");
         }
       }
-      timelinesInOrder.map((tl) => { 
+      timelinesInOrder.forEach((tl) => { 
         // for each timeline...
         let lines = [];
         let points = [];
         const tlPoints = this.state.pointsPerTimeline[tl];
-        tlPoints.map( (pt,ix) => { 
+        tlPoints.forEach( (pt,ix) => { 
           let instantsString = pt.instants.map((inst) => inst["@id"]).join(",");
           // determine CSS class: "currentTl" if timeline corresponds to selected performance
           // "active" if point is before or equal to the currently active qstamp (in playback)

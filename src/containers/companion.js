@@ -82,6 +82,8 @@ class Companion extends Component {
     this.mapVelocity = this.mapVelocity.bind(this);
     this.ensureArray = this.ensureArray.bind(this);
     this.seekToInstant = this.seekToInstant.bind(this);
+
+    this.player = React.createRef()
   }
 
   componentWillMount() { 
@@ -207,6 +209,8 @@ class Companion extends Component {
             this.setState({ scoreFollowing: !this.state.scoreFollowing });
           }
           break;
+        default: // other key
+          console.log("Unhandled key pressed: ", e)
       }
     }
   }
@@ -229,7 +233,7 @@ class Companion extends Component {
       if(deletedNotesInstant.length) { // could be 0 in a perfect performance...
         console.log("deleted notes instant: ", deletedNotesInstant);
         const deletedNotes = deletedNotesInstant[0]["http://purl.org/vocab/frbr/core#embodimentOf"];
-        deletedNotes.map( (n) => { 
+        deletedNotes.forEach( (n) => { 
           let noteOnPage = document.getElementById(n["@id"].substr(n["@id"].indexOf("#")+1));
           if(noteOnPage) {
             noteOnPage.classList.add("deleted");
@@ -263,7 +267,7 @@ class Companion extends Component {
         }
       }
     })
-    Object.keys(notesOnPagePerInstant).map( (i) => { 
+    Object.keys(notesOnPagePerInstant).forEach( (i) => { 
       // for each instant, figure out the minimal bounding box that contains all its notes
       let boxLeft = 10000;
       let boxTop = 10000;
@@ -277,7 +281,7 @@ class Companion extends Component {
         nudgeForFeatureVis = true;
       }
 
-      notesOnPagePerInstant[i].map( (n) => { 
+      notesOnPagePerInstant[i].forEach( (n) => { 
         // to contain all notes, we want to minimise left and top, 
         // and maximise right and bottom
         const boundRect = n.getBoundingClientRect();
@@ -330,13 +334,13 @@ class Companion extends Component {
         console.log("On bounding box click, attempting to  seek to: ", nDur);
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         this.tick(this.state.selectedVideo, nDur);
-        this.player.seekTo(Math.floor(nDur)); 
+        this.player.current.seekTo(Math.floor(nDur)); 
         // reset note velocities display for all notes after this one
         const notesOnPage = document.querySelectorAll(".note");
         const thisNote = document.querySelector("#" + noteId);
         const noteIndex = Array.prototype.indexOf.call(notesOnPage, thisNote);
         const notesAfterThisOne = Array.prototype.slice.call(notesOnPage, noteIndex+1);
-        notesAfterThisOne.map( (n) => { 
+        notesAfterThisOne.forEach( (n) => { 
           n.style.fill="";
           n.style.stroke="";
         })
@@ -369,14 +373,10 @@ class Companion extends Component {
         n.onclick = (e) => { 
           console.log("On note click, attempting to  seek to: ", nDur);
           this.tick(this.state.selectedVideo, nDur);
-          this.player.seekTo(Math.floor(nDur));
+          this.player.current.seekTo(Math.floor(nDur));
         }
       }
     });
-  }
-
-  ref = player => {
-    this.player = player;
   }
 
   render() { 
@@ -398,9 +398,9 @@ class Companion extends Component {
         <div id="wrapper">
           <div id="logoWrapper" className = { this.state.mode } >
             <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" 
-              onClick={() => window.open("https://trompamusic.eu/", "_blank")} />
+              onClick={() => window.open("https://trompamusic.eu/", "_blank", "noopener,noreferrer")} />
             <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" 
-              onClick={() => window.open("http://www.mdw.ac.at/", "_blank")} />
+              onClick={() => window.open("http://www.mdw.ac.at/", "_blank", "noopener,noreferrer")} />
           </div>
           <div id="instantBoundingBoxes" />
           {this.state.mode === "featureVis" && 
@@ -519,13 +519,13 @@ class Companion extends Component {
                       Inserted / deleted notes
                   </span>
                 </span>
-                <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank">More information</a></span>
+                <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank" rel="noopener noreferrer">More information</a></span>
               </div>
           }
           <div className="videoWrapper">
             <ReactPlayer 
               playing
-              ref={this.ref}
+              ref={this.player}
               url={ this.state.selectedVideo }
               progressInterval = { this.state.progressInterval } // update rate in milliseconds 
               controls={ true }
@@ -537,7 +537,7 @@ class Companion extends Component {
               onReady={ () => {
                 if(this.state.seekTo) { 
                   console.log("Render loop onReady: seeking to ", this.state.seekTo);
-                  this.player.seekTo(Math.floor(this.state.seekTo));
+                  this.player.current.seekTo(Math.floor(this.state.seekTo));
                   this.setState({seekTo: ""});
                 }
               }}
@@ -548,7 +548,7 @@ class Companion extends Component {
               <tbody>
                 <tr>
                   <td>
-                    <img src="https://ec.europa.eu/research/participants/docs/h2020-funding-guide/imgs/eu-flag.jpg" width="100px"/>
+                    <img alt="Flag of the European Union" src="https://ec.europa.eu/research/participants/docs/h2020-funding-guide/imgs/eu-flag.jpg" width="100px"/>
                   </td>
                   <td style={ {width: "830px", border: "0px"} }>
                       <div style={ {marginLeft: "20px", fontSize: "0.8em"} }>This project has received funding from the&nbsp;European Union's Horizon 2020 research and innovation programme<i>&nbsp;</i><em>H2020-EU.3.6.3.1. - Study European heritage, memory, identity, integration and cultural interaction and translation, including its representations in cultural and scientific collections, archives and museums, to better inform and understand the present by richer interpretations of the past</em> under grant agreement No 770376.
@@ -577,7 +577,7 @@ class Companion extends Component {
         // HACK: Offsets should be incorporated into data model through timeline maps
         startTime += parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         console.log("Trying to seek to: ", startTime, parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]));
-        this.player.seekTo(Math.floor(startTime));
+        this.player.current.seekTo(Math.floor(startTime));
         this.setState({currentSegment: selected[0]}); 
       }
     }
@@ -598,7 +598,7 @@ class Companion extends Component {
       document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
       this.setState({ selectedVideo, selectedPerformance, seekTo }, () => { 
         this.props.registerClock(selectedVideo);
-        this.player.seekTo(seekTo);
+        this.player.current.seekTo(seekTo);
       })
 
     }
@@ -696,12 +696,12 @@ class Companion extends Component {
       const previouslyActive = document.querySelectorAll(".note.active")
       if(previouslyActive.length && closestInstantIndices.length) { 
         newState["previouslyActive"] = Array.from(previouslyActive);
-        Array.from(previouslyActive).map( (n) => { 
+        Array.from(previouslyActive).forEach( (n) => { 
           n.classList.remove("active"); 
         });
       }
       //console.log("Tick: ", t, ", offset: ", thisOffset + t, ", closest instants: ", closestInstantIndices);
-      closestInstantIndices.map( (closestInstantIx) => {
+      closestInstantIndices.forEach( (closestInstantIx) => {
         let currentNotes = this.state.instantsByPerfTime[thisTimeline][closestInstantIx]["http://purl.org/vocab/frbr/core#embodimentOf"];
         // handle array (instant might correspond to chord or multiple voices...)
         currentNotes = Array.isArray(currentNotes) ? currentNotes : [currentNotes];
@@ -709,7 +709,7 @@ class Companion extends Component {
         let currentNoteElement;
         let currentMeasure;
         let noteToFlipTo;
-        currentNotes.map( (n) => { 
+        currentNotes.forEach( (n) => { 
           const currentNoteId =n["@id"].substr(n["@id"].lastIndexOf("#")+1);
         // highlight the current note if on current page
           currentNoteElement = document.getElementById(currentNoteId);
@@ -799,17 +799,17 @@ class Companion extends Component {
       typeof outcomes[0] !== 'undefined' && 
       typeof outcomes[1] !== 'undefined' &&
       typeof outcomes[2] !== 'undefined') { 
-      outcomes[0]["@graph"].map( (outcome) => {
+      outcomes[0]["@graph"].forEach( (outcome) => {
         performances.push(outcome)
       });
-      outcomes[1]["@graph"].map( (outcome) => {
+      outcomes[1]["@graph"].forEach( (outcome) => {
         segments.push(outcome)
       });
       segments = segments.sort( (a, b) => { 
         return parseInt(a["https://meld.linkedmusic.org/terms/order"]) - parseInt(b["https://meld.linkedmusic.org/terms/order"])
       })
       console.log("Sorted segments: ", segments)
-      outcomes[2]["@graph"].map( (outcome) => {
+      outcomes[2]["@graph"].forEach( (outcome) => {
         instants.push(outcome)
         const embodiments = Array.isArray(outcome["http://purl.org/vocab/frbr/core#embodimentOf"]) ? 
                                 outcome["http://purl.org/vocab/frbr/core#embodimentOf"] :
@@ -821,7 +821,7 @@ class Companion extends Component {
           instantsByPerfTime[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]] = [outcome]
         }
         // instants per NoteId
-        embodiments.map( (e) => { 
+        embodiments.forEach( (e) => { 
           const eId = e["@id"].substr(e["@id"].lastIndexOf("#")+1);
           if(outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] in instantsByNoteId) {
             instantsByNoteId[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]][eId] = outcome;
@@ -830,7 +830,7 @@ class Companion extends Component {
           }
         })
       });
-      Object.keys(instantsByPerfTime).map( (tl) => { 
+      Object.keys(instantsByPerfTime).forEach( (tl) => { 
         // order the instances along each timeline
         instantsByPerfTime[tl] = instantsByPerfTime[tl].sort( (a, b) => { 
           let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
