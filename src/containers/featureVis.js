@@ -30,6 +30,8 @@ class FeatureVis extends Component {
     this.makePoint = this.makePoint.bind(this);
     this.makeLine = this.makeLine.bind(this);
     this.handleClick = this.handleClick.bind(this);
+
+    this.featureSvg = React.createRef();
   }
 
   componentDidMount() { 
@@ -65,10 +67,10 @@ class FeatureVis extends Component {
       prevProps.currentlyActiveNoteIds.join("") !== this.props.currentlyActiveNoteIds.join("")) { 
       this.setState({ currentQstamp: this.calculateAvgQstampFromNoteIds(this.props.currentlyActiveNoteIds) }, () => {
         // clear previously active
-        const previouslyActive = ReactDOM.findDOMNode(this.featureSvg).querySelectorAll(".active");
+        const previouslyActive = ReactDOM.findDOMNode(this.featureSvg.current).querySelectorAll(".active");
         Array.from(previouslyActive).map((p) => p.classList.remove("active"));
         // grab elements on current timeline
-        const currentTlElements = ReactDOM.findDOMNode(this.featureSvg).querySelectorAll(".currentTl");
+        const currentTlElements = ReactDOM.findDOMNode(this.featureSvg.current).querySelectorAll(".currentTl");
         // make those active with a qstamp at or before the currentQstamp
         Array.from(currentTlElements).forEach((e) => { 
           if(parseFloat(e.getAttribute("data-qstamp")) <= this.state.currentQstamp) { 
@@ -167,7 +169,8 @@ class FeatureVis extends Component {
 
     // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group  
   convertCoords(elem) {
-    if(document.getElementById(elem.getAttribute("id"))) { 
+    if(document.getElementById(elem.getAttribute("id") && elem.style.display !== "none")) { 
+      console.log("elem: ", elem);
       const x = elem.getBBox().x;
       const y = elem.getBBox().y;
       const offset = elem.closest("svg").parentElement.getBoundingClientRect();
@@ -324,7 +327,7 @@ class FeatureVis extends Component {
               // black magic transform... (to compensate for flipped svg coord system)
               transform={ "scale(1, -1) translate(0, -" + Math.round(bpm*0.7 + bpm - 0.9*ix) + ")"}
               x="0" y={ Math.round(bpm*50/60) } 
-              classList="bpmLabel">
+              className="bpmLabel">
                 {bpm + " b.p.m."}
            </text>
         );
@@ -334,7 +337,7 @@ class FeatureVis extends Component {
               // black magic transform... (to compensate for flipped svg coord system)
               transform={ "scale(1, -1) translate(0, -" + Math.round(bpm*0.7 + bpm - 0.9*ix) + ")"}
               x={ this.state.width - 40} y={ Math.round(bpm*50/60) } 
-              classList="bpmLabel">
+              className="bpmLabel">
                 {bpm + " b.p.m."}
            </text>
         );
@@ -438,7 +441,7 @@ class FeatureVis extends Component {
         svgElements = [...svgElements, lines, points];
       });
       return (
-        <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = {(featureSvg) => { this.featureSvg = featureSvg } }>
+        <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.featureSvg }>
               { svgElements }
         </svg>
       )
@@ -457,4 +460,4 @@ function mapDispatchToProps(dispatch) {
     }, dispatch);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(FeatureVis);
+export default connect(mapStateToProps, mapDispatchToProps, false, {forwardRef: true})(FeatureVis);

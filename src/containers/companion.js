@@ -84,9 +84,11 @@ class Companion extends Component {
     this.seekToInstant = this.seekToInstant.bind(this);
 
     this.player = React.createRef()
+    this.featureVis = React.createRef()
+    this.scoreComponent = React.createRef()
   }
 
-  componentWillMount() { 
+  UNSAFE_componentWillMount() { 
     this.props.setTraversalObjectives([
       { "@type": "http://purl.org/ontology/mo/Performance" },
       { "@type": "http://www.linkedmusic.org/ontologies/segment/Segment" },
@@ -134,20 +136,21 @@ class Companion extends Component {
     }
 
     if("score" in prevProps && 
+      this.scoreComponent.current &&
       prevProps.score.latestRenderedPageNum !== this.props.score.latestRenderedPageNum // render has happened
     ) { 
       if(this.props.score.pageNum !== this.props.score.latestRenderedPageNum) { 
         console.warn("Warning: pageNum inconsistencies on initial update! ", this.props.score.pageNum, this.props.score.latestRenderedPageNum);
       }
-      this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note"),
-                      barlinesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".barLineAttr")
+      this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note"),
+                      barlinesOnPage: ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".barLineAttr")
       }, () => {
         // reflect the current mode (pageView vs featureVis) onto the scorepane
         if(this.props.score.pageNum !== this.props.score.latestRenderedPageNum) { 
           console.warn("Warning: pageNum inconsistencies on secondary update! ", this.props.score.pageNum, this.props.score.latestRenderedPageNum);
         }
         this.setState({featureVisPageNum: this.props.score.latestRenderedPageNum});
-        let scorepane = ReactDOM.findDOMNode(this.scoreComponent)
+        let scorepane = ReactDOM.findDOMNode(this.scoreComponent.current)
         let modes = ["pageView", "featureVis"]
         scorepane.classList.remove(...modes);
         scorepane.classList.add(this.state.mode);
@@ -167,7 +170,7 @@ class Companion extends Component {
 //      this.assignClickHandlersToNotes();
       this.createInstantBoundingRects();
       this.highlightDeletedNotes();
-      this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note") });
+      this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note") });
     }
     if(prevState.showConfidence !== this.state.showConfidence) { 
       this.createInstantBoundingRects(); // showConfidence preference changed; redraw boxes
@@ -254,7 +257,7 @@ class Companion extends Component {
     const selectedSignal = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]);
     const selectedInstant = this.ensureArray(selectedSignal[0]["http://purl.org/ontology/mo/time"]);
     const selectedTimeline = this.ensureArray(selectedInstant[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"])[0]["@id"];
-    const notes = ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note");
+    const notes = ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note");
     Array.prototype.map.call(notes, (n) => { 
       // associate notes on this page with their instant duration
       if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
@@ -277,7 +280,7 @@ class Companion extends Component {
 
       // if we have feature visualisation (featureVis) rendered on page, need to nudge notes down
       let nudgeForFeatureVis = false;
-      if(this.featureVis && ReactDOM.findDOMNode(this.featureVis).matches("svg")) { 
+      if(this.featureVis.current && ReactDOM.findDOMNode(this.featureVis.current).matches("svg")) { 
         nudgeForFeatureVis = true;
       }
 
@@ -365,7 +368,7 @@ class Companion extends Component {
   assignClickHandlersToNotes() {
     // check if our score page has updated
     const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
-    const notes = ReactDOM.findDOMNode(this.scoreComponent).querySelectorAll(".note");
+    const notes = ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note");
     Array.prototype.map.call(notes, (n) => { 
       if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
         let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
@@ -384,16 +387,35 @@ class Companion extends Component {
     if(this.state.loading) { 
       return(<div id="wrapper">Loading, please wait</div>);
     } else {
+      let currentTimeline = "";
+      if(this.state.selectedPerformance) { 
+        currentTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"][0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] || ""; // FIXME skolemisation bug causing multiple copies of time entity 
+      }
       // set up score according to mode -- either pageView (portait) or featureVis (flat, single-system)
       if(this.state.mode === "pageView") { 
         vrvOptions = vrvOptionsPageView;
       } else { 
         vrvOptions = vrvOptionsFeatureVis;
       }
-      let currentTimeline = "";
-      if(this.state.selectedPerformance) { 
-        currentTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"][0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] || ""; // FIXME skolemisation bug causing multiple copies of time entity 
+      let featureVisElement = "";
+      if(this.props.score.latestRenderedPageNum === this.state.featureVisPageNum &&
+         this.props.score.latestRenderedPageNum === this.state.featureVisPageNum) { 
+        featureVisElement = <FeatureVis 
+            notesOnPage={ this.state.notesOnPage } 
+            barlinesOnPage={ this.state.barlinesOnPage } 
+            instantsByNoteId={ this.state.instantsByNoteId } 
+            timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
+            currentTimeline = { currentTimeline } 
+            currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
+            seekToInstant = { this.seekToInstant }
+            ref = { this.featureVis } />
+      };
+
+      let currentScore = <div className="loadingMsg">Loading score, please wait...</div>;
+      if(this.state.currentScore) { 
+         currentScore = <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={ this.scoreComponent }/>
       }
+
       return(
         <div id="wrapper">
           <div id="logoWrapper" className = { this.state.mode } >
@@ -403,23 +425,8 @@ class Companion extends Component {
               onClick={() => window.open("http://www.mdw.ac.at/", "_blank", "noopener,noreferrer")} />
           </div>
           <div id="instantBoundingBoxes" />
-          {this.state.mode === "featureVis" && 
-            this.props.score.latestRenderedPageNum === this.state.featureVisPageNum
-            ? <FeatureVis 
-            notesOnPage={ this.state.notesOnPage } 
-            barlinesOnPage={ this.state.barlinesOnPage } 
-            instantsByNoteId={ this.state.instantsByNoteId } 
-            timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
-            currentTimeline = { currentTimeline } 
-            currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
-            seekToInstant = { this.seekToInstant }
-            ref = {(featureVis) => { this.featureVis = featureVis } } />
-            : ""
-          }
-          { this.state.currentScore 
-            ? <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={(score) => { this.scoreComponent = score}}/>
-            : <div className="loadingMsg">Loading score, please wait...</div>
-          }
+          { featureVisElement }
+          {  currentScore }
         <div id="pageControlsWrapper" ref="pageControlsWrapper" className={ this.state.mode + " following" }>
           { this.props.score.pageNum > 1 
             ? <div id="prev" ref="prev" onClick={() => {
@@ -873,4 +880,4 @@ function mapDispatchToProps(dispatch) {
     }, dispatch);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Companion);
+export default connect(mapStateToProps, mapDispatchToProps, false, {forwardRef: true})(Companion);
