@@ -30,6 +30,8 @@ class FeatureVis extends Component {
     this.makePoint = this.makePoint.bind(this);
     this.makeLine = this.makeLine.bind(this);
     this.handleClick = this.handleClick.bind(this);
+    this.featureSvg = React.createRef();
+
   }
 
   componentDidMount() { 
@@ -40,8 +42,8 @@ class FeatureVis extends Component {
       this.state.timemap.filter((t) => {
         // only care about times with onsets
         return "on" in t;
-      }).map((t) => { 
-        t.on.map((id) => { 
+      }).forEach((t) => { 
+        t.on.forEach((id) => { 
           timemapByNoteId[id] = {
             qstamp: t.qstamp,
             tstamp: t.tstamp
@@ -53,7 +55,7 @@ class FeatureVis extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) { 
-    if("score" in prevProps && prevProps.score.pageNum !== this.props.score.pageNum  // page flipped
+    if(prevProps.notesOnPage[0] !== this.props.notesOnPage[0] // page changed
     ) { 
       this.setNoteElementsByNoteId();
     }
@@ -65,19 +67,16 @@ class FeatureVis extends Component {
       prevProps.currentlyActiveNoteIds.join("") !== this.props.currentlyActiveNoteIds.join("")) { 
       this.setState({ currentQstamp: this.calculateAvgQstampFromNoteIds(this.props.currentlyActiveNoteIds) }, () => {
         // clear previously active
-        const featureSvgElement = ReactDOM.findDOMNode(this.featureSvg);
-        if(featureSvgElement) { 
-          const previouslyActive = ReactDOM.findDOMNode(this.featureSvg).querySelectorAll(".active");
-          Array.from(previouslyActive).map((p) => p.classList.remove("active"));
-          // grab elements on current timeline
-          const currentTlElements = ReactDOM.findDOMNode(this.featureSvg).querySelectorAll(".currentTl");
-          // make those active with a qstamp at or before the currentQstamp
-          Array.from(currentTlElements).map((e) => { 
-            if(parseFloat(e.getAttribute("data-qstamp")) <= this.state.currentQstamp) { 
-              e.classList.add("active");
-            }
-          })
-        }
+        const previouslyActive = ReactDOM.findDOMNode(this.featureSvg.current).querySelectorAll(".active");
+        Array.from(previouslyActive).map((p) => p.classList.remove("active"));
+        // grab elements on current timeline
+        const currentTlElements = ReactDOM.findDOMNode(this.featureSvg.current).querySelectorAll(".currentTl");
+        // make those active with a qstamp at or before the currentQstamp
+        Array.from(currentTlElements).forEach((e) => { 
+          if(parseFloat(e.getAttribute("data-qstamp")) <= this.state.currentQstamp) { 
+            e.classList.add("active");
+          }
+        })
       })
     }
   }
@@ -92,10 +91,10 @@ class FeatureVis extends Component {
   setInstantsByScoretime() { 
     let instantsByScoretime = {};
     // for each timeline we need to visualise:
-    this.props.timelinesToVis.map( (tl) => { 
+    this.props.timelinesToVis.forEach( (tl) => { 
       instantsByScoretime[tl] = {};
       // for each timeline instant 
-      this.state.instantsOnPage[tl].map( (inst) => { 
+      this.state.instantsOnPage[tl].forEach( (inst) => { 
         // average qstamps of note onsets at this instant
         let embodimentsAtInstant = this.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"])
         let noteIdsAtInstant = embodimentsAtInstant.map((n) => { 
@@ -119,7 +118,7 @@ class FeatureVis extends Component {
 
   setNoteElementsByNoteId() { 
     let noteElementsByNoteId = {};
-    Array.from(this.props.notesOnPage).map( (note) => {
+    Array.from(this.props.notesOnPage).forEach( (note) => {
       noteElementsByNoteId[note.getAttribute("id")] = note;
     })
     this.setState({ noteElementsByNoteId }, () => {
@@ -144,7 +143,7 @@ class FeatureVis extends Component {
     if(Object.keys(this.props.instantsByNoteId).length) { 
       let instantsOnPage = {};
       // for each timeline we need to visualise:
-      this.props.timelinesToVis.map( (tl) => { 
+      this.props.timelinesToVis.forEach( (tl) => { 
         // find the instants coresponding to notes on this page
         instantsOnPage[tl] = Array.from(this.props.notesOnPage).map( (note) => { 
           return this.props.instantsByNoteId[tl][note.getAttribute("id")]
@@ -168,27 +167,22 @@ class FeatureVis extends Component {
     }
   }
 
+    // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group  
   convertCoords(elem) {
-    if(elem) {
-      const elemOnPage = document.getElementById(elem.getAttribute("id")); 
-      if(elemOnPage) { 
-        const x = elemOnPage.getBBox().x;
-        const y = elemOnPage.getBBox().y;
-        const offset = elem.closest("svg").parentElement.getBoundingClientRect();
-        const matrix = elem.getScreenCTM();
-        return {
-            x: (matrix.a * x) + (matrix.c * y) + matrix.e - offset.left,
-            y: (matrix.b * x) + (matrix.d * y) + matrix.f - offset.top
-        };
-      } else {
-        console.warn("Element unavailable on page: ", elem.getAttribute("id"));
-        return { x:0, y:0 }
-      }
+    if(document.getElementById(elem.getAttribute("id")) 
+      && elem.style.display !== "none" && (elem.getBBox().x !== 0 || elem.getBBox().y !== 0)) { 
+      const x = elem.getBBox().x;
+      const y = elem.getBBox().y;
+      const offset = elem.closest("svg").parentElement.getBoundingClientRect();
+      const matrix = elem.getScreenCTM();
+      return {
+          x: (matrix.a * x) + (matrix.c * y) + matrix.e - offset.left,
+          y: (matrix.b * x) + (matrix.d * y) + matrix.f - offset.top
+      };
     } else {
-      console.error("Requesting convertCoorts of undefined element");
+      console.warn("Element unavailable on page: ", elem.getAttribute("id"));
       return { x:0, y:0 }
     }
-
   }
   
   ensureArray(val) { 
@@ -210,7 +204,7 @@ class FeatureVis extends Component {
 
   setPointsPerTimeline() { 
     let pointsPerTimeline={};
-    this.props.timelinesToVis.map( (tl, ix) => { 
+    this.props.timelinesToVis.forEach( (tl, ix) => { 
       let scoretimeArray = Object.keys(this.state.instantsByScoretime[tl]).sort((a,b) => { 
         return parseFloat(a) - parseFloat(b)
       })
@@ -218,7 +212,7 @@ class FeatureVis extends Component {
       let pointsForThisTl = scoretimeArray.map( (qstamp, ix) =>  { 
       // xpos should be average x position for note elements at this qstamp
         let noteElementsAtQstamp = [];
-        this.state.instantsByScoretime[tl][qstamp].map((inst) => {
+        this.state.instantsByScoretime[tl][qstamp].forEach((inst) => {
           noteElementsAtQstamp.push(this.noteElementsForInstant(inst));
         });
         let sumXPos = noteElementsAtQstamp.flat().reduce((sumX, note) => { 
@@ -290,7 +284,9 @@ class FeatureVis extends Component {
 
   handleClick(qstamp,tl) { 
     // seek to earliest instant on the clicked timeline at the clicked scoretime
-    this.props.seekToInstant(this.state.instantsByScoretime[tl][qstamp][0]);
+    if(tl in this.state.instantsByScoretime) { 
+      this.props.seekToInstant(this.state.instantsByScoretime[tl][qstamp][0]);
+    }
   }
    
 
@@ -298,7 +294,7 @@ class FeatureVis extends Component {
     if(Object.keys(this.state.pointsPerTimeline).length) {
       let svgElements = [];
       // generate barlines
-      Array.from(this.props.barlinesOnPage).map((bl,ix) => { 
+      Array.from(this.props.barlinesOnPage).forEach((bl,ix) => { 
         const absolute = this.convertCoords(bl);
         svgElements.push(
           this.makeLine(
@@ -310,11 +306,11 @@ class FeatureVis extends Component {
             null  // titleString - barlines don't need one!
           ) 
         )
-      })
+      }) 
 
       // generate bpm markers
       const bpmMarkersToDraw = [20, 40, 60,80,100,120,140];
-      bpmMarkersToDraw.map((bpm, ix) => {
+      bpmMarkersToDraw.forEach((bpm, ix) => {
         svgElements.push(
           this.makeLine(
             "bpmMarker", // className
@@ -331,7 +327,7 @@ class FeatureVis extends Component {
               // black magic transform... (to compensate for flipped svg coord system)
               transform={ "scale(1, -1) translate(0, -" + Math.round(bpm*0.7 + bpm - 0.9*ix) + ")"}
               x="0" y={ Math.round(bpm*50/60) } 
-              classList="bpmLabel">
+              className="bpmLabel">
                 {bpm + " b.p.m."}
            </text>
         );
@@ -341,7 +337,7 @@ class FeatureVis extends Component {
               // black magic transform... (to compensate for flipped svg coord system)
               transform={ "scale(1, -1) translate(0, -" + Math.round(bpm*0.7 + bpm - 0.9*ix) + ")"}
               x={ this.state.width - 40} y={ Math.round(bpm*50/60) } 
-              classList="bpmLabel">
+              className="bpmLabel">
                 {bpm + " b.p.m."}
            </text>
         );
@@ -361,12 +357,12 @@ class FeatureVis extends Component {
           console.warn("FeatureVis: Cannot find current timeline in timelinesToVis");
         }
       }
-      timelinesInOrder.map((tl) => { 
+      timelinesInOrder.forEach((tl) => { 
         // for each timeline...
         let lines = [];
         let points = [];
         const tlPoints = this.state.pointsPerTimeline[tl];
-        tlPoints.map( (pt,ix) => { 
+        tlPoints.forEach( (pt,ix) => { 
           let instantsString = pt.instants.map((inst) => inst["@id"]).join(",");
           // determine CSS class: "currentTl" if timeline corresponds to selected performance
           // "active" if point is before or equal to the currently active qstamp (in playback)
@@ -445,7 +441,7 @@ class FeatureVis extends Component {
         svgElements = [...svgElements, lines, points];
       });
       return (
-        <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = {(featureSvg) => { this.featureSvg = featureSvg } }>
+        <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.featureSvg }>
               { svgElements }
         </svg>
       )
@@ -464,4 +460,4 @@ function mapDispatchToProps(dispatch) {
     }, dispatch);
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(FeatureVis);
+export default connect(mapStateToProps, mapDispatchToProps, false, {forwardRef: true})(FeatureVis);
