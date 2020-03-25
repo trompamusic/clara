@@ -30,8 +30,8 @@ class FeatureVis extends Component {
     this.makePoint = this.makePoint.bind(this);
     this.makeLine = this.makeLine.bind(this);
     this.handleClick = this.handleClick.bind(this);
-
     this.featureSvg = React.createRef();
+
   }
 
   componentDidMount() { 
@@ -55,7 +55,7 @@ class FeatureVis extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) { 
-    if("score" in prevProps && prevProps.score.pageNum !== this.props.score.pageNum  // page flipped
+    if(prevProps.notesOnPage[0] !== this.props.notesOnPage[0] // page changed
     ) { 
       this.setNoteElementsByNoteId();
     }
@@ -169,8 +169,8 @@ class FeatureVis extends Component {
 
     // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group  
   convertCoords(elem) {
-    if(document.getElementById(elem.getAttribute("id") && elem.style.display !== "none")) { 
-      console.log("elem: ", elem);
+    if(document.getElementById(elem.getAttribute("id")) 
+      && elem.style.display !== "none" && (elem.getBBox().x !== 0 || elem.getBBox().y !== 0)) { 
       const x = elem.getBBox().x;
       const y = elem.getBBox().y;
       const offset = elem.closest("svg").parentElement.getBoundingClientRect();
@@ -306,7 +306,7 @@ class FeatureVis extends Component {
             null  // titleString - barlines don't need one!
           ) 
         )
-      })
+      }) 
 
       // generate bpm markers
       const bpmMarkersToDraw = [20, 40, 60,80,100,120,140];

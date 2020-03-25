@@ -67,7 +67,11 @@ class Companion extends Component {
       minExpectedVel: 0, // guesstimate as to a note played at pianissimo (unit: midi velocity)
       maxExpectedVel: 110, // guesstimate as to a note played at fortissimo (unit: midi velocity)
       mode: "featureVis", // currently either pageView (portrait style) or featureVis (flattened single-system with visualisation)
-      featureVisPageNum: 0 // guards against race conditions between Vrv score and featureVis svg
+      featureVisPageNum: 0, // guards against race conditions between Vrv score and featureVis svg
+      latestObservedPageNum: 0,
+      observingScore: false, // control behaviour of DOM change observer (to catch Verovio SVG render completions)
+      scoreComponentLoadingStarted: false,
+      scoreComponentLoaded: false // know when to initially start the DOM observer
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -82,10 +86,12 @@ class Companion extends Component {
     this.mapVelocity = this.mapVelocity.bind(this);
     this.ensureArray = this.ensureArray.bind(this);
     this.seekToInstant = this.seekToInstant.bind(this);
+    this.handleDOMChangeObserved = this.handleDOMChangeObserved.bind(this);
 
-    this.player = React.createRef()
-    this.featureVis = React.createRef()
-    this.scoreComponent = React.createRef()
+    this.player = React.createRef();
+    this.featureVis = React.createRef();
+    this.scoreComponent = React.createRef();
+    this.observer = new MutationObserver(this.handleDOMChangeObserved);
   }
 
   UNSAFE_componentWillMount() { 
@@ -110,7 +116,25 @@ class Companion extends Component {
     document.addEventListener('keydown', this.monitorKeys);
   }
 
+  handleDOMChangeObserved() { 
+    if(this.scoreComponent.current) { 
+      this.setState({ 
+        "observingScore": false, 
+        "scoreComponentLoaded": true, 
+        "notesOnPage": ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note"),
+        "barlinesOnPage": ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".barLineAttr")
+      });
+    }
+  }
+
   componentDidUpdate(prevProps, prevState) { 
+    if(!this.state.scoreComponentLoadingStarted && this.scoreComponent.current) { 
+      this.setState({"observingScore": true, scoreComponentLoadingStarted: true}, () => { 
+        const scoreElement = ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(".score");
+        this.observer.observe(scoreElement, {"childList": true});
+      })
+    }
+
     if("traversalPool" in this.props && Object.keys(this.props.traversalPool.pool).length === 0 &&
       prevProps.traversalPool.running > 0 && this.props.traversalPool.running === 0) { 
       // finished all traversals
@@ -134,17 +158,20 @@ class Companion extends Component {
       const nextTraversalParams = this.props.traversalPool.pool[nextTraversalUri];
       this.props.traverse(nextTraversalUri, nextTraversalParams);
     }
-
+/*
     if("score" in prevProps && 
-      this.scoreComponent.current &&
+      this.state.scoreComponentLoaded &&
+      this.scoreComponent.current && 
       prevProps.score.latestRenderedPageNum !== this.props.score.latestRenderedPageNum // render has happened
     ) { 
       if(this.props.score.pageNum !== this.props.score.latestRenderedPageNum) { 
         console.warn("Warning: pageNum inconsistencies on initial update! ", this.props.score.pageNum, this.props.score.latestRenderedPageNum);
       }
+      console.log("in componentDidUpdate has rendered bit! ", ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note"))
       this.setState({ notesOnPage: ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note"),
                       barlinesOnPage: ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".barLineAttr")
       }, () => {
+        console.log("In second bit, notes on page: ", this.state.notesOnPage);
         // reflect the current mode (pageView vs featureVis) onto the scorepane
         if(this.props.score.pageNum !== this.props.score.latestRenderedPageNum) { 
           console.warn("Warning: pageNum inconsistencies on secondary update! ", this.props.score.pageNum, this.props.score.latestRenderedPageNum);
@@ -156,6 +183,7 @@ class Companion extends Component {
         scorepane.classList.add(this.state.mode);
       });
     }
+    */
 
     if("score" in prevProps && this.state.selectedPerformance &&
        (prevProps.score.latestRenderedPageNum!== this.props.score.latestRenderedPageNum) // page flipped while performance selected
@@ -398,8 +426,9 @@ class Companion extends Component {
         vrvOptions = vrvOptionsFeatureVis;
       }
       let featureVisElement = "";
-      if(this.props.score.latestRenderedPageNum === this.state.featureVisPageNum &&
-         this.props.score.latestRenderedPageNum === this.state.featureVisPageNum) { 
+      if(this.state.mode === "featureVis" &&
+         this.state.scoreComponentLoaded
+         ) { 
         featureVisElement = <FeatureVis 
             notesOnPage={ this.state.notesOnPage } 
             barlinesOnPage={ this.state.barlinesOnPage } 
@@ -407,7 +436,7 @@ class Companion extends Component {
             timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
             currentTimeline = { currentTimeline } 
             currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
-            seekToInstant = { this.seekToInstant }
+            seekToInstant = { this.seekToInstant } 
             ref = { this.featureVis } />
       };
 
