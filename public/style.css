@@ -1,0 +1,201 @@
+body { 
+  font-family: sans-serif;
+}
+
+.videoWrapper { 
+  max-width:945px;
+  margin-left:20px;
+}
+
+.active { 
+  fill:darkorange;
+  stroke:darkorange;
+}
+
+.deleted {
+  fill: #00aaff;
+  stroke: #00aaff;
+}
+
+.wasActive{ 
+  fill:black;
+  stroke:black;
+  -webkit-animation-name: wasActive; /* Safari 4.0 - 8.0 */
+  -webkit-animation-duration:0.3s; /* Safari 4.0 - 8.0 */
+  animation-name: wasActive;
+  animation-duration:0.43;
+}
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes wasActive { 
+  from{fill:darkorange; stroke:darkorange}
+  to{fill:black; stroke:black;}
+}
+
+@keyframes wasActive { 
+  from{fill:darkorange; stroke:darkorange}
+  to{fill:#663300; stroke:#663300;}
+}
+
+.clickableBoundedInstant{
+  cursor:pointer;
+}
+
+.scorepane { 
+  min-height: 520px;
+  max-height: 520px;
+}
+
+.scorepane.featureVis { 
+  min-height: 230px;
+  max-height: 230px;
+}
+
+.errorDetected { 
+  fill:black;
+  stroke:black;
+  -webkit-animation-name: errorDetected; /* Safari 4.0 - 8.0 */
+  -webkit-animation-duration:0.3s; /* Safari 4.0 - 8.0 */
+  animation-name: errorDetected;
+  animation-duration:0.3s;
+}
+
+/* Safari 4.0 - 8.0 */
+@-webkit-keyframes errorDetected { 
+  from {fill:black; stroke:black;}
+  to {fill:red; stroke:red;}
+}
+
+@keyframes errorDetected { 
+  from {fill:black; stroke:black;}
+  to {fill:red; stroke:red;}
+}
+
+#pageControlsWrapper {
+  border-radius: 10px;
+  border: 1px solid rgb(255,102,0);
+  max-width: 945px;
+  margin-left: 20px;
+  height: 1.3em;
+  display: flex;
+  justify-content: space-between;
+  padding-left: .3em;
+  padding-right: .3em;
+  font-weight: bold;
+  max-width: 1253px;
+  color: rgba(255, 102, 0);
+}
+
+#pageControlsWrapper.featureVis { 
+  max-width: 1253px;
+}
+
+#pageControlsWrapper.following{
+  background: rgb(255,102,0);
+  background: linear-gradient(90deg, rgba(255,102,0,1) 0%, rgba(223,157,7,1) 50%, rgba(255,102,0,1) 100%);
+  color:white;
+}
+
+#pageControlsWrapper #prev, #pageControlsWrapper #next { 
+  margin-top:.1em;
+  cursor:pointer;
+}
+
+#pageControlsWrapper.following #prev, #pageControlsWrapper.following #next {
+ cursor:default;
+} 
+
+#selectWrapper { 
+  clear:both;
+  margin-left:20px;
+  padding-top:20px;
+  padding-bottom:20px;
+}
+
+.loadingMsg { 
+  margin-left:20px;
+}
+
+#logoWrapper { 
+  margin-bottom: -15px;
+  display: flex;
+  justify-content: space-between;
+  max-width: 950px;
+  margin-left: 20px;
+  z-index:-2;
+  cursor:pointer;
+}
+
+#logoWrapper.featureVis { 
+  max-width: 1310px;
+}
+
+#logoWrapper #trompaLogo { 
+  height:32px;
+  margin-top:20px;
+}
+
+#logoWrapper #mdwLogo { 
+  height:64px;
+}
+
+.hidden {
+  visibility:hidden;
+}
+
+#featureVis, #featureVisLoading {
+  margin-top: 80px;
+  margin-bottom:-80px;
+  overflow:visible;
+  height:120px;
+  width:1280px;
+}
+
+#featureVis { 
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(180, 180, 180, .2) 5%, rgba(180, 180, 180, .2) 95%, rgba(255, 255, 255, .2) 100%)
+}
+
+#featureVis line, #featureVis ellipse { 
+  stroke:black;
+  fill: #ffffff00;
+  cursor: pointer;
+}
+
+#featureVis line.currentTl, #featureVis ellipse.currentTl{
+  stroke:red;
+  fill:red;
+  stroke-width:2px;
+}
+
+#featureVis line.active, #featureVis ellipse.active{
+  stroke:orange !important;
+  fill:orange !important;
+}
+
+#featureVis line.barLineAttr { 
+  stroke:lightgrey;
+}
+
+#featureVis line.bpmMarker { 
+  stroke-dasharray:1;
+  stroke:lightgrey;
+}
+
+#featureVis line.estimated { 
+  stroke-dasharray: 1.5;
+}
+
+#featureVis text.bpmLabel {
+  font-size: 6px;
+  fill: lightgrey;
+}
+
+.clickableBoundedInstant { 
+  margin-top:120px;
+}
+
+/* if we have feature visualisation (featureVis) rendered on page, need to nudge notes down */
+.clickableBoundedInstant.featureVis, .confidenceBoundedInstant.featureVis { 
+  margin-top:0px;
+}
+
+
