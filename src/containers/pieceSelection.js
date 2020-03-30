@@ -25,7 +25,8 @@ export default class PieceSelection extends Component {
         }
         <select name="pieceSelect" onChange={ this.handlePieceSelected }>
           <option value="">Select a piece...</option>
-          <option key="http://localhost:8080/performance/WoO80-new.json"  value="http://localhost:8080/performance/WoO80-new.json"> WoO 80</option>
+          <option key="http://localhost:8080/rdfcache/WoO80cache.json"  value="http://localhost:8080/rdfcache/WoO80cache.json"> WoO 80</option>
+          <option key="http://localhost:8080/rdfcache/CSchumann200.min.json"  value="http://localhost:8080/rdfcache/CSchumann200.min.json">Clara Schumann - Romanze ohne Opuszahl</option>
           <option key="http://localhost:8080/performance/Op126Nr3.json"  value="http://localhost:8080/performance/Op126Nr3.json">Op 126 Nr 3</option>
         </select>
       </div>

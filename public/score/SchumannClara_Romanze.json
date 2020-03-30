@@ -1,0 +1,20 @@
+{
+  "@context": {
+    "meld": "https://meld.linkedmusic.org/terms/",
+    "mo": "http://purl.org/ontology/mo/",
+    "score": "https://trompa.mdw.ac.at/score/",
+    "struct": "https://trompa.mdw.ac.at/structure/"
+  },
+  "@graph": [
+    {
+      "@id": "score:SchumannClara_Romanze.json",
+      "@type": "mo:Score",
+      "meld:segments": {
+        "@id": "struct:Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.json"
+      },
+      "mo:published_as": {
+        "@id": "https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei"
+      }
+    }
+  ]
+}
