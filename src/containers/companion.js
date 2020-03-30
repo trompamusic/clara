@@ -4,10 +4,7 @@ import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 import ReactPlayer from 'react-player'
 import FeatureVis from './featureVis';
-
-//import { Media, Player, controls, utils, withMediaProps } from 'react-media-player'
-//const { PlayPause, CurrentTime, Progress, SeekBar, Duration, MuteUnmute, Volume, Fullscreen } = controls
-//const { formatTime } = utils
+import { AuthButton, Value, LoggedIn, LoggedOut } from '@solid/react';
 
 import Score from 'meld-clients-core/lib/containers/score';
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
@@ -433,12 +430,22 @@ class Companion extends Component {
       }
       return(
         <div id="wrapper">
-          <div id="logoWrapper" className = { this.state.mode } >
+          <div id="logoWrapper" className = { this.state.mode }>
             <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" 
               onClick={() => window.open("https://trompamusic.eu/", "_blank", "noopener,noreferrer")} />
             <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" 
               onClick={() => window.open("http://www.mdw.ac.at/", "_blank", "noopener,noreferrer")} />
           </div>
+          <div id="authWrapper" className = { this.state.mode }>
+            <AuthButton popup="auth-popup.html" login="Log in" logout="Log out" />
+            <LoggedOut>
+              <p>You are not logged in</p>
+            </LoggedOut>
+            <LoggedIn>
+              <p>You are logged in as <Value src="user.name"/>! Yay</p>
+            </LoggedIn>
+          </div>
+            
           <div id="instantBoundingBoxes" />
           { featureVisElement }
           {  currentScore }

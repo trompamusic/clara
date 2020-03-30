@@ -20,6 +20,7 @@
     "react-addons-test-utils": "^0.14.7"
   },
   "dependencies": {
+    "@solid/react": "^1.9.0",
     "axios": "^0.19.0",
     "browserslist": "^4.11.0",
     "fiber": "^1.0.4",
