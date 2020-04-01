@@ -6,13 +6,13 @@ import thunk from 'redux-thunk';
 import ReduxPromise from 'redux-promise';
 
 import { reducers } from 'meld-clients-core/lib/reducers';
-import Companion from './containers/companion';
+import AuthWrapper from './containers/authWrapper';
 
 const createStoreWithMiddleware = applyMiddleware(thunk, ReduxPromise)(createStore);
 
 ReactDOM.render(
 	<Provider store={createStoreWithMiddleware(reducers)}>
-          <Companion uri="http://localhost:8080/rdfcache/CSchumann200.min.json" />
+          <AuthWrapper />
 	</Provider>
 		, document.querySelector('.container')
 );
