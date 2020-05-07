@@ -5,17 +5,20 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix so: <http://www.linkedmusic.org/ontologies/segment/> .
-@prefix struct: <https://trompa.mdw.ac.at/structure/> .
+@prefix struct: <https://musicog.solid.community/private/clara.trompamusic.folder/structure/> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei> a mo:PublishedScore .
 
-<https://trompa.mdw.ac.at/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll#A1> a so:Segment ;
-    frbr:embodiment [ a rdf:Bag,
+<https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl#A1> a so:Segment ;
+    frbr:embodiment <https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl#A1Embodiment> ;
+    so:onSegmentLine <https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl> ;
+    meld:order "0" .
+
+<https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl#A1Embodiment> a rdf:Bag,
                 meld:MEIManifestation ;
             rdfs:member <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#A1> ;
-            meld:endsWith struct:note-0000001910938733 ;
             meld:measures <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#measure-0000000046626563>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#measure-0000000070015397>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#measure-0000000158396524>,
@@ -415,16 +418,16 @@
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000002136980529>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000002143554449>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000005342085841>,
-                <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000009400181549> ;
-            meld:startsWith struct:note-0000001038383042 ] ;
-    so:onSegmentLine struct:Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll ;
-    meld:order "0" .
+                <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000009400181549> .
 
-<https://trompa.mdw.ac.at/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll#A2> a so:Segment ;
-    frbr:embodiment [ a rdf:Bag,
+<https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl#A2> a so:Segment ;
+    so:onSegmentLine <https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl> ;
+    meld:order "2" ;
+    frbr:embodiment <https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl#A2Embodiment> .
+
+    <https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl#A2Embodiment> a rdf:Bag,
                 meld:MEIManifestation ;
             rdfs:member <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#A2> ;
-            meld:endsWith struct:note-0000000678424209 ;
             meld:measures <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#measure-0000000008005283>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#measure-0000000023020835>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#measure-0000000055148020>,
@@ -913,16 +916,16 @@
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000002136319705>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000002140974277>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000002146186465>,
-                <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#rest-0000001828807940> ;
-            meld:startsWith struct:note-0000001952736127 ] ;
-    so:onSegmentLine struct:Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll ;
-    meld:order "2" .
+                <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#rest-0000001828807940> .
 
-<https://trompa.mdw.ac.at/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll#B> a so:Segment ;
-    frbr:embodiment [ a rdf:Bag,
+<https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl#B> a so:Segment ;
+    so:onSegmentLine <https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl> ;
+    meld:order "1" ;
+    frbr:embodiment <https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl#BEmbodiment> . 
+
+   <https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl#BEmbodiment> a rdf:Bag,
                 meld:MEIManifestation ;
             rdfs:member <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#B> ;
-            meld:endsWith struct:note-0000002109532284 ;
             meld:measures <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#measure-0000000204067374>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#measure-0000000226676726>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#measure-0000000352786286>,
@@ -1379,10 +1382,8 @@
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000002118975933>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000002131969819>,
                 <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000002134592044>,
-                <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000002140624716> ;
-            meld:startsWith struct:note-0000000520905166 ] ;
-    so:onSegmentLine struct:Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll ;
-    meld:order "1" .
+                <https://trompa.mdw.ac.at/mei/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.mei#note-0000002140624716> .
 
-struct:Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll a so:SegmentLine .
+
+<https://musicog.solid.community/private/clara.trompamusic.folder/structure/Schumann-Clara_Romanze-ohne-Opuszahl_A-Moll.ttl> a so:SegmentLine .
 

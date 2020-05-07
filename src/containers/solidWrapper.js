@@ -1,11 +1,13 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect  } from 'react';
 import data from '@solid/query-ldflex';
 import auth from 'solid-auth-client' ;
+import * as jsonld from 'jsonld';
 
 import { 
   AuthButton, 
   Value, 
   List, 
+  LiveUpdate,
   LoggedIn, 
   LoggedOut, 
   useLDflexValue, 
@@ -15,27 +17,28 @@ import {
 
 import Companion from './companion';
 
-export default function AuthWrapper(props) {
+export default function SolidWrapper(props) {
     data.context.extend({
       mo: "http://purl.org/ontology/mo/",
       trompa: "http://vocab.trompamusic.eu/vocab#"
     })
-    
+  /*
     const [val, pending, error] = useLDflex("user.trompa_hasPerformanceCollection");
-    let response;
+    const [performanceCollection, setPerformanceCollection] = useState({});
+
     if(val !== undefined && val !== null) {
-      response = <Companion uri={ `${val}` } />
       auth.fetch(`${val}`, { headers: { Accept: "application/ld+json" } })
         .then((body) => body.json())
-        .then(console.log)
-
-    }
+        .then(setPerformanceCollection)
+    }*/
+  /* 
     else if(pending) 
-      response = <p>Loading...</p>
+      setPerformanceCollection("Loading...");
     else if(error) 
-      response = <p>Error</p>
+      setPerformanceCollection("Error");
     else 
-      response = <p> No idea</p>;
+      setPerformanceCollection("No idea");*/
+    const performanceCollection = useLDflexValue("user.trompa_hasPerformanceCollection");
     return(
       <div id="authWrapper">
         <AuthButton popup="auth-popup.html" login="Log in" logout="Log out" />
@@ -44,8 +47,10 @@ export default function AuthWrapper(props) {
         </LoggedOut>
         <LoggedIn>
           <p>You are logged in as <Value src="user.name"/>! Yay</p>
-          <p>Trying to load <Value src="user.trompa_hasPerformanceCollection"/></p>
-          { response }
+          { performanceCollection 
+           ? <Companion uri = { `${performanceCollection}` }/>
+           : <p>Trying to load <Value src="user.trompa_hasPerformanceCollection"/></p>
+          }
         </LoggedIn>
       </div>
     )

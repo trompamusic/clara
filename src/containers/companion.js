@@ -3,12 +3,13 @@ import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 import ReactPlayer from 'react-player'
-import FeatureVis from './featureVis';
+import auth from 'solid-auth-client';
 
 import Score from 'meld-clients-core/lib/containers/score';
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/index';
 
+import FeatureVis from './featureVis';
 
 const vrvOptionsPageView = {
 	scale: 45,
@@ -52,7 +53,7 @@ class Companion extends Component {
       videoOffset: 0, // in seconds
       progressInterval: 1, // of video playback (callback rate), in milliseconds
       activeWindow: .1, // window of notes before current instant considered active, in seconds 
-      traversalThreshold: 20, // max parallel traversal threads,
+      traversalThreshold: 10, // max parallel traversal threads,
       loading: true, // flip when traversals are completed
       scoreFollowing: true, // if true, page automatically with playback 
       showConfidence: false, // if true, visualise MAPS confidence per instant
@@ -101,14 +102,9 @@ class Companion extends Component {
   componentDidMount() { 
     console.log("Attempting to start traversal with ", this.props.uri);
     this.props.registerTraversal(this.props.uri, {
-      numHops:0, 
-      objectPrefixWhitelist:["http://localhost:8080/", "http://localhost:4000"],
-      objectPrefixBlacklist:[
-        "http://localhost:8080/videos/", 
-        "http://localhost:8080/Beethoven_Op126Nr3.mei", 
-        "http://localhost:8080/Beethoven_WoO80-32-Variationen-c-Moll.mei",
-        "http://localhost:8080/Beethoven_Op126Nr3#"
-      ]
+      numHops:6, 
+      objectPrefixWhitelist:["https://musicog.solid.community", "https://trompa.mdw.ac.at", "https://raw.githubusercontent.com/trompamusic-encodings"],
+      objectPrefixBlacklist:["https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei", "https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei#", "https://trompa.mdw.ac.at/videos/"]
     });
     document.addEventListener('keydown', this.monitorKeys);
     this.setState({vrvOptions: this.state.mode === "featureVis" ? vrvOptionsFeatureVis : vrvOptionsPageView});
@@ -139,12 +135,13 @@ class Companion extends Component {
       })
     }
 
-    if("traversalPool" in this.props && Object.keys(this.props.traversalPool.pool).length === 0 &&
+    if("traversalPool" in prevProps && Object.keys(this.props.traversalPool.pool).length === 0 &&
       prevProps.traversalPool.running > 0 && this.props.traversalPool.running === 0) { 
       // finished all traversals
-      this.setState({ "loading": false });
-      console.log("Attempting to process outcomes:", this.props.graph.outcomes);
-      this.props.checkTraversalObjectives(this.props.graph.graph, this.props.graph.objectives);
+      this.setState({ "loading": false }, () => {
+        console.log("Attempting to process outcomes:", this.props.graph.outcomes);
+        this.props.checkTraversalObjectives(this.props.graph.graph, this.props.graph.objectives);
+      });
     }
     if("graph" in prevProps) { 
       // check our traversal objectives if the graph has updated
@@ -160,6 +157,7 @@ class Companion extends Component {
       // then start another traversal
       const nextTraversalUri = Object.keys(this.props.traversalPool.pool)[0];
       const nextTraversalParams = this.props.traversalPool.pool[nextTraversalUri];
+      console.log("Spawning traversal with pool length: ", Object.keys(this.props.traversalPool.pool).length)
       this.props.traverse(nextTraversalUri, nextTraversalParams);
     }
 
@@ -348,6 +346,7 @@ class Companion extends Component {
         console.log("On bounding box click, attempting to  seek to: ", nDur);
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         this.tick(this.state.selectedVideo, nDur);
+        console.log("attempting to seek to ", Math.floor(nDur));
         this.player.current.seekTo(Math.floor(nDur)); 
         // reset note velocities display for all notes after this one
         const notesOnPage = document.querySelectorAll(".note");
@@ -401,7 +400,7 @@ class Companion extends Component {
     } else {
       let currentTimeline = "";
       if(this.state.selectedPerformance) { 
-        currentTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"][0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] || ""; // FIXME skolemisation bug causing multiple copies of time entity 
+        currentTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] || ""; // FIXME skolemisation bug causing multiple copies of time entity 
       }
       // set up score according to mode -- either pageView (portait) or featureVis (flat, single-system)
       if(this.state.mode === "pageView") { 
@@ -631,7 +630,7 @@ class Companion extends Component {
   seekToInstant(instant) { 
     // seek to a specific instant on a particular timeline
     // (switching to the performance of that timeline if necessary)
-    const performances = this.state.performances.filter((p) => p["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"][0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] === instant["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]);
+    const performances = this.state.performances.filter((p) => p["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] === instant["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]);
     if(!performances.length) { 
       console.warn("Tried to seek to instant on timeline of non-existant performance: ", instant);
     } else { 
