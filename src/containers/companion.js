@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 import ReactPlayer from 'react-player'
-import auth from 'solid-auth-client';
 
 import Score from 'meld-clients-core/lib/containers/score';
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
@@ -101,11 +100,16 @@ class Companion extends Component {
 
   componentDidMount() { 
     console.log("Attempting to start traversal with ", this.props.uri);
-    this.props.registerTraversal(this.props.uri, {
+    const params = {
       numHops:6, 
-      objectPrefixWhitelist:["https://musicog.solid.community", "https://trompa.mdw.ac.at", "https://raw.githubusercontent.com/trompamusic-encodings"],
+      objectPrefixWhitelist:["https://trompa.solid.community", "https://trompa.mdw.ac.at", "https://raw.githubusercontent.com/trompamusic-encodings"],
       objectPrefixBlacklist:["https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei", "https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei#", "https://trompa.mdw.ac.at/videos/"]
-    });
+    }
+    if(this.props.userPOD) {
+      console.log("Adding ", this.props.userPOD);
+      params["objectPrefixWhitelist"] = [this.props.userPOD, ...params["objectPrefixWhitelist"]];
+    }
+    this.props.registerTraversal(this.props.uri, params)
     document.addEventListener('keydown', this.monitorKeys);
     this.setState({vrvOptions: this.state.mode === "featureVis" ? vrvOptionsFeatureVis : vrvOptionsPageView});
   }
