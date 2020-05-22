@@ -26,7 +26,6 @@
     "fiber": "^1.0.4",
     "fibers": "^4.0.2",
     "meld-clients-core": "oerc-music/meld-clients-core#updateBabelDependency-solidAuth",
-    "node-sass": "^4.13.1",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
     "react-player": "^1.11.0",
@@ -36,7 +35,6 @@
     "redux": "^4.0.5",
     "redux-promise": "^0.6.0",
     "redux-thunk": "^2.3.0",
-    "sass": "^1.26.3",
     "typescript": "^3.8.3"
   },
   "browserslist": {
