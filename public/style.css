@@ -36,10 +36,6 @@ body {
   to{fill:#663300; stroke:#663300;}
 }
 
-.clickableBoundedInstant{
-  cursor:pointer;
-}
-
 .scorepane { 
   min-height: 460px;
   max-height: 460px;
@@ -190,6 +186,7 @@ body {
 
 .clickableBoundedInstant { 
   margin-top:120px;
+  cursor:pointer;
 }
 
 /* if we have feature visualisation (featureVis) rendered on page, need to nudge notes down */
