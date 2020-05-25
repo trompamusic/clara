@@ -13,7 +13,7 @@ import FeatureVis from './featureVis';
 const vrvOptionsPageView = {
 	scale: 45,
   adjustPageHeight: 1,
-	pageHeight: 900,
+	pageHeight:1200,
 	pageWidth: 2200,
 	noFooter: 1,
 	unit: 6
