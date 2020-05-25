@@ -185,13 +185,8 @@ body {
 }
 
 .clickableBoundedInstant { 
-  margin-top:120px;
   cursor:pointer;
 }
 
-/* if we have feature visualisation (featureVis) rendered on page, need to nudge notes down */
-.clickableBoundedInstant.featureVis, .confidenceBoundedInstant.featureVis { 
-  margin-top:0px;
-}
 
 

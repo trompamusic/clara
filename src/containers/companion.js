@@ -121,6 +121,10 @@ class Companion extends Component {
         "scoreComponentLoaded": true, 
         "notesOnPage": ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note"),
         "barlinesOnPage": ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".barLineAttr")
+      }, () => { 
+        if(this.state.selectedPerformance) { 
+          this.createInstantBoundingRects();
+        }
       });
     }
   }
