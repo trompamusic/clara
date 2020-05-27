@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 
+const defaultY = 80; // for edge-case of only-one-note-on-page
+
 class FeatureVis extends Component {
   constructor(props) {
     super(props);
@@ -374,15 +376,18 @@ class FeatureVis extends Component {
             prevY = tlPoints[ix-1].y;
           }
           if(ix === 0) { 
+            console.log("latest tlPoints: ", tlPoints)
             // at the first point:
             // no line to previous (because no previous)
             // "steal" Y position from 2nd point (because no iii at first point)
+            // UNLESS (edge-case!) it's the only note on page, in which case just invent a tempo (defaultY)
+            let stolenY = tlPoints.length === 1 ? defaultY : tlPoints[ix+1].y;
             points.push(
               this.makePoint(
                 className, 
                 pt.qstamp, 
                 tl, // timeline
-                pt.x, tlPoints[ix+1].y, "3", "3",  //cx, cy, rx, ry
+                pt.x, stolenY, "3", "3",  //cx, cy, rx, ry
                 "point-"+tl+ix, // react key
                 "Point: " + instantsString +" qstamp: " + pt.qstamp // titleString
               )
