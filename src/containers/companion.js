@@ -103,7 +103,7 @@ class Companion extends Component {
     const params = {
       numHops:6, 
       objectPrefixWhitelist:["https://trompa.solid.community", "https://trompa.mdw.ac.at", "https://raw.githubusercontent.com/trompamusic-encodings"],
-      objectPrefixBlacklist:["https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei", "https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei#", "https://trompa.mdw.ac.at/videos/"]
+      objectPrefixBlacklist:["https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO80_BreitkopfHaertel/master/Beethoven_WoO80.mei", "https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei", "https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei#", "https://raw.githubusercontent.com/trompamusic-encodings/", "https://trompa.mdw.ac.at/videos/"]
     }
     if(this.props.userPOD) {
       console.log("Adding ", this.props.userPOD);
