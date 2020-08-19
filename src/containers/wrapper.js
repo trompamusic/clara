@@ -31,10 +31,12 @@ export default function Wrapper(props) {
         .then(
           (midi) => { 
               setMidiSupported(true);
+              let i = []
               const inputs = midi.inputs.values();
               for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
-                setMidiIn([...midiIn, input.value]);
+                i.push(input.value);
               }
+              setMidiIn(i);
           },
           (err) => console.log('Something went wrong', err));
       } else { 
