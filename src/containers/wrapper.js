@@ -49,7 +49,10 @@ export default function Wrapper(props) {
     return(
       <div id="authWrapper">
         { midiSupported
-          ? <div>{ midiIn.map(device => `${device.name}`).join('') }</div>
+          ? <span>Please choose your MIDI device: <select name="midiDevices" id="midiDevices">
+              { midiIn.map(device => <option key={`${device.name}`} value={`${device.name}`}>{`${device.name}`}</option>) }
+            </select>
+          </span>
           : <div>MIDI not supported</div>
         }
         <LoggedOut>
