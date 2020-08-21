@@ -188,5 +188,10 @@ body {
   cursor:pointer;
 }
 
-
+#midiEvents { 
+  max-height:10em;
+  overflow:auto;
+  display:flex;
+  flex-direction: column-reverse;
+}
 

@@ -23,6 +23,7 @@ export default function Wrapper(props) {
     const [showPublicDemo, setShowPublicDemo] = useState(false);
     const [midiSupported, setMidiSupported] = useState(false);
     const [midiIn, setMidiIn] = useState([]);
+    const [midiEvents, setMidiEvents] = useState([])
 
     // Web-MIDI
     useEffect(() => {
@@ -34,6 +35,7 @@ export default function Wrapper(props) {
               let i = []
               const inputs = midi.inputs.values();
               for (let input = inputs.next(); input && !input.done; input = inputs.next()) {
+                input.value.addEventListener('midimessage', (mes) => handleMidiMessage(mes));
                 i.push(input.value);
               }
               setMidiIn(i);
@@ -43,18 +45,26 @@ export default function Wrapper(props) {
         console.warn("Browser does not support WebMIDI");
       }
     }, [])
-
-
+    
+    function handleMidiMessage(mes) { 
+      setMidiEvents(midiEvents => [...midiEvents, mes]);
+    }
 
     return(
       <div id="authWrapper">
-        { midiSupported
-          ? <span>Please choose your MIDI device: <select name="midiDevices" id="midiDevices">
-              { midiIn.map(device => <option key={`${device.name}`} value={`${device.name}`}>{`${device.name}`}</option>) }
-            </select>
-          </span>
-          : <div>MIDI not supported</div>
-        }
+          { midiSupported
+            ? <div id="midi">
+                <span>Please choose your MIDI device: 
+                  <select name="midiDevices" id="midiDevices">
+                    { midiIn.map(device => <option key={`${device.name}`} value={`${device.name}`}>{`${device.name}`}</option>) }
+                  </select>
+                </span>
+                <div id="midiEvents">
+                    {midiEvents.map(ev => <div key={ev.timeStamp}>{ev.data.reverse().join()}</div>)}
+                </div>
+              </div>
+            : <div>MIDI not supported</div>
+          }
         <LoggedOut>
           { showPublicDemo
             ? <Companion uri = { publicPerformanceCollection } />
