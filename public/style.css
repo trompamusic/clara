@@ -195,3 +195,17 @@ body {
   flex-direction: column-reverse;
 }
 
+#recordingIndicator { 
+  font-family: "Lucida Console", Monaco, monospace;
+  margin-left:1em;
+  padding:.2em;
+  color: white;
+}
+
+#recordingIndicator .isRecording { 
+  background: green;
+}
+
+#recordingIndicator .isNotRecording { 
+  background: red;
+}

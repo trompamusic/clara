@@ -12,6 +12,8 @@ import {
 
 import Companion from './companion';
 
+const MIDI_TIMEOUT = 5000; // milliseconds until we decide rehearsal rendition has stopped
+
 export default function Wrapper(props) {
     data.context.extend({
       mo: "http://purl.org/ontology/mo/",
@@ -25,7 +27,7 @@ export default function Wrapper(props) {
     const [midiIn, setMidiIn] = useState([]);
     const [midiEvents, setMidiEvents] = useState([])
 
-    // Web-MIDI
+    // Initialise Web-MIDI
     useEffect(() => {
       if("requestMIDIAccess" in navigator) { 
         navigator.requestMIDIAccess()
@@ -45,6 +47,23 @@ export default function Wrapper(props) {
         console.warn("Browser does not support WebMIDI");
       }
     }, [])
+
+
+  // Track MIDI events and start / end rehearsal rendition recordings based on them
+  useEffect(() => {
+    let timer;
+    if(timer) { 
+      clearTimeout(timer)
+    }
+    timer = setTimeout(() => {
+      if(midiEvents.length) {
+        console.log("I declare a rehearsal to be complete: ", midiEvents.map(ev => ev.data.join()));
+      }
+      //TODO do something with midiEvents
+      setMidiEvents([]);
+    }, MIDI_TIMEOUT)
+    return () => clearTimeout(timer)
+  }, [midiEvents]);
     
     function handleMidiMessage(mes) { 
       setMidiEvents(midiEvents => [...midiEvents, mes]);
@@ -58,6 +77,12 @@ export default function Wrapper(props) {
                   <select name="midiDevices" id="midiDevices">
                     { midiIn.map(device => <option key={`${device.name}`} value={`${device.name}`}>{`${device.name}`}</option>) }
                   </select>
+                </span>
+                <span id="recordingIndicator">
+                  { midiEvents.length 
+                  ? <span className="isRecording">Recording</span>
+                  : <span className="isNotRecording">Not Recording</span>
+                  }
                 </span>
                 <div id="midiEvents">
                     {midiEvents.map(ev => <div key={ev.timeStamp}>{ev.data.reverse().join()}</div>)}
