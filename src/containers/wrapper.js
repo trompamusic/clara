@@ -13,6 +13,7 @@ import {
 import Companion from './companion';
 
 const MIDI_TIMEOUT = 5000; // milliseconds until we decide rehearsal rendition has stopped
+const MIDI_BATCH_ENDPOINT = "http://127.0.0.1:5000/midiBatch"
 
 export default function Wrapper(props) {
     data.context.extend({
@@ -58,6 +59,13 @@ export default function Wrapper(props) {
     timer = setTimeout(() => {
       if(midiEvents.length) {
         console.log("I declare a rehearsal to be complete: ", midiEvents.map(ev => ev.data.join()));
+        console.log(midiEvents)
+        fetch(MIDI_BATCH_ENDPOINT, { 
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: midiEvents
+        }).then(response => response.json())
+        .then(data => console.log("GOT RESPONSE: ", data))
       }
       //TODO do something with midiEvents
       setMidiEvents([]);
