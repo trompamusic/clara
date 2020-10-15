@@ -19,7 +19,7 @@ export default function SolidWrapper(props) {
     })
     const performanceCollection = useLDflexValue("user.trompa_hasPerformanceCollection");
     const userPOD = useLDflexValue('user.storage');
-    const publicPerformanceCollection = 'https://trompa.solid.community/public/clara.trompamusic.folder/performanceCollection/SchumannRenditions.ttl';
+    const publicPerformanceCollection = 'https://trompa.solidcommunity.net/public/clara.trompamusic.folder/performanceCollection/SchumannRenditions.ttl';
     const [showPublicDemo, setShowPublicDemo] = useState(false);
 
     return(
