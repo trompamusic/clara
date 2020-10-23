@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import data from '@solid/query-ldflex';
+import MIDIMessage from 'midimessage';
 
 import { 
   LoginButton,
@@ -58,12 +59,12 @@ export default function Wrapper(props) {
     }
     timer = setTimeout(() => {
       if(midiEvents.length) {
-        console.log("I declare a rehearsal to be complete: ", midiEvents.map(ev => ev.data.join()));
-        console.log(midiEvents)
+        let midiEventsJson = midiEvents.map(m => JSON.stringify(MIDIMessage(m)));
+        console.log("I declare a rehearsal to be complete: ", midiEventsJson);
         fetch(MIDI_BATCH_ENDPOINT, { 
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: midiEvents
+          body: midiEventsJson
         }).then(response => response.json())
         .then(data => console.log("GOT RESPONSE: ", data))
       }
