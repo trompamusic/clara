@@ -1,9 +1,8 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
+import TempoCurveVis from './tempoCurveVis';
 
-const defaultY = 80; // for edge-case of only-one-note-on-page
 
 class FeatureVis extends Component {
   constructor(props) {
@@ -28,7 +27,6 @@ class FeatureVis extends Component {
     this.noteElementsForInstant = this.noteElementsForInstant.bind(this);
     this.calculateAvgQstampFromNoteIds = this.calculateAvgQstampFromNoteIds.bind(this);
     this.handleClick = this.handleClick.bind(this);
-    this.featureSvg = React.createRef();
   }
 
   componentDidMount() { 
@@ -213,6 +211,7 @@ class FeatureVis extends Component {
           instantsByScoretime = { this.state.instantsByScoretime }
           instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
           timelinesToVis = { this.props.timelinesToVis }
+          noteElementsForInstant = { this.noteElementsForInstant }
         />
       </div>
     )

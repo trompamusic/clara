@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom'
 
-class TempoCurveVis extends Component {
+const defaultY = 80; // for edge-case of only-one-note-on-page
+
+export default class TempoCurveVis extends Component {
   constructor(props) { 
     super(props);
     this.state = {
@@ -12,17 +14,21 @@ class TempoCurveVis extends Component {
     this.setPointsPerTimeline = this.setPointsPerTimeline.bind(this);
     this.makePoint = this.makePoint.bind(this);
     this.makeLine = this.makeLine.bind(this);
+    this.tempoCurveSvg = React.createRef();
   }
 
+  componentDidMount() { 
+    console.log("tempo mounted with props ", this.props);
+  }
   componentDidUpdate(prevProps, prevState) { 
     if("currentQstamp" in prevProps && 
       prevProps.currentQstamp !== this.props.currentQstamp) { 
       // current score time has changed, e.g. because playback has progressed
       // clear previously active
-      const previouslyActive = ReactDOM.findDOMNode(this.featureSvg.current).querySelectorAll(".active");
+      const previouslyActive = ReactDOM.findDOMNode(this.tempoCurveSvg.current).querySelectorAll(".active");
       Array.from(previouslyActive).map((p) => p.classList.remove("active"));
       // grab elements on current timeline
-      const currentTlElements = ReactDOM.findDOMNode(this.featureSvg.current).querySelectorAll(".currentTl");
+      const currentTlElements = ReactDOM.findDOMNode(this.tempoCurveSvg.current).querySelectorAll(".currentTl");
       // make those active with a qstamp at or before the currentQstamp
       Array.from(currentTlElements).forEach((e) => { 
         if(parseFloat(e.getAttribute("data-qstamp")) <= this.props.currentQstamp) { 
@@ -31,7 +37,7 @@ class TempoCurveVis extends Component {
       })
     }
     if("instantsByScoretimeLastModified" in prevProps &&
-      prevProps.instantsByScoretimeLastModified != this.props.instantsByScoretimeLastModified) { 
+      prevProps.instantsByScoretimeLastModified !== this.props.instantsByScoretimeLastModified) { 
       // instantsByScoretime changed, e.g. because page has been flipped
       // recalculate points per timeline
         this.setPointsPerTimeline()
@@ -49,7 +55,7 @@ class TempoCurveVis extends Component {
       // xpos should be average x position for note elements at this qstamp
         let noteElementsAtQstamp = [];
         this.props.instantsByScoretime[tl][qstamp].forEach((inst) => {
-          noteElementsAtQstamp.push(this.noteElementsForInstant(inst));
+          noteElementsAtQstamp.push(this.props.noteElementsForInstant(inst));
         });
         let sumXPos = noteElementsAtQstamp.flat().reduce((sumX, note) => { 
           let absolute = this.props.convertCoords(note);
@@ -123,7 +129,7 @@ class TempoCurveVis extends Component {
       let svgElements = [];
       // generate barlines
       Array.from(this.props.barlinesOnPage).forEach((bl,ix) => { 
-        const absolute = this.convertCoords(bl);
+        const absolute = this.props.convertCoords(bl);
         svgElements.push(
           this.makeLine(
             "barLineAttr", // className,
@@ -202,7 +208,6 @@ class TempoCurveVis extends Component {
             prevY = tlPoints[ix-1].y;
           }
           if(ix === 0) { 
-            console.log("latest tlPoints: ", tlPoints)
             // at the first point:
             // no line to previous (because no previous)
             // "steal" Y position from 2nd point (because no iii at first point)
@@ -269,16 +274,18 @@ class TempoCurveVis extends Component {
         // SVGs don't support CSS z-index, so we need to be careful with our ordering:
         // We want whole timelines to be consistent in their z-axis ordering
         // But on a given timeline, we want points to paint over lines.
-        svgElements = [...svgElements, lines, points];
-        return(
-          <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.featureSvg }>
-                { svgElements }
-          </svg>
-        )
-      })
+          svgElements = [...svgElements, lines, points];
+        })
+      return(
+        <svg id="featureVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.tempoCurveSvg }>
+              { svgElements }
+        </svg>
+      )
     } else { 
        return ( <div id="featureVisLoading" >Rendering tempo curves...</div> )
     }
+  }
+}
 
 
 
