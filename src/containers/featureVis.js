@@ -7,7 +7,7 @@ import TempoCurveVis from './tempoCurveVis';
 class FeatureVis extends Component {
   constructor(props) {
     super(props);
-    this.state = { 
+    this.state = {
       width: this.props.width || "1280",
       height: this.props.height || "120",
       instantsOnPage: {},
@@ -29,8 +29,8 @@ class FeatureVis extends Component {
     this.handleClick = this.handleClick.bind(this);
   }
 
-  componentDidMount() { 
-    // ON ELEMENT LOAD 
+  componentDidMount() {
+    // ON ELEMENT LOAD
     // Get handles for note elements on current (i.e., first) page...
     this.setNoteElementsByNoteId();
     // Calculate Verovio timemap, i.e. the score times
@@ -40,9 +40,9 @@ class FeatureVis extends Component {
       this.state.timemap.filter((t) => {
         // only care about times with onsets
         return "on" in t;
-      }).forEach((t) => { 
-        t.on.forEach((id) => { 
-          // build score time lookup by note id 
+      }).forEach((t) => {
+        t.on.forEach((id) => {
+          // build score time lookup by note id
           timemapByNoteId[id] = {
             qstamp: t.qstamp,
             tstamp: t.tstamp
@@ -53,59 +53,59 @@ class FeatureVis extends Component {
     })
   }
 
-  componentDidUpdate(prevProps, prevState) { 
-    if(prevProps.notesOnPage[0] !== this.props.notesOnPage[0] 
-    ) { 
+  componentDidUpdate(prevProps, prevState) {
+    if(prevProps.notesOnPage[0] !== this.props.notesOnPage[0]
+    ) {
       // page changed, set handles for note elements on new page
       this.setNoteElementsByNoteId();
     }
-    if(prevProps.currentTimeline !== this.props.currentTimeline) { 
+    if(prevProps.currentTimeline !== this.props.currentTimeline) {
       // selected timeline has changed, update state accordingly
       this.setState({ currentTimeline: this.props.currentTimeline });
     }
     if("currentlyActiveNoteIds" in prevProps &&
-      prevProps.currentlyActiveNoteIds.join("") !== this.props.currentlyActiveNoteIds.join("")) { 
+      prevProps.currentlyActiveNoteIds.join("") !== this.props.currentlyActiveNoteIds.join("")) {
       // "active" (highlighted) note Ids have changed, update current score time
       this.setState({ currentQstamp: this.calculateAvgQstampFromNoteIds(this.props.currentlyActiveNoteIds) })
     }
   }
 
-  calculateAvgQstampFromNoteIds(noteIds) { 
-    return noteIds.reduce((sumQ, noteId) => { 
+  calculateAvgQstampFromNoteIds(noteIds) {
+    return noteIds.reduce((sumQ, noteId) => {
           return sumQ += this.state.timemapByNoteId[noteId].qstamp;
         }, 0) / noteIds.length;
   }
 
 
-  setInstantsByScoretime() { 
+  setInstantsByScoretime() {
     let instantsByScoretime = {};
     // for each timeline we need to visualise:
-    this.props.timelinesToVis.forEach( (tl) => { 
+    this.props.timelinesToVis.forEach( (tl) => {
       instantsByScoretime[tl] = {};
-      // for each timeline instant 
-      this.state.instantsOnPage[tl].forEach( (inst) => { 
+      // for each timeline instant
+      this.state.instantsOnPage[tl].forEach( (inst) => {
         // average qstamps of note onsets at this instant
         let embodimentsAtInstant = this.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"])
-        let noteIdsAtInstant = embodimentsAtInstant.map((n) => { 
+        let noteIdsAtInstant = embodimentsAtInstant.map((n) => {
           return n["@id"].substr(n["@id"].lastIndexOf("#")+1);
         })
         const avgQstamp = this.calculateAvgQstampFromNoteIds(noteIdsAtInstant);
         // conceivable that distinct performed instants share a scoretime
         // so, maintain an array of instants at each scoretime
-        if(avgQstamp in instantsByScoretime[tl]) { 
+        if(avgQstamp in instantsByScoretime[tl]) {
           instantsByScoretime[tl][avgQstamp].push(inst);
-        } else { 
+        } else {
           instantsByScoretime[tl][avgQstamp] = [inst];
         }
       })
     })
-    this.setState({ 
+    this.setState({
       instantsByScoretime: instantsByScoretime,
-      instantsByScoretimeLastModified: new Date().valueOf()    
+      instantsByScoretimeLastModified: new Date().valueOf()
     });
   }
 
-  setNoteElementsByNoteId() { 
+  setNoteElementsByNoteId() {
     let noteElementsByNoteId = {};
     Array.from(this.props.notesOnPage).forEach( (note) => {
       noteElementsByNoteId[note.getAttribute("id")] = note;
@@ -116,25 +116,25 @@ class FeatureVis extends Component {
     });
   }
 
-  noteElementsForInstant(inst) { 
-    let noteElements = this.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"]).map( (n) => { 
+  noteElementsForInstant(inst) {
+    let noteElements = this.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"]).map( (n) => {
       // return note (DOM) elements corresponding to each embodiment
       return this.state.noteElementsByNoteId[n["@id"].substr(n["@id"].lastIndexOf("#")+1)]
     })
-    noteElements = noteElements.filter( (note) => { 
+    noteElements = noteElements.filter( (note) => {
       // filter out undefined notes (deleted notes might not be notesOnPage)
       return note
     })
     return noteElements;
   }
 
-  setInstantsOnPage() { 
-    if(Object.keys(this.props.instantsByNoteId).length) { 
+  setInstantsOnPage() {
+    if(Object.keys(this.props.instantsByNoteId).length) {
       let instantsOnPage = {};
       // for each timeline we need to visualise:
-      this.props.timelinesToVis.forEach( (tl) => { 
+      this.props.timelinesToVis.forEach( (tl) => {
         // find the instants coresponding to notes on this page
-        instantsOnPage[tl] = Array.from(this.props.notesOnPage).map( (note) => { 
+        instantsOnPage[tl] = Array.from(this.props.notesOnPage).map( (note) => {
           return this.props.instantsByNoteId[tl][note.getAttribute("id")]
         }).filter( (inst) => {
           // filter out undefined instants (i.e. when note doesn't appear in timeline)
@@ -142,43 +142,47 @@ class FeatureVis extends Component {
           return inst && parseFloat(inst["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, "")) > -1
         }).sort( (a, b) => {
           // ensure order by performance time
-          return parseFloat(a["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, "")) - 
-          parseFloat(b["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, ""))  
+          return parseFloat(a["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, "")) -
+          parseFloat(b["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, ""))
         });
-        instantsOnPage[tl] = instantsOnPage[tl].filter( (inst, ix) => { 
+        instantsOnPage[tl] = instantsOnPage[tl].filter( (inst, ix) => {
           return ix > 0 && inst["@id"] !== instantsOnPage[tl][ix-1]["@id"];
         })
       })
-      this.setState({instantsOnPage}, () => { 
+      this.setState({instantsOnPage}, () => {
         // now set instantsByScoretime
         this.setInstantsByScoretime();
       })
     }
   }
 
-    // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group  
+    // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group
   convertCoords(elem) {
-    if(document.getElementById(elem.getAttribute("id")) 
-      && elem.style.display !== "none" && (elem.getBBox().x !== 0 || elem.getBBox().y !== 0)) { 
+    if(document.getElementById(elem.getAttribute("id"))
+      && elem.style.display !== "none" && (elem.getBBox().x !== 0 || elem.getBBox().y !== 0)) {
       const x = elem.getBBox().x;
+      const width = elem.getBBox().width;
       const y = elem.getBBox().y;
+      const height = elem.getBBox().height;
       const offset = elem.closest("svg").parentElement.getBoundingClientRect();
       const matrix = elem.getScreenCTM();
       return {
           x: (matrix.a * x) + (matrix.c * y) + matrix.e - offset.left,
-          y: (matrix.b * x) + (matrix.d * y) + matrix.f - offset.top
+          y: (matrix.b * x) + (matrix.d * y) + matrix.f - offset.top,
+          x2: (matrix.a * (x + width)) + (matrix.c * y) + matrix.e - offset.left,
+          y2: (matrix.b * x) + (matrix.d * (y + height)) + matrix.f - offset.top
       };
     } else {
       console.warn("Element unavailable on page: ", elem.getAttribute("id"));
-      return { x:0, y:0 }
+      return { x:0, y:0, x2:0, y2:0 }
     }
   }
-  
-  ensureArray(val) { 
+
+  ensureArray(val) {
     return Array.isArray(val) ? val : [val]
   }
 
-  calculateQStampForInstant(inst) { 
+  calculateQStampForInstant(inst) {
     // qstamp == time in quarter notes (as per verovio timemap
     // as multiple notes (with potentially different qstamps) could share a performed
     // instant, calculate an (average) qstamp per instant here
@@ -191,21 +195,21 @@ class FeatureVis extends Component {
     return sumQ / noteElements.length;
   }
 
-  handleClick(qstamp,tl) { 
+  handleClick(qstamp,tl) {
     // seek to earliest instant on the clicked timeline at the clicked scoretime
-    if(tl in this.state.instantsByScoretime) { 
+    if(tl in this.state.instantsByScoretime) {
       this.props.seekToInstant(this.state.instantsByScoretime[tl][qstamp][0]);
     }
   }
-   
+
 
   render() {
     return (
       <div id="featureVisContainer">
-        <TempoCurveVis 
-          width = { this.state.width } 
-          height = { this.state.height } 
-          barlinesOnPage = { this.props.barlinesOnPage } 
+        <TempoCurveVis
+          width = { this.state.width }
+          height = { this.state.height }
+          barlinesOnPage = { this.props.barlinesOnPage }
           convertCoords = { this.convertCoords }
           handleClick = { this.handleClick }
           instantsByScoretime = { this.state.instantsByScoretime }
@@ -222,8 +226,8 @@ function mapStateToProps({ score }) {
   return { score }
 }
 
-function mapDispatchToProps(dispatch) { 
-  return bindActionCreators( { 
+function mapDispatchToProps(dispatch) {
+  return bindActionCreators( {
     }, dispatch);
 }
 

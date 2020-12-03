@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom'
 const defaultY = 80; // for edge-case of only-one-note-on-page
 
 export default class TempoCurveVis extends Component {
-  constructor(props) { 
+  constructor(props) {
     super(props);
     this.state = {
       width: this.props.width || "1280",
@@ -17,12 +17,12 @@ export default class TempoCurveVis extends Component {
     this.tempoCurveSvg = React.createRef();
   }
 
-  componentDidMount() { 
+  componentDidMount() {
     console.log("tempo mounted with props ", this.props);
   }
-  componentDidUpdate(prevProps, prevState) { 
-    if("currentQstamp" in prevProps && 
-      prevProps.currentQstamp !== this.props.currentQstamp) { 
+  componentDidUpdate(prevProps, prevState) {
+    if("currentQstamp" in prevProps &&
+      prevProps.currentQstamp !== this.props.currentQstamp) {
       // current score time has changed, e.g. because playback has progressed
       // clear previously active
       const previouslyActive = ReactDOM.findDOMNode(this.tempoCurveSvg.current).querySelectorAll(".active");
@@ -30,42 +30,42 @@ export default class TempoCurveVis extends Component {
       // grab elements on current timeline
       const currentTlElements = ReactDOM.findDOMNode(this.tempoCurveSvg.current).querySelectorAll(".currentTl");
       // make those active with a qstamp at or before the currentQstamp
-      Array.from(currentTlElements).forEach((e) => { 
-        if(parseFloat(e.getAttribute("data-qstamp")) <= this.props.currentQstamp) { 
+      Array.from(currentTlElements).forEach((e) => {
+        if(parseFloat(e.getAttribute("data-qstamp")) <= this.props.currentQstamp) {
           e.classList.add("active");
         }
       })
     }
     if("instantsByScoretimeLastModified" in prevProps &&
-      prevProps.instantsByScoretimeLastModified !== this.props.instantsByScoretimeLastModified) { 
+      prevProps.instantsByScoretimeLastModified !== this.props.instantsByScoretimeLastModified) {
       // instantsByScoretime changed, e.g. because page has been flipped
       // recalculate points per timeline
         this.setPointsPerTimeline()
     }
   }
 
-  setPointsPerTimeline() { 
+  setPointsPerTimeline() {
     let pointsPerTimeline={};
-    this.props.timelinesToVis.forEach( (tl, ix) => { 
-      let scoretimeArray = Object.keys(this.props.instantsByScoretime[tl]).sort((a,b) => { 
+    this.props.timelinesToVis.forEach( (tl, ix) => {
+      let scoretimeArray = Object.keys(this.props.instantsByScoretime[tl]).sort((a,b) => {
         return parseFloat(a) - parseFloat(b)
       })
       // for each instant on this page ...
-      let pointsForThisTl = scoretimeArray.map( (qstamp, ix) =>  { 
+      let pointsForThisTl = scoretimeArray.map( (qstamp, ix) =>  {
       // xpos should be average x position for note elements at this qstamp
         let noteElementsAtQstamp = [];
         this.props.instantsByScoretime[tl][qstamp].forEach((inst) => {
           noteElementsAtQstamp.push(this.props.noteElementsForInstant(inst));
         });
-        let sumXPos = noteElementsAtQstamp.flat().reduce((sumX, note) => { 
+        let sumXPos = noteElementsAtQstamp.flat().reduce((sumX, note) => {
           let absolute = this.props.convertCoords(note);
-          return sumX + absolute.x;
+          return sumX + (absolute.x + absolute.x2) / 2;
         }, 0);
         let avgXPos = sumXPos / noteElementsAtQstamp.flat().length;
-        
+
         // calculate y position (default to 0 on first instant)
         let yPos = 0;
-        if(ix > 0) { 
+        if(ix > 0) {
           // calculate change in avg performance time of instants at previous and current qstamp
           // TODO optimise (cache)
           const theseTimestamps = this.props.instantsByScoretime[tl][qstamp].map((inst) => {
@@ -89,7 +89,7 @@ export default class TempoCurveVis extends Component {
         }
         // if our point is on the current timeline and before or equal to the current qstamp, we are "active"
         const isActive = tl === this.props.currentTimeline && qstamp <= this.props.currentQstamp;
-        // return point data for this timeline and scoretime 
+        // return point data for this timeline and scoretime
         return {x: avgXPos, y: yPos, qstamp:qstamp, instants:this.props.instantsByScoretime[tl][qstamp], isActive };
       })
       pointsPerTimeline[tl] = pointsForThisTl;
@@ -97,38 +97,38 @@ export default class TempoCurveVis extends Component {
     this.setState({ pointsPerTimeline });
   }
 
-  makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString) { 
+  makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString) {
     // return SVG for a "point" (e.g. ellipse) on the visualisation
-    return <ellipse 
-      className={className} 
-      data-qstamp={qstamp} 
-      cx={cx} cy={cy} 
-      rx={rx} ry={ry} 
-      id={qstamp} 
+    return <ellipse
+      className={className}
+      data-qstamp={qstamp}
+      cx={cx} cy={cy}
+      rx={rx} ry={ry}
+      id={qstamp}
       key={key}
       onClick={ () => this.props.handleClick(qstamp,tl) }>
         <title>{titleString}</title>
       </ellipse>;
   }
 
-  makeLine(className, qstamp, tl, x1, y1, x2, y2, key, titleString) { 
+  makeLine(className, qstamp, tl, x1, y1, x2, y2, key, titleString) {
     // return SVG for a line segment on the visualisation
-    return <line 
-    className={className} 
-    data-qstamp={qstamp} 
-    x1={x1} y1={y1} 
-    x2={x2} y2={y2} 
+    return <line
+    className={className}
+    data-qstamp={qstamp}
+    x1={x1} y1={y1}
+    x2={x2} y2={y2}
     key={key}
     onClick={ () => this.props.handleClick(qstamp,tl) }>
       <title>{titleString}</title>
     </line>;
   }
 
-  render() { 
+  render() {
     if(Object.keys(this.state.pointsPerTimeline).length) {
       let svgElements = [];
       // generate barlines
-      Array.from(this.props.barlinesOnPage).forEach((bl,ix) => { 
+      Array.from(this.props.barlinesOnPage).forEach((bl,ix) => {
         const absolute = this.props.convertCoords(bl);
         svgElements.push(
           this.makeLine(
@@ -138,9 +138,9 @@ export default class TempoCurveVis extends Component {
             absolute.x, "0", absolute.x, this.state.height, // x1, y1, x2, y2
             "barline-"+ix, // react key
             null  // titleString - barlines don't need one!
-          ) 
+          )
         )
-      }) 
+      })
 
       // generate bpm markers
       const bpmMarkersToDraw = [20, 40, 60,80,100,120,140];
@@ -156,21 +156,21 @@ export default class TempoCurveVis extends Component {
           )
         )
         svgElements.push(
-            <text key={ bpm + "label" } 
+            <text key={ bpm + "label" }
               style={ {fontSize:8, fill:"darkgrey"} }
               // black magic transform... (to compensate for flipped svg coord system)
               transform={ "scale(1, -1) translate(0, -" + Math.round(bpm*0.7 + bpm - 0.9*ix) + ")"}
-              x="0" y={ Math.round(bpm*50/60) } 
+              x="0" y={ Math.round(bpm*50/60) }
               className="bpmLabel">
                 {bpm + " b.p.m."}
            </text>
         );
         svgElements.push(
-            <text key={ bpm + "label2" } 
+            <text key={ bpm + "label2" }
               style={ {fontSize:8, fill:"darkgrey"} }
               // black magic transform... (to compensate for flipped svg coord system)
               transform={ "scale(1, -1) translate(0, -" + Math.round(bpm*0.7 + bpm - 0.9*ix) + ")"}
-              x={ this.state.width - 40} y={ Math.round(bpm*50/60) } 
+              x={ this.state.width - 40} y={ Math.round(bpm*50/60) }
               className="bpmLabel">
                 {bpm + " b.p.m."}
            </text>
@@ -182,32 +182,32 @@ export default class TempoCurveVis extends Component {
       let timelinesInOrder = this.props.timelinesToVis;
       if(this.props.currentTimeline) {
         const currentTlIndex = timelinesInOrder.indexOf(this.props.currentTimeline);
-        if(currentTlIndex > -1) { 
+        if(currentTlIndex > -1) {
           timelinesInOrder.splice(currentTlIndex,1);
           timelinesInOrder.push(this.props.currentTimeline);
 
         }
-        else { 
+        else {
           console.warn("FeatureVis: Cannot find current timeline in timelinesToVis");
         }
       }
-      timelinesInOrder.forEach((tl) => { 
+      timelinesInOrder.forEach((tl) => {
         // for each timeline...
         let lines = [];
         let points = [];
         const tlPoints = this.state.pointsPerTimeline[tl];
-        tlPoints.forEach( (pt,ix) => { 
+        tlPoints.forEach( (pt,ix) => {
           let instantsString = pt.instants.map((inst) => inst["@id"]).join(",");
           // determine CSS class: "currentTl" if timeline corresponds to selected performance
           // "active" if point is before or equal to the currently active qstamp (in playback)
           let className = tl === this.state.currentTimeline ? "currentTl" : "";
           let prevX = 0;
           let prevY = 0;
-          if(ix > 0) { 
+          if(ix > 0) {
             prevX = tlPoints[ix-1].x;
             prevY = tlPoints[ix-1].y;
           }
-          if(ix === 0) { 
+          if(ix === 0) {
             // at the first point:
             // no line to previous (because no previous)
             // "steal" Y position from 2nd point (because no iii at first point)
@@ -215,15 +215,15 @@ export default class TempoCurveVis extends Component {
             let stolenY = tlPoints.length === 1 ? defaultY : tlPoints[ix+1].y;
             points.push(
               this.makePoint(
-                className, 
-                pt.qstamp, 
+                className,
+                pt.qstamp,
                 tl, // timeline
                 pt.x, stolenY, "3", "3",  //cx, cy, rx, ry
                 "point-"+tl+ix, // react key
                 "Point: " + instantsString +" qstamp: " + pt.qstamp // titleString
               )
             )
-          } else if(ix === 1) { 
+          } else if(ix === 1) {
             // at the second point:
             // connect line to "estimated" first point (with stolen Y position)
             // and draw a "normal" point
@@ -239,8 +239,8 @@ export default class TempoCurveVis extends Component {
             )
             points.push(
               this.makePoint(
-                className, 
-                pt.qstamp, 
+                className,
+                pt.qstamp,
                 tl, //timeline
                 pt.x, pt.y, "3", "3",  //cx, cy, rx, ry
                 "point-"+tl+ix, // react key
@@ -261,8 +261,8 @@ export default class TempoCurveVis extends Component {
             )
             points.push(
               this.makePoint(
-                className, 
-                pt.qstamp, 
+                className,
+                pt.qstamp,
                 tl, //timeline
                 pt.x, pt.y, "3", "3",  //cx, cy, rx, ry
                 "point-"+tl+ix, // react key
@@ -281,11 +281,8 @@ export default class TempoCurveVis extends Component {
               { svgElements }
         </svg>
       )
-    } else { 
+    } else {
        return ( <div id="featureVisLoading" >Rendering tempo curves...</div> )
     }
   }
 }
-
-
-
