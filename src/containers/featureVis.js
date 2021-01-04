@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 import TempoCurveVis from './tempoCurveVis';
+import DynamicsVis from './dynamicsVis';
 
 
 class FeatureVis extends Component {
@@ -27,6 +28,8 @@ class FeatureVis extends Component {
     this.noteElementsForInstant = this.noteElementsForInstant.bind(this);
     this.calculateAvgQstampFromNoteIds = this.calculateAvgQstampFromNoteIds.bind(this);
     this.handleClick = this.handleClick.bind(this);
+    this.makePoint = this.makePoint.bind(this);
+    this.makeLine = this.makeLine.bind(this);
   }
 
   componentDidMount() {
@@ -207,18 +210,62 @@ class FeatureVis extends Component {
     return (
       <div id="featureVisContainer">
         <TempoCurveVis
-          width = { this.state.width }
-          height = { this.state.height }
-          barlinesOnPage = { this.props.barlinesOnPage }
-          convertCoords = { this.convertCoords }
-          handleClick = { this.handleClick }
-          instantsByScoretime = { this.state.instantsByScoretime }
-          instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
-          timelinesToVis = { this.props.timelinesToVis }
-          noteElementsForInstant = { this.noteElementsForInstant }
-        />
+            width = { this.state.width }
+            height = { this.state.height }
+            barlinesOnPage = { this.props.barlinesOnPage }
+            convertCoords = { this.convertCoords }
+            handleClick = { this.handleClick }
+            instantsByScoretime = { this.state.instantsByScoretime }
+            instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
+            timelinesToVis = { this.props.timelinesToVis }
+            noteElementsForInstant = { this.noteElementsForInstant }
+            makePoint = { this.makePoint }
+            makeLine = { this.makeLine }
+          />
+          <DynamicsVis
+            width = { this.state.width }
+            height = { this.state.height }
+            barlinesOnPage = { this.props.barlinesOnPage }
+            convertCoords = { this.convertCoords }
+            handleClick = { this.handleClick }
+            instantsByScoretime = { this.state.instantsByScoretime }
+            instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
+            timelinesToVis = { this.props.timelinesToVis }
+            noteElementsForInstant = { this.noteElementsForInstant }
+            makePoint = { this.makePoint }
+            makeLine = { this.makeLine }
+            performedElements = { this.props.performedElements } 
+            scoreComponent = { this.props.scoreComponent }
+          />
       </div>
     )
+  }
+
+  makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString) { 
+    // return SVG for a "point" (e.g. ellipse) on the visualisation
+    return <ellipse 
+      className={className} 
+      data-qstamp={qstamp} 
+      cx={cx} cy={cy} 
+      rx={rx} ry={ry} 
+      id={qstamp} 
+      key={key}
+      onClick={ () => this.props.handleClick(qstamp,tl) }>
+        <title>{titleString}</title>
+      </ellipse>;
+  }
+
+  makeLine(className, qstamp, tl, x1, y1, x2, y2, key, titleString) { 
+    // return SVG for a line segment on the visualisation
+    return <line 
+    className={className} 
+    data-qstamp={qstamp} 
+    x1={x1} y1={y1} 
+    x2={x2} y2={y2} 
+    key={key}
+    onClick={ () => this.props.handleClick(qstamp,tl) }>
+      <title>{titleString}</title>
+    </line>;
   }
 }
 

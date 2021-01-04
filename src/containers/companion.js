@@ -67,7 +67,8 @@ class Companion extends Component {
       latestObservedPageNum: 0,
       observingScore: false, // control behaviour of DOM change observer (to catch Verovio SVG render completions)
       scoreComponentLoadingStarted: false,
-      scoreComponentLoaded: false // know when to initially start the DOM observer
+      scoreComponentLoaded: false, // know when to initially start the DOM observer
+      performedElements: {}
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -94,7 +95,8 @@ class Companion extends Component {
     this.props.setTraversalObjectives([
       { "@type": "http://purl.org/ontology/mo/Performance" },
       { "@type": "http://www.linkedmusic.org/ontologies/segment/Segment" },
-      { "@type": "http://purl.org/NET/c4dm/timeline.owl#Instant" }
+      { "@type": "http://purl.org/NET/c4dm/timeline.owl#Instant" },
+      { "@type": "http://www.w3.org/ns/oa#Annotation" }
     ]);
   }
 
@@ -102,8 +104,8 @@ class Companion extends Component {
     console.log("Attempting to start traversal with ", this.props.uri);
     const params = {
       numHops:6, 
-      objectPrefixWhitelist:["https://trompa.solidcommunity.net", "https://trompa.mdw.ac.at", "https://raw.githubusercontent.com/trompamusic-encodings"],
-      objectPrefixBlacklist:["https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei", "https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei#", "https://trompa.mdw.ac.at/videos/"]
+      objectPrefixBlacklist:["https://raw.githubusercontent.com/trompamusic-encodings/"],
+      objectPrefixWhitelist:[]
     }
     if(this.props.userPOD) {
       console.log("Adding ", this.props.userPOD);
@@ -421,13 +423,15 @@ class Companion extends Component {
          this.state.scoreComponentLoaded
          ) { 
         featureVisElement = <FeatureVis 
-            notesOnPage={ this.state.notesOnPage } 
-            barlinesOnPage={ this.state.barlinesOnPage } 
-            instantsByNoteId={ this.state.instantsByNoteId } 
+            performedElements = { this.state.performedElements }
+            notesOnPage = { this.state.notesOnPage } 
+            barlinesOnPage = { this.state.barlinesOnPage } 
+            instantsByNoteId = { this.state.instantsByNoteId } 
             timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
             currentTimeline = { currentTimeline } 
             currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
             seekToInstant = { this.seekToInstant } 
+            scoreComponent = { this.scoreComponent }
             ref = { this.featureVis } />
       };
 
@@ -847,10 +851,12 @@ class Companion extends Component {
     let instants = [];
     let instantsByPerfTime = {};
     let instantsByNoteId = {};
-    if(outcomes.length === 3 && 
+    let performedElements = {}
+    if(outcomes.length === 4 && 
       typeof outcomes[0] !== 'undefined' && 
       typeof outcomes[1] !== 'undefined' &&
-      typeof outcomes[2] !== 'undefined') { 
+      typeof outcomes[2] !== 'undefined' &&
+      typeof outcomes[3] !== 'undefined') { 
       outcomes[0]["@graph"].forEach( (outcome) => {
         performances.push(outcome)
       });
@@ -882,6 +888,33 @@ class Companion extends Component {
           }
         })
       });
+
+      // filter annotations to only those which are oa#describing (i.e., describing dynamics)
+      // TODO: consider a custom TROMPA motivation to be more restrictive here
+      outcomes[3]["@graph"].filter((outcome) => {
+        if("http://www.w3.org/ns/oa#motivatedBy" in outcome &&
+          outcome["http://www.w3.org/ns/oa#motivatedBy"]["@id"] === "http://www.w3.org/ns/oa#describing") { 
+          return true
+        }
+      }).forEach( (outcome) => { 
+        // the annotation target's source is the MEI element
+        // and its scope is the performance timeline.
+        // Build a look-up table of:
+        // { mei-element: { timeline: velocityVal } }
+        let target = outcome["http://www.w3.org/ns/oa#hasTarget"];
+        let targetMEI = target["http://www.w3.org/ns/oa#hasSource"]["@id"].split("#")[1];
+        let targetScope = target["http://www.w3.org/ns/oa#hasScope"]["@id"];
+        // FIXME The velocity value should hang off the annotation, not off the target
+        let velocity = target["http://www.w3.org/ns/oa#bodyValue"];
+        if(targetMEI in performedElements) { 
+          performedElements[targetMEI][targetScope] = velocity;
+        } else { 
+          performedElements[targetMEI] = { [targetScope]: velocity }
+        }
+
+      })
+
+
       Object.keys(instantsByPerfTime).forEach( (tl) => { 
         // order the instances along each timeline
         instantsByPerfTime[tl] = instantsByPerfTime[tl].sort( (a, b) => { 
@@ -899,7 +932,7 @@ class Companion extends Component {
         console.log("Current performance: ", currentPerformance)
         const currentScore = currentPerformance["http://purl.org/ontology/mo/published_as"]["@id"];
         this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
-        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore });
+        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore, performedElements });
       }
     }
   }
