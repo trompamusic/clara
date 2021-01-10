@@ -209,6 +209,7 @@ class FeatureVis extends Component {
   render() {
     return (
       <div id="featureVisContainer">
+      {/*
         <TempoCurveVis
             width = { this.state.width }
             height = { this.state.height }
@@ -221,7 +222,7 @@ class FeatureVis extends Component {
             noteElementsForInstant = { this.noteElementsForInstant }
             makePoint = { this.makePoint }
             makeLine = { this.makeLine }
-          />
+          />*/}
           <DynamicsVis
             width = { this.state.width }
             height = { this.state.height }
@@ -241,8 +242,18 @@ class FeatureVis extends Component {
     )
   }
 
-  makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString) { 
+  makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString) {
     // return SVG for a "point" (e.g. ellipse) on the visualisation
+    console.log("makePoint!",
+      "className", className,
+      "qstamp", qstamp,
+      "tl", tl,
+      "cx", cx,
+      "cy", cy,
+      "rx", rx, 
+      "ry", ry,
+      "key", key,
+      "titleString", titleString);
     return <ellipse 
       className={className} 
       data-qstamp={qstamp} 
@@ -250,7 +261,7 @@ class FeatureVis extends Component {
       rx={rx} ry={ry} 
       id={qstamp} 
       key={key}
-      onClick={ () => this.props.handleClick(qstamp,tl) }>
+      onClick={ () => this.handleClick(qstamp,tl) }>
         <title>{titleString}</title>
       </ellipse>;
   }
@@ -263,7 +274,7 @@ class FeatureVis extends Component {
     x1={x1} y1={y1} 
     x2={x2} y2={y2} 
     key={key}
-    onClick={ () => this.props.handleClick(qstamp,tl) }>
+    onClick={ () => this.handleClick(qstamp,tl) }>
       <title>{titleString}</title>
     </line>;
   }
