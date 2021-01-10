@@ -217,9 +217,35 @@ export default class DynamicsVis extends Component {
             )
           })
         })
+        // now connect the points!
+        const minLines = minPoints.map((p, ix) => {
+          if(ix < minPoints.length-1) { 
+            let from = p[0].props;
+            let to = minPoints[ix+1][0].props;
+            return this.props.makeLine("dynamicsConnector",
+              from.qstamp, 
+              from.tl, from.cx, from.cy, to.cx, to.cy, 
+              "min---" + p[0].key + "---" + minPoints[ix+1][0].key,
+              ""
+            );
+          }
+        })
+        const maxLines = maxPoints.map((p, ix) => {
+          if(ix < maxPoints.length-1) { 
+            let from = p[0].props;
+            let to = maxPoints[ix+1][0].props;
+            return this.props.makeLine("dynamicsConnector",
+              from.qstamp,
+              from.tl, from.cx, from.cy, to.cx, to.cy, 
+              "max---" + p[0].key + "---" + maxPoints[ix+1][0].key,
+              ""
+            );
+          }
+        })
         points = [...minPoints, ...maxPoints];
+        lines = [...minLines, ...maxLines];
       }
-      svgElements = [...svgElements, lines, points];
+      svgElements = [...svgElements, ...points, ...lines];
     })
     return(
       <svg id="dynamicsVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.dynamicsSvg }>

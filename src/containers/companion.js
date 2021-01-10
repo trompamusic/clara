@@ -911,9 +911,7 @@ class Companion extends Component {
         } else { 
           performedElements[targetMEI] = { [targetScope]: velocity }
         }
-
       })
-
 
       Object.keys(instantsByPerfTime).forEach( (tl) => { 
         // order the instances along each timeline

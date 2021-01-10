@@ -244,16 +244,6 @@ class FeatureVis extends Component {
 
   makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString) {
     // return SVG for a "point" (e.g. ellipse) on the visualisation
-    console.log("makePoint!",
-      "className", className,
-      "qstamp", qstamp,
-      "tl", tl,
-      "cx", cx,
-      "cy", cy,
-      "rx", rx, 
-      "ry", ry,
-      "key", key,
-      "titleString", titleString);
     return <ellipse 
       className={className} 
       data-qstamp={qstamp} 

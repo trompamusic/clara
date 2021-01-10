@@ -188,5 +188,15 @@ body {
   cursor:pointer;
 }
 
+.dynamicsConnector { 
+  stroke:black;
+  fill:black;
+  stroke-width:1px;
+}
+
+.dynamicsConector.active{
+  stroke:red;
+  fill:red;
+}
 
 
