@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom'
 import jsonld from 'jsonld'
 
 const defaultR = 3; // default point radius
+const permissibleQstampGap = 4; // only connect dynamics points not further apart than this
 
 export default class DynamicsVis extends Component {
   constructor(props) { 
@@ -188,7 +189,8 @@ export default class DynamicsVis extends Component {
       let lines = [];
       let points = [];
       if(tl in this.state.pointsPerTimeline) { 
-        const minPoints = Object.keys(this.state.pointsPerTimeline[tl]).map( (qstamp) => { 
+        const sortedTlPoints = Object.keys(this.state.pointsPerTimeline[tl]).sort( (a, b) => a-b )
+        const minPoints = sortedTlPoints.map( (qstamp) => { 
           return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (layerId) => {
             let layer = this.state.pointsPerTimeline[tl][qstamp][layerId];
             return this.props.makePoint(
@@ -198,11 +200,11 @@ export default class DynamicsVis extends Component {
               Math.round(layer.avgX), Math.round(layer.yMin), 
               defaultR, defaultR,
               encodeURIComponent(tl) + "-" + qstamp + "-" + layerId,
-              "Minimum velocity for this layer: ", Math.round(layer.yMin)
+              "Minimum velocity for this layer: " + Math.round(layer.yMin)
             )
           })
         })
-        const maxPoints = Object.keys(this.state.pointsPerTimeline[tl]).map( (qstamp) => { 
+        const maxPoints = sortedTlPoints.map( (qstamp) => { 
           return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (layerId) => {
             let layer = this.state.pointsPerTimeline[tl][qstamp][layerId];
             return this.props.makePoint(
@@ -213,7 +215,7 @@ export default class DynamicsVis extends Component {
               defaultR, defaultR,
               encodeURIComponent(tl) + "-" + qstamp + "-" + layerId,
               encodeURIComponent(tl) + "-" + qstamp + "-" + layerId,
-              "Maximum velocity for this layer: ", Math.round(layer.yMax)
+              "Maximum velocity for this layer: " + Math.round(layer.yMax)
             )
           })
         })
@@ -222,24 +224,28 @@ export default class DynamicsVis extends Component {
           if(ix < minPoints.length-1) { 
             let from = p[0].props;
             let to = minPoints[ix+1][0].props;
-            return this.props.makeLine("dynamicsConnector",
-              from.qstamp, 
-              from.tl, from.cx, from.cy, to.cx, to.cy, 
-              "min---" + p[0].key + "---" + minPoints[ix+1][0].key,
-              ""
-            );
+            if(to["data-qstamp"] - from["data-qstamp"] <= permissibleQstampGap) { 
+              return this.props.makeLine("dynamicsConnector",
+                from["data-qstamp"], 
+                from.tl, from.cx, from.cy, to.cx, to.cy, 
+                "min---" + p[0].key + "---" + minPoints[ix+1][0].key,
+                "qstamp from: " + from["data-qstamp"] + "qstamp to: " + to["data-qstamp"]
+              );
+            }
           }
         })
         const maxLines = maxPoints.map((p, ix) => {
           if(ix < maxPoints.length-1) { 
             let from = p[0].props;
             let to = maxPoints[ix+1][0].props;
-            return this.props.makeLine("dynamicsConnector",
-              from.qstamp,
-              from.tl, from.cx, from.cy, to.cx, to.cy, 
-              "max---" + p[0].key + "---" + maxPoints[ix+1][0].key,
-              ""
-            );
+            if(to["data-qstamp"] - from["data-qstamp"] <= permissibleQstampGap) { 
+              return this.props.makeLine("dynamicsConnector",
+                from["data-qstamp"],
+                from.tl, from.cx, from.cy, to.cx, to.cy, 
+                "max---" + p[0].key + "---" + maxPoints[ix+1][0].key,
+                "qstamp from: " + from["data-qstamp"] + "qstamp to: " + to["data-qstamp"]
+              );
+            }
           }
         })
         points = [...minPoints, ...maxPoints];
