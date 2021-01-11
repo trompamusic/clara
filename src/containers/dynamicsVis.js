@@ -200,8 +200,9 @@ export default class DynamicsVis extends Component {
         const minPoints = sortedTlPoints.map( (qstamp) => { 
           return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (layerId) => {
             let layer = this.state.pointsPerTimeline[tl][qstamp][layerId];
+            let layerNum = this.props.layermap[layerId]
             return this.props.makePoint(
-              className + " " + layerId,
+              className + " layer" + layerNum,
               qstamp, 
               tl,
               Math.round(layer.avgX), Math.round(layer.yMin), 
@@ -214,8 +215,9 @@ export default class DynamicsVis extends Component {
         const maxPoints = sortedTlPoints.map( (qstamp) => { 
           return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (layerId) => {
             let layer = this.state.pointsPerTimeline[tl][qstamp][layerId];
+            let layerNum = this.props.layermap[layerId]
             return this.props.makePoint(
-              className + " " + layerId,
+              className + " layer" + layerNum,
               qstamp, 
               tl,
               Math.round(layer.avgX), Math.round(layer.yMax), 
@@ -232,7 +234,7 @@ export default class DynamicsVis extends Component {
             let from = p[0].props;
             let to = minPoints[ix+1][0].props;
             if(to["data-qstamp"] - from["data-qstamp"] <= permissibleQstampGap) { 
-              return this.props.makeLine("dynamicsConnector " + from.layerId,
+              return this.props.makeLine("dynamicsConnector " + from.className,
                 from["data-qstamp"], 
                 from.tl, from.cx, from.cy, to.cx, to.cy, 
                 "min---" + p[0].key + "---" + minPoints[ix+1][0].key,
@@ -246,7 +248,7 @@ export default class DynamicsVis extends Component {
             let from = p[0].props;
             let to = maxPoints[ix+1][0].props;
             if(to["data-qstamp"] - from["data-qstamp"] <= permissibleQstampGap) { 
-              return this.props.makeLine("dynamicsConnector " + from.layerId,
+              return this.props.makeLine("dynamicsConnector " + from.className,
                 from["data-qstamp"],
                 from.tl, from.cx, from.cy, to.cx, to.cy, 
                 "max---" + p[0].key + "---" + maxPoints[ix+1][0].key,
@@ -261,9 +263,21 @@ export default class DynamicsVis extends Component {
       svgElements = [...svgElements, ...points, ...lines];
     })
     return(
-      <svg id="dynamicsVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.dynamicsSvg }>
-            { svgElements }
-      </svg>
+      <>
+        <svg id="dynamicsVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.dynamicsSvg }>
+              { svgElements }
+        </svg>
+        <span id="dynamicsLegend">Layers: 
+          <span className="layer1">&nbsp;</span>1
+          <span className="layer2">&nbsp;</span>2
+          <span className="layer3">&nbsp;</span>3
+          <span className="layer4">&nbsp;</span>4
+          <span className="layer5">&nbsp;</span>5
+          <span className="layer6">&nbsp;</span>6
+          <span className="layer7">&nbsp;</span>7
+          <span className="layer8">&nbsp;</span>8
+        </span>
+      </>
     )
   }
 }

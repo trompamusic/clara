@@ -16,6 +16,7 @@ class FeatureVis extends Component {
       noteElementsByNoteId: {},
       timemap: [],
       timemapByNoteId: {},
+      layermap: {},
       currentTimeline: this.props.currentTimeline,
       currentQstamp: "",
     }
@@ -51,8 +52,14 @@ class FeatureVis extends Component {
             tstamp: t.tstamp
           }
         });
-      })
-      this.setState({ timemapByNoteId });
+      });
+      // map layer IDs to layer numbers
+      const mei = this.props.score.vrvTk.getMEI();
+      const meiDoc = new DOMParser().parseFromString(mei, "text/xml");
+      const layerElements = Array.from(meiDoc.getElementsByTagName("layer"));
+      let layermap = {};
+      layerElements.map((l) => layermap[l.getAttribute("xml:id")] = l.getAttribute("n"));
+      this.setState({ timemapByNoteId, layermap });
     })
   }
 
@@ -209,7 +216,7 @@ class FeatureVis extends Component {
   render() {
     return (
       <div id="featureVisContainer">
-        <div class="visLabel"> Tempo </div>
+        <div className="visLabel"> Tempo </div>
         <TempoCurveVis
             width = { this.state.width }
             height = { this.state.height }
@@ -223,7 +230,7 @@ class FeatureVis extends Component {
             makePoint = { this.makePoint }
             makeLine = { this.makeLine }
           />
-        <div class="visLabel"> Dynamics </div>
+        <div className="visLabel"> Dynamics </div>
           <DynamicsVis
             width = { this.state.width }
             height = { this.state.height }
@@ -237,6 +244,7 @@ class FeatureVis extends Component {
             makePoint = { this.makePoint }
             makeLine = { this.makeLine }
             performedElements = { this.props.performedElements } 
+            layermap = { this.state.layermap }
             scoreComponent = { this.props.scoreComponent }
           />
       </div>

@@ -216,3 +216,64 @@ line.dynamicsConnector.active{
   top: -40px;
   font-size: xx-small;
 }
+
+#dynamicsLegend { 
+  position:relative;
+  top: -60px;
+  font-size: xx-small;
+}
+
+#dynamicsLegend span { 
+  width: 1em;
+  height: 1em;
+  margin-left:4em;
+  margin-right:1em;
+}
+
+#dynamicsVis .layer1, #dynamicsLegend .layer1 { 
+  stroke:#a6cee3cc;
+  fill:#a6cee3cc;
+  background:#a6cee3cc;
+}
+
+#dynamicsVis .layer2, #dynamicsLegend .layer2 { 
+  stroke:#1f78b4cc;
+  fill:#1f78b4cc;
+  background:#1f78b4cc;
+}
+
+#dynamicsVis .layer3, #dynamicsLegend .layer3 { 
+  stroke:#b2df8acc;
+  fill:#b2df8acc;
+  background:#b2df8acc;
+}
+
+#dynamicsVis .layer4, #dynamicsLegend .layer4 { 
+  stroke:#33a92ccc;
+  fill:#33a92ccc;
+  background:#33a92ccc;
+}
+
+#dynamicsVis .layer5, #dynamicsLegend .layer5 { 
+  stroke:#fb9a99cc;
+  fill:#fb9a99cc;
+  background:#fb9a99cc;
+}
+
+#dynamicsVis .layer6, #dynamicsLegend .layer6 { 
+  stroke:#e31a1ccc;
+  fill:#e31a1ccc;
+  background:#e31a1ccc;
+}
+
+#dynamicsVis .layer7, #dynamicsLegend .layer7 { 
+  stroke:#fdbf6fcc;
+  fill:#fdbf6fcc;
+  background:#fdbf6fcc;
+}
+
+#dynamicsVis .layer8, #dynamicsLegend .layer8 { 
+  stroke:#ff7f00cc;
+  fill:#ff7f00cc;
+  background:#ff7f00cc;
+}
