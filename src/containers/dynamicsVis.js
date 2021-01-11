@@ -195,6 +195,7 @@ export default class DynamicsVis extends Component {
       // for each timeline...
       let lines = [];
       let points = [];
+      let polygons = [];
       if(tl in this.state.pointsPerTimeline) { 
         const sortedTlPoints = Object.keys(this.state.pointsPerTimeline[tl]).sort( (a, b) => a-b )
         const minPoints = sortedTlPoints.map( (qstamp) => { 
@@ -257,10 +258,31 @@ export default class DynamicsVis extends Component {
             }
           }
         })
+        // connect the points into a polygon
+        // we want to envelope each layer along its min and max points
+        // order matters! draw a line from the left- to the right-most minimum,
+        // then up to the right-most maximum and back to the left-most maximum.
+        // We don't need to connect the final (left-most) maximum back to the first
+        // (left-most) minimum, as closing the polygon is implied in SVG
+        const polygonPoints = [
+          ...minPoints.map( (p) => {
+            return { x: p[0].props.cx, y: p[0].props.cy } 
+          }), 
+          ...maxPoints.slice(0).reverse().map( (p) => { 
+            return { x: p[0].props.cx, y: p[0].props.cy } 
+          })
+        ]
+        console.log("POLYPOINTS: ", polygonPoints);
+        const polygonPointsString = polygonPoints.reduce(
+          (pStr, p) => pStr += p.x + "," + p.y + " ",
+        "");
+        console.log("POLYPOINTS STRING: ", polygonPointsString);
+
+        polygons = [this.props.makePolygon("test", "test", polygonPointsString, "test")];  
         points = [...minPoints, ...maxPoints];
         lines = [...minLines, ...maxLines];
       }
-      svgElements = [...svgElements, ...points, ...lines];
+      svgElements = [...svgElements, ...points, /*...lines,*/ ...polygons];
     })
     return(
       <>

@@ -31,6 +31,7 @@ class FeatureVis extends Component {
     this.handleClick = this.handleClick.bind(this);
     this.makePoint = this.makePoint.bind(this);
     this.makeLine = this.makeLine.bind(this);
+    this.makePolygon = this.makePolygon.bind(this);
   }
 
   componentDidMount() {
@@ -243,6 +244,7 @@ class FeatureVis extends Component {
             noteElementsForInstant = { this.noteElementsForInstant }
             makePoint = { this.makePoint }
             makeLine = { this.makeLine }
+            makePolygon = { this.makePolygon }
             performedElements = { this.props.performedElements } 
             layermap = { this.state.layermap }
             scoreComponent = { this.props.scoreComponent }
@@ -276,6 +278,16 @@ class FeatureVis extends Component {
     onClick={ () => this.handleClick(qstamp,tl) }>
       <title>{titleString}</title>
     </line>;
+  }
+
+  makePolygon(className, tl, points, key, titleString) { 
+    return <polygon
+    className={className}
+    points={points}
+    key={key}
+    >
+      <title>{titleString}</title>
+    </polygon>;
   }
 }
 
