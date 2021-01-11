@@ -209,7 +209,7 @@ class FeatureVis extends Component {
   render() {
     return (
       <div id="featureVisContainer">
-      {/*
+        <div class="visLabel"> Tempo </div>
         <TempoCurveVis
             width = { this.state.width }
             height = { this.state.height }
@@ -222,7 +222,8 @@ class FeatureVis extends Component {
             noteElementsForInstant = { this.noteElementsForInstant }
             makePoint = { this.makePoint }
             makeLine = { this.makeLine }
-          />*/}
+          />
+        <div class="visLabel"> Dynamics </div>
           <DynamicsVis
             width = { this.state.width }
             height = { this.state.height }

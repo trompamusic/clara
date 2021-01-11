@@ -95,7 +95,7 @@ export default class DynamicsVis extends Component {
         Object.keys(instantsByQtLayer).forEach( (layerId) => {
           const avgX = noteElementsByQtLayer[layerId].reduce((sumX, note) => { 
             let absolute = this.props.convertCoords(note);
-            return sumX + absolute.x;
+            return sumX + (absolute.x + absolute.x2) / 2;
           }, 0) / noteElementsByQtLayer[layerId].length;
           const localVelocities = noteElementsByQtLayer[layerId].map(
             (el) => this.props.performedElements[el.getAttribute("id")][tl]
@@ -120,6 +120,13 @@ export default class DynamicsVis extends Component {
 
   render() { 
     let svgElements = [];
+    // generate layer-to-colour mappings
+    // FIXME: these will be inconsistent between pages when a layer is added or removed
+    // ... to fix, need to build from MEI rather than from SVG
+    const distinctLayerIdsOnPage= [...new Set(
+      Array.from(document.querySelectorAll(".layer")).map((el) => el.getAttribute("id"))
+    )]
+
     // generate barlines
     Array.from(this.props.barlinesOnPage).forEach((bl,ix) => { 
       const absolute = this.props.convertCoords(bl);
@@ -194,7 +201,7 @@ export default class DynamicsVis extends Component {
           return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (layerId) => {
             let layer = this.state.pointsPerTimeline[tl][qstamp][layerId];
             return this.props.makePoint(
-              className + " " + layerId + " min",
+              className + " " + layerId,
               qstamp, 
               tl,
               Math.round(layer.avgX), Math.round(layer.yMin), 
@@ -208,7 +215,7 @@ export default class DynamicsVis extends Component {
           return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (layerId) => {
             let layer = this.state.pointsPerTimeline[tl][qstamp][layerId];
             return this.props.makePoint(
-              className + " " + layerId + " max",
+              className + " " + layerId,
               qstamp, 
               tl,
               Math.round(layer.avgX), Math.round(layer.yMax), 
@@ -225,11 +232,11 @@ export default class DynamicsVis extends Component {
             let from = p[0].props;
             let to = minPoints[ix+1][0].props;
             if(to["data-qstamp"] - from["data-qstamp"] <= permissibleQstampGap) { 
-              return this.props.makeLine("dynamicsConnector",
+              return this.props.makeLine("dynamicsConnector " + from.layerId,
                 from["data-qstamp"], 
                 from.tl, from.cx, from.cy, to.cx, to.cy, 
                 "min---" + p[0].key + "---" + minPoints[ix+1][0].key,
-                "qstamp from: " + from["data-qstamp"] + "qstamp to: " + to["data-qstamp"]
+                "qstamp from: " + from["data-qstamp"] + " qstamp to: " + to["data-qstamp"]
               );
             }
           }
@@ -239,7 +246,7 @@ export default class DynamicsVis extends Component {
             let from = p[0].props;
             let to = maxPoints[ix+1][0].props;
             if(to["data-qstamp"] - from["data-qstamp"] <= permissibleQstampGap) { 
-              return this.props.makeLine("dynamicsConnector",
+              return this.props.makeLine("dynamicsConnector " + from.layerId,
                 from["data-qstamp"],
                 from.tl, from.cx, from.cy, to.cx, to.cy, 
                 "max---" + p[0].key + "---" + maxPoints[ix+1][0].key,

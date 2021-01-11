@@ -200,7 +200,7 @@ export default class TempoCurveVis extends Component {
             // and draw a "normal" point
             lines.push(
               this.props.makeLine(
-                className + " estimated",
+                className + " tempoConnector estimated",
                 pt.qstamp,
                 tl, //timeline
                 prevX, pt.y, pt.x, pt.y, // x1, y1, x2, y2
@@ -222,7 +222,7 @@ export default class TempoCurveVis extends Component {
             // "normal" line and point
             lines.push(
               this.props.makeLine(
-                className,
+                className + " tempoConnector",
                 pt.qstamp,
                 tl, //timeline
                 prevX, prevY, pt.x, pt.y, // x1, y1, x2, y2
