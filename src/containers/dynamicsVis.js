@@ -143,7 +143,7 @@ export default class DynamicsVis extends Component {
     }) 
 
     // generate dynamic (velocity) markers
-    const velocityMarkersToDraw = [20, 40, 60,80,100,120,140];
+    const velocityMarkersToDraw = [20, 40, 60,80,100,120];
     velocityMarkersToDraw.forEach((velocity, ix) => {
       svgElements.push(
         this.props.makeLine(
