@@ -264,21 +264,42 @@ export default class DynamicsVis extends Component {
         // then up to the right-most maximum and back to the left-most maximum.
         // We don't need to connect the final (left-most) maximum back to the first
         // (left-most) minimum, as closing the polygon is implied in SVG
-        const polygonPoints = [
-          ...minPoints.map( (p) => {
-            return { x: p[0].props.cx, y: p[0].props.cy } 
-          }), 
-          ...maxPoints.slice(0).reverse().map( (p) => { 
-            return { x: p[0].props.cx, y: p[0].props.cy } 
-          })
-        ]
-        console.log("POLYPOINTS: ", polygonPoints);
-        const polygonPointsString = polygonPoints.reduce(
-          (pStr, p) => pStr += p.x + "," + p.y + " ",
-        "");
-        console.log("POLYPOINTS STRING: ", polygonPointsString);
-
-        polygons = [this.props.makePolygon("test", "test", polygonPointsString, "test")];  
+        
+        // for each layer...
+        const layerNums = [...new Set(Object.values(this.props.layermap))]
+        const polygonPointsStringByLayerList = layerNums.map( (layerN) => { 
+          const layerId = "layer" + layerN;
+          const minPointsForThisLayer = minPoints.filter( (p) => p[0].props.className.endsWith(layerId) )
+          const maxPointsForThisLayer = maxPoints.filter( (p) => p[0].props.className.endsWith(layerId) )
+          const polygonPointsForThisLayer = [
+            ...minPointsForThisLayer.map( (p) => {
+              return { x: p[0].props.cx, y: p[0].props.cy } 
+            }), 
+            ...maxPointsForThisLayer.slice(0).reverse().map( (p) => { 
+              return { x: p[0].props.cx, y: p[0].props.cy } 
+            })
+          ]
+          const polygonPointsStringForThisLayer = polygonPointsForThisLayer.reduce(
+            (pStr, p) => pStr += p.x + "," + p.y + " ",
+          "");
+          return { [layerId]: polygonPointsStringForThisLayer }
+        })
+        console.log("POLY STRING", polygonPointsStringByLayerList)
+        const polygonPointsStringByLayer = polygonPointsStringByLayerList
+          // turn list of kv pairs into single object
+          .reduce( (obj, str) => obj = {...obj, ...str}, {} )
+        console.log("POLY OBJECT", polygonPointsStringByLayer);
+        //polygons = [this.props.makePolygon("test", "test", polygonPointsString, "test")];  
+        polygons = layerNums.map((layerNum) => {
+          const layerId = "layer"+layerNum;
+          return this.props.makePolygon(
+            layerId, 
+            tl,
+            polygonPointsStringByLayer[layerId],
+            "poly" + tl + layerId,
+            layerId + " on timeline " + tl
+          )
+        })
         points = [...minPoints, ...maxPoints];
         lines = [...minLines, ...maxLines];
       }
