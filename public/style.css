@@ -277,3 +277,27 @@ line.dynamicsConnector.active{
   fill:#ff7f00cc;
   background:#ff7f00cc;
 }
+
+#dynamicsVis .layer9, #dynamicsLegend .layer9 { 
+  stroke:#cab2d6cc;;
+  fill:#cab2d6cc;;
+  background:#cab2d6cc;;
+}
+
+#dynamicsVis .layer10, #dynamicsLegend .layer10 { 
+  stroke:#6a3d9acc;
+  fill:#6a3d9acc;
+  background:#6a3d9acc;
+}
+
+#dynamicsVis .layer11, #dynamicsLegend .layer11 { 
+  stroke:#ffff99cc;
+  fill:#ffff99cc;
+  background:#ffff99cc;
+}
+
+#dynamicsVis .layer12, #dynamicsLegend .layer12 { 
+  stroke:#b15928cc;
+  fill:#b15928cc;
+  background:#b15928cc;
+}
