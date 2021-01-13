@@ -193,7 +193,8 @@ export default class DynamicsVis extends Component {
       }
     }
     timelinesInOrder.forEach((tl) => { 
-      let className = tl === this.state.currentTimeline ? "currentTl" : "";
+      let className = tl === this.props.currentTimeline ? "currentTl" : "";
+      console.log("Current / this", this.props.currentTimeline, tl);
       // for each timeline...
       let lines = [];
       let points = [];
@@ -296,8 +297,9 @@ export default class DynamicsVis extends Component {
         //polygons = [this.props.makePolygon("test", "test", polygonPointsString, "test")];  
         polygons = [...polygons, ...layerNums.map((layerNum) => {
           const layerId = "layer"+layerNum;
+          console.log("setting classname: ", className + " " + layerId);
           return this.props.makePolygon(
-            layerId, 
+            className + " " + layerId, 
             tl,
             polygonPointsStringByLayer[layerId],
             "poly" + tl + layerId,
@@ -307,7 +309,7 @@ export default class DynamicsVis extends Component {
         points = [...minPoints, ...maxPoints];
         lines = [...minLines, ...maxLines];
       }
-      dynamicsSummarySvg = [...svgElements, ...maxPoints, ...maxLines]; // dynamics summary
+      dynamicsSummarySvg = [...dynamicsSummarySvg, svgElements, ...maxPoints, ...maxLines]; // dynamics summary
     })
     return(
       <div id="dynamicsVis">
@@ -332,7 +334,7 @@ export default class DynamicsVis extends Component {
               <>
                 <div className="visLabel"> Dynamics (min/max) for layer {n}</div>
                   <svg id={"dynamicsLayer"+n} key={"dynamicsLayer"+n} xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)">
-                    { [...svgElements, ...polygons.filter((p)=>p.props.className==="layer"+n)] }
+                    { [...svgElements, ...polygons.filter((p)=>p.props.className.endsWith("layer"+n))] }
                   </svg>
               </>
             ) } </>

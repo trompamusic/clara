@@ -230,73 +230,73 @@ line.dynamicsConnector.active{
   margin-right:1em;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer1 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer1 {
   stroke:#a6cee3cc;
   fill:#a6cee3cc;
   background:#a6cee3cc;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer2 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer2 {
   stroke:#1f78b4cc;
   fill:#1f78b4cc;
   background:#1f78b4cc;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer3 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer3 {
   stroke:#b2df8acc;
   fill:#b2df8acc;
   background:#b2df8acc;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer4 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer4 {
   stroke:#33a92ccc;
   fill:#33a92ccc;
   background:#33a92ccc;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer5 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer5 {
   stroke:#fb9a99cc;
   fill:#fb9a99cc;
   background:#fb9a99cc;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer6 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer6 {
   stroke:#e31a1ccc;
   fill:#e31a1ccc;
   background:#e31a1ccc;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer7 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer7 {
   stroke:#fdbf6fcc;
   fill:#fdbf6fcc;
   background:#fdbf6fcc;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer8 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer8 {
   stroke:#ff7f00cc;
   fill:#ff7f00cc;
   background:#ff7f00cc;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer9 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer9 {
   stroke:#cab2d6cc;;
   fill:#cab2d6cc;;
   background:#cab2d6cc;;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer10 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer10 {
   stroke:#6a3d9acc;
   fill:#6a3d9acc;
   background:#6a3d9acc;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer11 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer11 {
   stroke:#ffff99cc;
   fill:#ffff99cc;
   background:#ffff99cc;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) .layer12 {
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer12 {
   stroke:#b15928cc;
   fill:#b15928cc;
   background:#b15928cc;

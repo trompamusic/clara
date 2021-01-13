@@ -258,6 +258,7 @@ class FeatureVis extends Component {
             <TempoCurveVis
               width = { this.state.width }
               height = { this.state.height }
+              currentTimeline = { this.props.currentTimeline }
               barlinesOnPage = { this.props.barlinesOnPage }
               convertCoords = { this.convertCoords }
               handleClick = { this.handleClick }
@@ -275,6 +276,7 @@ class FeatureVis extends Component {
               <DynamicsVis
                 width = { this.state.width }
                 height = { this.state.height }
+                currentTimeline = { this.props.currentTimeline }
                 barlinesOnPage = { this.props.barlinesOnPage }
                 convertCoords = { this.convertCoords }
                 handleClick = { this.handleClick }
