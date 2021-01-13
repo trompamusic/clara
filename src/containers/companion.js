@@ -15,8 +15,9 @@ const vrvOptionsPageView = {
   adjustPageHeight: 1,
 	pageHeight: 900,
 	pageWidth: 2200,
-	noFooter: 1,
-	unit: 6
+  footer: "none",
+	unit: 6,
+  breaks: "line"
 };
 
 const vrvOptionsFeatureVis = {
@@ -24,9 +25,10 @@ const vrvOptionsFeatureVis = {
   adjustPageHeight: 1,
 	pageHeight: 400,
 	pageWidth:  2800,
-	noFooter: 1,
-	noHeader: 1,
-	unit: 6
+  footer: "none",
+  header: "none",
+	unit: 6,
+  breaks: "line"
 };
 
 class Companion extends Component {
@@ -572,7 +574,7 @@ class Companion extends Component {
                           }
                         }}
                       />
-                      Visualise tempo curves 
+                      Feature visualisation
                   </span>
                 </span>
                 <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank" rel="noopener noreferrer">More information</a></span>

@@ -120,6 +120,8 @@ export default class DynamicsVis extends Component {
 
   render() { 
     let svgElements = [];
+    let polygons = [];
+    let dynamicsSummarySvg = [];
     // generate layer-to-colour mappings
     // FIXME: these will be inconsistent between pages when a layer is added or removed
     // ... to fix, need to build from MEI rather than from SVG
@@ -195,10 +197,14 @@ export default class DynamicsVis extends Component {
       // for each timeline...
       let lines = [];
       let points = [];
-      let polygons = [];
+
+      let maxPoints = []; 
+      let minPoints = [];
+      let maxLines = [];
+      let minLines = [];
       if(tl in this.state.pointsPerTimeline) { 
         const sortedTlPoints = Object.keys(this.state.pointsPerTimeline[tl]).sort( (a, b) => a-b )
-        const minPoints = sortedTlPoints.map( (qstamp) => { 
+        minPoints = sortedTlPoints.map( (qstamp) => { 
           return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (layerId) => {
             let layer = this.state.pointsPerTimeline[tl][qstamp][layerId];
             let layerNum = this.props.layermap[layerId]
@@ -213,7 +219,7 @@ export default class DynamicsVis extends Component {
             )
           })
         })
-        const maxPoints = sortedTlPoints.map( (qstamp) => { 
+        maxPoints = sortedTlPoints.map( (qstamp) => { 
           return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (layerId) => {
             let layer = this.state.pointsPerTimeline[tl][qstamp][layerId];
             let layerNum = this.props.layermap[layerId]
@@ -230,7 +236,7 @@ export default class DynamicsVis extends Component {
           })
         })
         // now connect the points!
-        const minLines = minPoints.map((p, ix) => {
+        minLines = minPoints.map((p, ix) => {
           if(ix < minPoints.length-1) { 
             let from = p[0].props;
             let to = minPoints[ix+1][0].props;
@@ -244,7 +250,7 @@ export default class DynamicsVis extends Component {
             }
           }
         })
-        const maxLines = maxPoints.map((p, ix) => {
+        maxLines = maxPoints.map((p, ix) => {
           if(ix < maxPoints.length-1) { 
             let from = p[0].props;
             let to = maxPoints[ix+1][0].props;
@@ -284,13 +290,11 @@ export default class DynamicsVis extends Component {
           "");
           return { [layerId]: polygonPointsStringForThisLayer }
         })
-        console.log("POLY STRING", polygonPointsStringByLayerList)
         const polygonPointsStringByLayer = polygonPointsStringByLayerList
           // turn list of kv pairs into single object
           .reduce( (obj, str) => obj = {...obj, ...str}, {} )
-        console.log("POLY OBJECT", polygonPointsStringByLayer);
         //polygons = [this.props.makePolygon("test", "test", polygonPointsString, "test")];  
-        polygons = layerNums.map((layerNum) => {
+        polygons = [...polygons, ...layerNums.map((layerNum) => {
           const layerId = "layer"+layerNum;
           return this.props.makePolygon(
             layerId, 
@@ -299,23 +303,43 @@ export default class DynamicsVis extends Component {
             "poly" + tl + layerId,
             layerId + " on timeline " + tl
           )
-        })
+        })]
         points = [...minPoints, ...maxPoints];
         lines = [...minLines, ...maxLines];
       }
-      svgElements = [...svgElements, ...points, /*...lines,*/ ...polygons];
+      dynamicsSummarySvg = [...svgElements, ...maxPoints, ...maxLines]; // dynamics summary
     })
     return(
-      <>
-        <svg id="dynamicsVis" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.dynamicsSvg }>
-              { svgElements }
-        </svg>
-        <span id="dynamicsLegend">Layers on page: 
-        { [...new Set(Object.values(this.props.layermap).sort())].map( (n) => 
-          <><span className={"layer" + n}>&nbsp;</span>{n}</>)
+      <div id="dynamicsVis">
+        { this.props.displayDynamicsSummary 
+          ? <><div className="visLabel"> Dynamics (summary)</div>
+            <svg id="dynamicsVisSummary" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.dynamicsSvg }>
+                { dynamicsSummarySvg }
+            </svg></>
+          : <></>
         }
-        </span>
-      </>
+        {/* Code to draw legend - maybe no longer required?
+        { this.props.displayDynamicsPerLayer.size 
+          ? <span id="dynamicsLegend">Layers on page: 
+              { [...new Set(Object.values(this.props.layermap).sort())].map( (n) => 
+                <><span className={"layer" + n}>&nbsp;</span>{n}</>)
+              }
+             </span>
+          : <></>
+          */}
+        { this.props.displayDynamicsPerLayer.size
+          ? <> { [...this.props.displayDynamicsPerLayer].sort().map( (n) =>  
+              <>
+                <div className="visLabel"> Dynamics (min/max) for layer {n}</div>
+                  <svg id={"dynamicsLayer"+n} key={"dynamicsLayer"+n} xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)">
+                    { [...svgElements, ...polygons.filter((p)=>p.props.className==="layer"+n)] }
+                  </svg>
+              </>
+            ) } </>
+          : <></>
+        }
+        
+      </div>
     )
   }
 }

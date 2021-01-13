@@ -19,6 +19,9 @@ class FeatureVis extends Component {
       layermap: {},
       currentTimeline: this.props.currentTimeline,
       currentQstamp: "",
+      displayTempoCurves: true, 
+      displayDynamicsSummary: true, 
+      displayDynamicsPerLayer: new Set() // display detailed dynamics for these layer numbers
     }
     this.setInstantsOnPage = this.setInstantsOnPage.bind(this);
     this.setInstantsByScoretime = this.setInstantsByScoretime.bind(this);
@@ -217,38 +220,80 @@ class FeatureVis extends Component {
   render() {
     return (
       <div id="featureVisContainer">
-        <div className="visLabel"> Tempo </div>
-        <TempoCurveVis
-            width = { this.state.width }
-            height = { this.state.height }
-            barlinesOnPage = { this.props.barlinesOnPage }
-            convertCoords = { this.convertCoords }
-            handleClick = { this.handleClick }
-            instantsByScoretime = { this.state.instantsByScoretime }
-            instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
-            timelinesToVis = { this.props.timelinesToVis }
-            noteElementsForInstant = { this.noteElementsForInstant }
-            makePoint = { this.makePoint }
-            makeLine = { this.makeLine }
-          />
-        <div className="visLabel"> Dynamics </div>
-          <DynamicsVis
-            width = { this.state.width }
-            height = { this.state.height }
-            barlinesOnPage = { this.props.barlinesOnPage }
-            convertCoords = { this.convertCoords }
-            handleClick = { this.handleClick }
-            instantsByScoretime = { this.state.instantsByScoretime }
-            instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
-            timelinesToVis = { this.props.timelinesToVis }
-            noteElementsForInstant = { this.noteElementsForInstant }
-            makePoint = { this.makePoint }
-            makeLine = { this.makeLine }
-            makePolygon = { this.makePolygon }
-            performedElements = { this.props.performedElements } 
-            layermap = { this.state.layermap }
-            scoreComponent = { this.props.scoreComponent }
-          />
+        <div id="featureVisControls">
+          Features to visualise: 
+              <input 
+                type="checkbox" 
+                defaultChecked={ this.state.displayTempoCurves}
+                onChange={ () => 
+                  { this.setState({ displayTempoCurves: !this.state.displayTempoCurves }) }
+                }
+              /> Tempo curves
+              <input 
+                type="checkbox" 
+                defaultChecked={ this.state.displayDynamicsSummary }
+                onChange={ () => 
+                  { this.setState({ displayDynamicsSummary: !this.state.displayDynamicsSummary }) }
+                }
+              /> Dynamics (summary)
+              <span id="dynamicsPerLayerControls">        
+                Detailed dynamics for layer: 
+                { [...new Set(Object.values(this.state.layermap).sort())].map( (n) => 
+                  <> <input 
+                    type="checkbox" 
+                    defaultChecked={ this.state.displayDynamicsPerLayer.has(n) }
+                    key={ "dynamicsPerLayerCheckbox" + n }
+                    onChange={ () => {
+                      const updated = new Set(this.state.displayDynamicsPerLayer);
+                      updated.has(n) ? updated.delete(n) : updated.add(n);
+                      this.setState({ displayDynamicsPerLayer: updated });
+                    }}
+                  /><span className={"layer" + n}>{n}</span>
+                  </>
+                )}
+              </span>
+        </div>
+        { this.state.displayTempoCurves 
+         ? <> <div className="visLabel"> Tempo </div>
+            <TempoCurveVis
+              width = { this.state.width }
+              height = { this.state.height }
+              barlinesOnPage = { this.props.barlinesOnPage }
+              convertCoords = { this.convertCoords }
+              handleClick = { this.handleClick }
+              instantsByScoretime = { this.state.instantsByScoretime }
+              instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
+              timelinesToVis = { this.props.timelinesToVis }
+              noteElementsForInstant = { this.noteElementsForInstant }
+              makePoint = { this.makePoint }
+              makeLine = { this.makeLine }
+            /></>
+          : <></>
+        }
+        { this.state.displayDynamicsSummary || this.state.displayDynamicsPerLayer.size
+          ? <>
+              <DynamicsVis
+                width = { this.state.width }
+                height = { this.state.height }
+                barlinesOnPage = { this.props.barlinesOnPage }
+                convertCoords = { this.convertCoords }
+                handleClick = { this.handleClick }
+                instantsByScoretime = { this.state.instantsByScoretime }
+                instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
+                timelinesToVis = { this.props.timelinesToVis }
+                noteElementsForInstant = { this.noteElementsForInstant }
+                makePoint = { this.makePoint }
+                makeLine = { this.makeLine }
+                makePolygon = { this.makePolygon }
+                performedElements = { this.props.performedElements } 
+                layermap = { this.state.layermap }
+                scoreComponent = { this.props.scoreComponent }
+                displayDynamicsSummary = { this.state.displayDynamicsSummary }
+                displayDynamicsPerLayer =  { this.state.displayDynamicsPerLayer }
+              />
+            </>
+          : <></>
+        }
       </div>
     )
   }

@@ -146,17 +146,17 @@ body {
   width:1280px;
 }
 
-#tempoCurve, #dynamicsVis { 
+#tempoCurve, #dynamicsVis svg { 
   display:block;
   margin-block: .5em;
 }
 
-#dynamicsVis { 
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(180, 180, 180, .2) 5%, rgba(180, 180, 180, .2) 95%, rgba(255, 255, 255, .2) 100%);
+#dynamicsVis svg { 
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(220, 220, 220, .2) 5%, rgba(220, 220, 220, .2) 95%, rgba(255, 255, 255, .2) 100%);
 }
 
 #tempoCurve { 
-  background: linear-gradient(90deg, rgba(128, 128, 255, 0.2) 0%, rgba(90, 90, 180, .2) 5%, rgba(90, 90, 180, .2) 95%, rgba(128, 128, 255, .2) 100%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(220, 220, 220, .2) 5%, rgba(220, 220, 220, .2) 95%, rgba(255, 255, 255, .2) 100%);
 }
 
 #featureVisContainer line, #featureVisContainer ellipse { 
@@ -230,74 +230,80 @@ line.dynamicsConnector.active{
   margin-right:1em;
 }
 
-#dynamicsVis .layer1, #dynamicsLegend .layer1 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer1 {
   stroke:#a6cee3cc;
   fill:#a6cee3cc;
   background:#a6cee3cc;
 }
 
-#dynamicsVis .layer2, #dynamicsLegend .layer2 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer2 {
   stroke:#1f78b4cc;
   fill:#1f78b4cc;
   background:#1f78b4cc;
 }
 
-#dynamicsVis .layer3, #dynamicsLegend .layer3 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer3 {
   stroke:#b2df8acc;
   fill:#b2df8acc;
   background:#b2df8acc;
 }
 
-#dynamicsVis .layer4, #dynamicsLegend .layer4 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer4 {
   stroke:#33a92ccc;
   fill:#33a92ccc;
   background:#33a92ccc;
 }
 
-#dynamicsVis .layer5, #dynamicsLegend .layer5 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer5 {
   stroke:#fb9a99cc;
   fill:#fb9a99cc;
   background:#fb9a99cc;
 }
 
-#dynamicsVis .layer6, #dynamicsLegend .layer6 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer6 {
   stroke:#e31a1ccc;
   fill:#e31a1ccc;
   background:#e31a1ccc;
 }
 
-#dynamicsVis .layer7, #dynamicsLegend .layer7 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer7 {
   stroke:#fdbf6fcc;
   fill:#fdbf6fcc;
   background:#fdbf6fcc;
 }
 
-#dynamicsVis .layer8, #dynamicsLegend .layer8 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer8 {
   stroke:#ff7f00cc;
   fill:#ff7f00cc;
   background:#ff7f00cc;
 }
 
-#dynamicsVis .layer9, #dynamicsLegend .layer9 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer9 {
   stroke:#cab2d6cc;;
   fill:#cab2d6cc;;
   background:#cab2d6cc;;
 }
 
-#dynamicsVis .layer10, #dynamicsLegend .layer10 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer10 {
   stroke:#6a3d9acc;
   fill:#6a3d9acc;
   background:#6a3d9acc;
 }
 
-#dynamicsVis .layer11, #dynamicsLegend .layer11 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer11 {
   stroke:#ffff99cc;
   fill:#ffff99cc;
   background:#ffff99cc;
 }
 
-#dynamicsVis .layer12, #dynamicsLegend .layer12 { 
+#dynamicsVis :not(#dynamicsVisSummary) .layer12 {
   stroke:#b15928cc;
   fill:#b15928cc;
   background:#b15928cc;
+}
+
+#featureVisControls {
+  position:relative;
+  top: -40px;
+  font-size: xx-small;
 }
