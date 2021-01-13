@@ -166,7 +166,7 @@ body {
   display:block;
 }
 
-#featureVisContainer line.currentTl, #featureVisContainer ellipse.currentTl{
+#featureVisContainer line.currentTl, #featureVisContainer ellipse.currentTl, #featureVisContainer polygon.currentTl{
   stroke:red;
   fill:red;
   stroke-width:2px;
@@ -230,80 +230,95 @@ line.dynamicsConnector.active{
   margin-right:1em;
 }
 
+#dynamicsVis :not(#dynamicsVisSummary) polygon:not(.currentTl) { 
+  stroke:#00000099;
+  fill:#00000099;
+}
+
+/*
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer1 {
-  stroke:#a6cee3cc;
-  fill:#a6cee3cc;
-  background:#a6cee3cc;
+  stroke:#a6cee399;
+  fill:#a6cee399;
+  background:#a6cee399;
 }
 
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer2 {
-  stroke:#1f78b4cc;
-  fill:#1f78b4cc;
-  background:#1f78b4cc;
+  stroke:#1f78b499;
+  fill:#1f78b499;
+  background:#1f78b499;
 }
 
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer3 {
-  stroke:#b2df8acc;
-  fill:#b2df8acc;
-  background:#b2df8acc;
+  stroke:#b2df8a99;
+  fill:#b2df8a99;
+  background:#b2df8a99;
 }
 
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer4 {
-  stroke:#33a92ccc;
-  fill:#33a92ccc;
-  background:#33a92ccc;
+  stroke:#33a92c99;
+  fill:#33a92c99;
+  background:#33a92c99;
 }
 
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer5 {
-  stroke:#fb9a99cc;
-  fill:#fb9a99cc;
-  background:#fb9a99cc;
+  stroke:#fb9a9999;
+  fill:#fb9a9999;
+  background:#fb9a9999;
 }
 
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer6 {
-  stroke:#e31a1ccc;
-  fill:#e31a1ccc;
-  background:#e31a1ccc;
+  stroke:#e31a1c99;
+  fill:#e31a1c99;
+  background:#e31a1c99;
 }
 
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer7 {
-  stroke:#fdbf6fcc;
-  fill:#fdbf6fcc;
-  background:#fdbf6fcc;
+  stroke:#fdbf6f99;
+  fill:#fdbf6f99;
+  background:#fdbf6f99;
 }
 
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer8 {
-  stroke:#ff7f00cc;
-  fill:#ff7f00cc;
-  background:#ff7f00cc;
+  stroke:#ff7f0099;
+  fill:#ff7f0099;
+  background:#ff7f0099;
 }
 
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer9 {
-  stroke:#cab2d6cc;;
-  fill:#cab2d6cc;;
-  background:#cab2d6cc;;
+  stroke:#cab2d699;;
+  fill:#cab2d699;;
+  background:#cab2d699;;
 }
 
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer10 {
-  stroke:#6a3d9acc;
-  fill:#6a3d9acc;
-  background:#6a3d9acc;
+  stroke:#6a3d9a99;
+  fill:#6a3d9a99;
+  background:#6a3d9a99;
 }
 
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer11 {
-  stroke:#ffff99cc;
-  fill:#ffff99cc;
-  background:#ffff99cc;
+  stroke:#ffff9999;
+  fill:#ffff9999;
+  background:#ffff9999;
 }
 
 #dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer12 {
-  stroke:#b15928cc;
-  fill:#b15928cc;
-  background:#b15928cc;
+  stroke:#b1592899;
+  fill:#b1592899;
+  background:#b1592899;
 }
+*/
 
 #featureVisControls {
   position:relative;
   top: -40px;
   font-size: xx-small;
+}
+
+
+.selectDynamicsAggregate { 
+  margin-left:1em;
+  border-bottom: 2px solid lightgrey;
+  display: inline-block;
+  line-height: 0.85;
 }

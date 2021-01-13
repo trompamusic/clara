@@ -237,13 +237,13 @@ class FeatureVis extends Component {
                 }
               /> Dynamics (summary)
               <span id="dynamicsPerLayerControls">        
-                Detailed dynamics for layer: 
+                Detailed dynamics per layer: 
                 { [...new Set(Object.values(this.state.layermap).sort())].map( (n) => 
                   <> <input 
                     type="checkbox" 
-                    defaultChecked={ this.state.displayDynamicsPerLayer.has(n) }
+                    checked={ this.state.displayDynamicsPerLayer.has(n) }
                     key={ "dynamicsPerLayerCheckbox" + n }
-                    onChange={ () => {
+                    onClick={ () => {
                       const updated = new Set(this.state.displayDynamicsPerLayer);
                       updated.has(n) ? updated.delete(n) : updated.add(n);
                       this.setState({ displayDynamicsPerLayer: updated });
@@ -251,6 +251,16 @@ class FeatureVis extends Component {
                   /><span className={"layer" + n}>{n}</span>
                   </>
                 )}
+                <span class="selectDynamicsAggregate" id="selectAllDynamics"
+                  onClick= { () => this.setState({ 
+                    displayDynamicsPerLayer: new Set(Object.values(this.state.layermap))
+                  })}
+                >All</span>
+                <span class="selectDynamicsAggregate" id="selectNoDynamics"
+                  onClick= { () => this.setState({ 
+                    displayDynamicsPerLayer: new Set()
+                  })}
+                >None</span>
               </span>
         </div>
         { this.state.displayTempoCurves 

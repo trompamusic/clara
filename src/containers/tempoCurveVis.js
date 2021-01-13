@@ -171,7 +171,7 @@ export default class TempoCurveVis extends Component {
           let instantsString = pt.instants.map((inst) => inst["@id"]).join(",");
           // determine CSS class: "currentTl" if timeline corresponds to selected performance
           // "active" if point is before or equal to the currently active qstamp (in playback)
-          let className = tl === this.state.currentTimeline ? "currentTl" : "";
+          let className = tl === this.props.currentTimeline ? "currentTl" : "";
           let prevX = 0;
           let prevY = 0;
           if(ix > 0) {
