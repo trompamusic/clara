@@ -194,7 +194,6 @@ export default class DynamicsVis extends Component {
     }
     timelinesInOrder.forEach((tl) => { 
       let className = tl === this.props.currentTimeline ? "currentTl" : "";
-      console.log("Current / this", this.props.currentTimeline, tl);
       // for each timeline...
       let lines = [];
       let points = [];
@@ -297,7 +296,6 @@ export default class DynamicsVis extends Component {
         //polygons = [this.props.makePolygon("test", "test", polygonPointsString, "test")];  
         polygons = [...polygons, ...layerNums.map((layerNum) => {
           const layerId = "layer"+layerNum;
-          console.log("setting classname: ", className + " " + layerId);
           return this.props.makePolygon(
             className + " " + layerId, 
             tl,
@@ -309,7 +307,10 @@ export default class DynamicsVis extends Component {
         points = [...minPoints, ...maxPoints];
         lines = [...minLines, ...maxLines];
       }
-      dynamicsSummarySvg = [...dynamicsSummarySvg, svgElements, ...maxPoints, ...maxLines]; // dynamics summary
+      // if we haven't added the svgElements to dynamicsSummarySvg yet, do so:
+      dynamicsSummarySvg = dynamicsSummarySvg.length ? dynamicsSummarySvg : [...svgElements]
+      // fill in this timeline's maxPoints and maxLines
+      dynamicsSummarySvg = [...dynamicsSummarySvg, ...maxPoints, ...maxLines]; // dynamics summary
     })
     return(
       <div id="dynamicsVis">
