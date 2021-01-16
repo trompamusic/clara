@@ -86,6 +86,7 @@ class Companion extends Component {
     this.ensureArray = this.ensureArray.bind(this);
     this.seekToInstant = this.seekToInstant.bind(this);
     this.handleDOMChangeObserved = this.handleDOMChangeObserved.bind(this);
+    this.convertCoords = this.convertCoords.bind(this);
 
     this.player = React.createRef();
     this.featureVis = React.createRef();
@@ -308,11 +309,11 @@ class Companion extends Component {
       notesOnPagePerInstant[i].forEach( (n) => { 
         // to contain all notes, we want to minimise left and top, 
         // and maximise right and bottom
-        const boundRect = n.getBoundingClientRect();
-        boxLeft = boundRect.left + window.scrollX < boxLeft ? boundRect.left + window.scrollX : boxLeft; 
-        boxTop  = boundRect.top + window.scrollY < boxTop ? boundRect.top + window.scrollY: boxTop; 
-        boxRight= boundRect.right > boxRight? boundRect.right : boxRight; 
-        boxBottom= boundRect.bottom > boxBottom ? boundRect.bottom: boxBottom; 
+        const boundRect = this.convertCoords(n);
+        boxLeft = boundRect.x < boxLeft ? boundRect.x : boxLeft; 
+        boxTop  = boundRect.y < boxTop ? boundRect.y : boxTop; 
+        boxRight= boundRect.x2 > boxRight ? boundRect.x2 : boxRight; 
+        boxBottom= boundRect.y2 > boxBottom ? boundRect.y2 : boxBottom; 
         // remember a note ID for indexing into instantsByNoteId (to retrieve confidence) further below
         noteId = n.getAttribute("id"); 
       });
@@ -332,8 +333,8 @@ class Companion extends Component {
          "top:"   + Math.floor(boxTop) + "px;" + 
          "width:" + Math.ceil(boxRight - boxLeft) + "px;" + 
          "height:"+ Math.ceil(boxBottom - boxTop) + "px;" + 
-         "background: rgba(255,0,0," + parseFloat(1 - this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"] * .01) + ");" + 
-         "z-index: -1;"
+         "background: rgba(0,0,0," + parseFloat(1 - this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"] * .01) + ");" + 
+         "z-index: -2;"
       );
       clickableBoundDiv.setAttribute("id", "conf-" + i);
       clickableBoundDiv.classList.add("clickableBoundedInstant");
@@ -386,6 +387,27 @@ class Companion extends Component {
       boundingBoxesWrapper.appendChild(clickableBoundDiv);
     })
   }
+    // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group
+  convertCoords(elem) {
+    if(document.getElementById(elem.getAttribute("id"))
+      && elem.style.display !== "none" && (elem.getBBox().x !== 0 || elem.getBBox().y !== 0)) {
+      const x = elem.getBBox().x;
+      const width = elem.getBBox().width;
+      const y = elem.getBBox().y;
+      const height = elem.getBBox().height;
+      const offset = elem.closest("svg").parentElement.getBoundingClientRect();
+      const matrix = elem.getScreenCTM();
+      return {
+          x: (matrix.a * x) + (matrix.c * y) + matrix.e - offset.left,
+          y: (matrix.b * x) + (matrix.d * y) + matrix.f - offset.top,
+          x2: (matrix.a * (x + width)) + (matrix.c * y) + matrix.e - offset.left,
+          y2: (matrix.b * x) + (matrix.d * (y + height)) + matrix.f - offset.top
+      };
+    } else {
+      console.warn("Element unavailable on page: ", elem.getAttribute("id"));
+      return { x:0, y:0, x2:0, y2:0 }
+    }
+  }
 
   assignClickHandlersToNotes() {
     // check if our score page has updated
@@ -434,6 +456,7 @@ class Companion extends Component {
             currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
             seekToInstant = { this.seekToInstant } 
             scoreComponent = { this.scoreComponent }
+            convertCoords = { this.convertCoords } 
             ref = { this.featureVis } />
       };
 
@@ -450,8 +473,8 @@ class Companion extends Component {
               onClick={() => window.open("http://www.mdw.ac.at/", "_blank", "noopener,noreferrer")} />
           </div>
             
-          <div id="instantBoundingBoxes" />
           { featureVisElement }
+          <div id="instantBoundingBoxes" />
           {  currentScore }
         <div id="pageControlsWrapper" ref="pageControlsWrapper" className={ this.state.mode + " following" }>
           { this.props.score.pageNum > 1 

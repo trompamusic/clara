@@ -40,11 +40,17 @@ body {
   min-height: 460px;
   max-height: 460px;
   display:block;
+  position: relative;
+  z-index: -1;
 }
 
 .scorepane.featureVis { 
   min-height: 230px;
   max-height: 230px;
+}
+
+#instantBoundingBoxes { 
+  position: absolute;
 }
 
 .errorDetected { 
@@ -197,6 +203,7 @@ body {
 
 .clickableBoundedInstant { 
   cursor:pointer;
+  border:1px solid red;
 }
 
 #dynamicsVis ellipse, #dynamicsVis .dynamicsConnector,

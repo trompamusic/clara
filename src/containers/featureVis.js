@@ -27,7 +27,6 @@ class FeatureVis extends Component {
     this.setInstantsByScoretime = this.setInstantsByScoretime.bind(this);
     this.setNoteElementsByNoteId = this.setNoteElementsByNoteId.bind(this);
     this.ensureArray = this.ensureArray.bind(this);
-    this.convertCoords = this.convertCoords.bind(this);
     this.calculateQStampForInstant = this.calculateQStampForInstant.bind(this);
     this.noteElementsForInstant = this.noteElementsForInstant.bind(this);
     this.calculateAvgQstampFromNoteIds = this.calculateAvgQstampFromNoteIds.bind(this);
@@ -170,27 +169,6 @@ class FeatureVis extends Component {
     }
   }
 
-    // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group
-  convertCoords(elem) {
-    if(document.getElementById(elem.getAttribute("id"))
-      && elem.style.display !== "none" && (elem.getBBox().x !== 0 || elem.getBBox().y !== 0)) {
-      const x = elem.getBBox().x;
-      const width = elem.getBBox().width;
-      const y = elem.getBBox().y;
-      const height = elem.getBBox().height;
-      const offset = elem.closest("svg").parentElement.getBoundingClientRect();
-      const matrix = elem.getScreenCTM();
-      return {
-          x: (matrix.a * x) + (matrix.c * y) + matrix.e - offset.left,
-          y: (matrix.b * x) + (matrix.d * y) + matrix.f - offset.top,
-          x2: (matrix.a * (x + width)) + (matrix.c * y) + matrix.e - offset.left,
-          y2: (matrix.b * x) + (matrix.d * (y + height)) + matrix.f - offset.top
-      };
-    } else {
-      console.warn("Element unavailable on page: ", elem.getAttribute("id"));
-      return { x:0, y:0, x2:0, y2:0 }
-    }
-  }
 
   ensureArray(val) {
     return Array.isArray(val) ? val : [val]
@@ -270,7 +248,7 @@ class FeatureVis extends Component {
               height = { this.state.height }
               currentTimeline = { this.props.currentTimeline }
               barlinesOnPage = { this.props.barlinesOnPage }
-              convertCoords = { this.convertCoords }
+              convertCoords = { this.props.convertCoords }
               handleClick = { this.handleClick }
               instantsByScoretime = { this.state.instantsByScoretime }
               instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
@@ -288,7 +266,7 @@ class FeatureVis extends Component {
                 height = { this.state.height }
                 currentTimeline = { this.props.currentTimeline }
                 barlinesOnPage = { this.props.barlinesOnPage }
-                convertCoords = { this.convertCoords }
+                convertCoords = { this.props.convertCoords }
                 handleClick = { this.handleClick }
                 instantsByScoretime = { this.state.instantsByScoretime }
                 instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
