@@ -251,7 +251,7 @@ class Companion extends Component {
       const thisTime = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
       const thisTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
       const deletedNotesInstant = this.state.instantsByPerfTime[thisTimeline].filter( (i) => { 
-        let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        let dur = i["http://purl.org/NET/c4dm/timeline.owl#at"];
         dur = parseInt(dur.substr(1, dur.length-2));
         return dur === -1; // all deleted notes "occur" at this instant
       })
@@ -283,7 +283,7 @@ class Companion extends Component {
     Array.prototype.map.call(notes, (n) => { 
       // associate notes on this page with their instant duration
       if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
-        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#at"];
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
         if(nDur in notesOnPagePerInstant) { 
           notesOnPagePerInstant[nDur].push(n);
@@ -351,7 +351,7 @@ class Companion extends Component {
          "z-index: 1;"
       );
       clickableBoundDiv.onclick = (e) => { 
-        let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+        let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#at"]
         if(parseInt(nDur.substr(1,nDur.length-2)) === -1) {
           // this is a deleted (i.e. unperformed) note; thus we can't seek to it!
           return
@@ -371,7 +371,7 @@ class Companion extends Component {
           n.style.stroke="";
         })
       }
-      let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+      let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#at"]
       nDur = nDur.substr(1, nDur.length-2);
       if(parseInt(nDur) === -1) { 
         clickableBoundDiv.setAttribute("title", "This note was not sounded during the selected performance");
@@ -415,7 +415,7 @@ class Companion extends Component {
     const notes = ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note");
     Array.prototype.map.call(notes, (n) => { 
       if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
-        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#at"]
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         n.onclick = (e) => { 
           console.log("On note click, attempting to  seek to: ", nDur);
@@ -653,7 +653,7 @@ class Companion extends Component {
       const timelineSegment = this.findInstantToSeekTo(selected[0]);
       console.log("timelineSegment: ", timelineSegment)
       if(timelineSegment.length) { 
-        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#at"];
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         // HACK: Offsets should be incorporated into data model through timeline maps
         startTime += parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
@@ -673,7 +673,7 @@ class Companion extends Component {
     } else { 
       const selectedPerformance = performances[0];
       const selectedVideo = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
-      let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+      let dur = instant["http://purl.org/NET/c4dm/timeline.owl#at"];
       dur = parseFloat(dur.substr(1, dur.length-2));
       let seekTo = dur + parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
       document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
@@ -696,7 +696,7 @@ class Companion extends Component {
       // set up a jump to the currently selected segment in this performance
       const timelineSegment = this.findInstantToSeekTo(this.state.currentSegment, selectedPerformance);
       if(timelineSegment.length) {
-        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#at"];
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         startTime += parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         newState["seekTo"] = startTime;
@@ -731,13 +731,13 @@ class Companion extends Component {
     })
     // returned them in chronological order
     const sorted = timelineSegment.sort( (a, b) => { 
-      let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
-      let bDur = b["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+      let aDur = a["http://purl.org/NET/c4dm/timeline.owl#at"]
+      let bDur = b["http://purl.org/NET/c4dm/timeline.owl#at"]
       return parseFloat(aDur.substr(1, aDur.length-2)) - parseFloat(bDur.substr(1, bDur.length-2))
     })
     // remove any occurring at -1 (indicating deleted notes)
     const filtered = sorted.filter( (n) => {
-      let dur = n["http://purl.org/NET/c4dm/timeline.owl#atDuration"]; 
+      let dur = n["http://purl.org/NET/c4dm/timeline.owl#at"]; 
       dur = parseInt(dur.substr(1, dur.length-2));
       return(dur !== -1)
     })
@@ -765,7 +765,7 @@ class Companion extends Component {
       const thisTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
       const thisOffset = this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"];
       let closestInstantIndices = this.state.instantsByPerfTime[thisTimeline].reduce( (indices, instant, thisIndex) => { 
-        let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        let dur = instant["http://purl.org/NET/c4dm/timeline.owl#at"];
         dur = dur.substr(1, dur.length-2);
         const offsetDur = parseFloat(dur) + parseFloat(thisOffset);
         if(offsetDur > (t - this.state.activeWindow) && offsetDur <= t) { 
@@ -941,8 +941,8 @@ class Companion extends Component {
       Object.keys(instantsByPerfTime).forEach( (tl) => { 
         // order the instances along each timeline
         instantsByPerfTime[tl] = instantsByPerfTime[tl].sort( (a, b) => { 
-          let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
-          let bDur = b["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+          let aDur = a["http://purl.org/NET/c4dm/timeline.owl#at"];
+          let bDur = b["http://purl.org/NET/c4dm/timeline.owl#at"];
           return parseFloat(aDur.substr(1, aDur.length-2)) - parseFloat(bDur.substr(1, bDur.length-2))
         })
       })

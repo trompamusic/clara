@@ -67,12 +67,12 @@ export default class TempoCurveVis extends Component {
           // calculate change in avg performance time of instants at previous and current qstamp
           // TODO optimise (cache)
           const theseTimestamps = this.props.instantsByScoretime[tl][qstamp].map((inst) => {
-            return parseFloat(inst["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, ""))
+            return parseFloat(inst["http://purl.org/NET/c4dm/timeline.owl#at"].replace(/[PS]/g, ""))
           });
           const thisT = theseTimestamps.reduce((sumT, t) => (sumT + t)) / theseTimestamps.length
 
           const prevTimestamps = this.props.instantsByScoretime[tl][scoretimeArray[ix-1]].map((inst) => {
-            return parseFloat(inst["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, ""))
+            return parseFloat(inst["http://purl.org/NET/c4dm/timeline.owl#at"].replace(/[PS]/g, ""))
           })
           const prevT = prevTimestamps.reduce((sumT, t) => (sumT + t)) / prevTimestamps.length;
 

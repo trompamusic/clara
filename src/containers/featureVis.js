@@ -152,11 +152,11 @@ class FeatureVis extends Component {
         }).filter( (inst) => {
           // filter out undefined instants (i.e. when note doesn't appear in timeline)
           // and instants at duration -1 (deleted notes)
-          return inst && parseFloat(inst["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, "")) > -1
+          return inst && parseFloat(inst["http://purl.org/NET/c4dm/timeline.owl#at"].replace(/[PS]/g, "")) > -1
         }).sort( (a, b) => {
           // ensure order by performance time
-          return parseFloat(a["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, "")) -
-          parseFloat(b["http://purl.org/NET/c4dm/timeline.owl#atDuration"].replace(/[PS]/g, ""))
+          return parseFloat(a["http://purl.org/NET/c4dm/timeline.owl#at"].replace(/[PS]/g, "")) -
+          parseFloat(b["http://purl.org/NET/c4dm/timeline.owl#at"].replace(/[PS]/g, ""))
         });
         instantsOnPage[tl] = instantsOnPage[tl].filter( (inst, ix) => {
           return ix > 0 && inst["@id"] !== instantsOnPage[tl][ix-1]["@id"];
