@@ -203,7 +203,6 @@ body {
 
 .clickableBoundedInstant { 
   cursor:pointer;
-  border:1px solid red;
 }
 
 #dynamicsVis ellipse, #dynamicsVis .dynamicsConnector,

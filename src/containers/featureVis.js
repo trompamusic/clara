@@ -48,13 +48,16 @@ class FeatureVis extends Component {
         // only care about times with onsets
         return "on" in t;
       }).forEach((t) => {
-        t.on.forEach((id) => {
-          // build score time lookup by note id
-          timemapByNoteId[id] = {
-            qstamp: t.qstamp,
-            tstamp: t.tstamp
-          }
-        });
+          t.on
+            // filter out inserted notes (by definition they don't have a corersponding MEI element)
+            .filter((id) => !(id.startsWith("https://terms.trompamusic.eu/maps#inserted")))
+            // build score time lookup by MEI note id
+            .forEach((id) => {
+              timemapByNoteId[id] = {
+                qstamp: t.qstamp,
+                tstamp: t.tstamp
+              }
+          });
       });
       // map layer IDs to layer numbers
       const mei = this.props.score.vrvTk.getMEI();
@@ -85,6 +88,10 @@ class FeatureVis extends Component {
 
   calculateAvgQstampFromNoteIds(noteIds) {
     return noteIds.reduce((sumQ, noteId) => {
+          if(!(noteId in this.state.timemapByNoteId && "qstamp" in this.state.timemapByNoteId[noteId])) { 
+            console.info("Skipping inserted note in AvgQstmp calculation: ", noteId)
+            return sumQ;
+          }
           return sumQ += this.state.timemapByNoteId[noteId].qstamp;
         }, 0) / noteIds.length;
   }
@@ -130,9 +137,12 @@ class FeatureVis extends Component {
   }
 
   noteElementsForInstant(inst) {
-    let noteElements = this.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"]).map( (n) => {
+    let noteElements = this.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"])
+      // filter out inserted notes (as by definition they don't have corresponding MEI elements)
+      .filter( (n) => !(n["@id"].startsWith("https://terms.trompamusic.eu/maps#inserted")))
       // return note (DOM) elements corresponding to each embodiment
-      return this.state.noteElementsByNoteId[n["@id"].substr(n["@id"].lastIndexOf("#")+1)]
+      .map( (n) => {
+        return this.state.noteElementsByNoteId[n["@id"].substr(n["@id"].lastIndexOf("#")+1)]
     })
     noteElements = noteElements.filter( (note) => {
       // filter out undefined notes (deleted notes might not be notesOnPage)
@@ -217,24 +227,25 @@ class FeatureVis extends Component {
               <span id="dynamicsPerLayerControls">        
                 Detailed dynamics per layer: 
                 { [...new Set(Object.values(this.state.layermap).sort())].map( (n) => 
-                  <> <input 
-                    type="checkbox" 
-                    checked={ this.state.displayDynamicsPerLayer.has(n) }
-                    key={ "dynamicsPerLayerCheckbox" + n }
-                    onClick={ () => {
-                      const updated = new Set(this.state.displayDynamicsPerLayer);
-                      updated.has(n) ? updated.delete(n) : updated.add(n);
-                      this.setState({ displayDynamicsPerLayer: updated });
-                    }}
-                  /><span className={"layer" + n}>{n}</span>
-                  </>
+                  <span key={ "dynamicsPerLayerCheckboxWrapper" + n }> 
+                    <input 
+                      type="checkbox" 
+                      checked={ this.state.displayDynamicsPerLayer.has(n) }
+                      key={ "dynamicsPerLayerCheckbox" + n }
+                      onChange={ () => {
+                        const updated = new Set(this.state.displayDynamicsPerLayer);
+                        updated.has(n) ? updated.delete(n) : updated.add(n);
+                        this.setState({ displayDynamicsPerLayer: updated });
+                      }}
+                    />{n}
+                  </span>
                 )}
-                <span class="selectDynamicsAggregate" id="selectAllDynamics"
+                <span className="selectDynamicsAggregate" id="selectAllDynamics"
                   onClick= { () => this.setState({ 
                     displayDynamicsPerLayer: new Set(Object.values(this.state.layermap))
                   })}
                 >All</span>
-                <span class="selectDynamicsAggregate" id="selectNoDynamics"
+                <span className="selectDynamicsAggregate" id="selectNoDynamics"
                   onClick= { () => this.setState({ 
                     displayDynamicsPerLayer: new Set()
                   })}
