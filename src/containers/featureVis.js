@@ -207,7 +207,7 @@ class FeatureVis extends Component {
 
   render() {
     return (
-      <div id="featureVisContainer">
+      <div id="featureVisContainer" className={ this.props.mode === "featureVis" ? "" : "removedFromDisplay" }>
         <div id="featureVisControls">
           Features to visualise: 
               <input 

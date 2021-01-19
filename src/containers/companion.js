@@ -443,7 +443,7 @@ class Companion extends Component {
         vrvOptions = vrvOptionsFeatureVis;
       }
       let featureVisElement = "";
-      if(this.state.mode === "featureVis" &&
+      if(//this.state.mode === "featureVis" &&
          this.state.scoreComponentLoaded
          ) { 
         featureVisElement = <FeatureVis 
@@ -457,6 +457,7 @@ class Companion extends Component {
             seekToInstant = { this.seekToInstant } 
             scoreComponent = { this.scoreComponent }
             convertCoords = { this.convertCoords } 
+            mode = { this.state.mode }
             ref = { this.featureVis } />
       };
 
