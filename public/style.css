@@ -37,8 +37,8 @@ body {
 }
 
 .scorepane { 
-  min-height: 520px;
-  max-height: 520px;
+  min-height: 460px;
+  max-height: 460px;
   display:block;
   position: relative;
   z-index: -1;
@@ -129,7 +129,7 @@ body {
 }
 
 #logoWrapper.featureVis { 
-  max-width: 1310px;
+  max-width: 1765px;
 }
 
 #logoWrapper #trompaLogo { 
@@ -217,4 +217,119 @@ body {
   stroke-width:1px;
 }
 
+line.dynamicsConnector.active{
+  stroke:red;
+  fill:red;
+}
 
+.visLabel { 
+  position:relative;
+  top: -40px;
+  font-size: xx-small;
+}
+
+#dynamicsLegend { 
+  position:relative;
+  top: -60px;
+  font-size: xx-small;
+}
+
+#dynamicsLegend span { 
+  width: 1em;
+  height: 1em;
+  margin-left:4em;
+  margin-right:1em;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) polygon:not(.currentTl) { 
+  stroke:#00000099;
+  fill:#00000099;
+}
+
+/*
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer1 {
+  stroke:#a6cee399;
+  fill:#a6cee399;
+  background:#a6cee399;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer2 {
+  stroke:#1f78b499;
+  fill:#1f78b499;
+  background:#1f78b499;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer3 {
+  stroke:#b2df8a99;
+  fill:#b2df8a99;
+  background:#b2df8a99;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer4 {
+  stroke:#33a92c99;
+  fill:#33a92c99;
+  background:#33a92c99;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer5 {
+  stroke:#fb9a9999;
+  fill:#fb9a9999;
+  background:#fb9a9999;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer6 {
+  stroke:#e31a1c99;
+  fill:#e31a1c99;
+  background:#e31a1c99;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer7 {
+  stroke:#fdbf6f99;
+  fill:#fdbf6f99;
+  background:#fdbf6f99;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer8 {
+  stroke:#ff7f0099;
+  fill:#ff7f0099;
+  background:#ff7f0099;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer9 {
+  stroke:#cab2d699;;
+  fill:#cab2d699;;
+  background:#cab2d699;;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer10 {
+  stroke:#6a3d9a99;
+  fill:#6a3d9a99;
+  background:#6a3d9a99;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer11 {
+  stroke:#ffff9999;
+  fill:#ffff9999;
+  background:#ffff9999;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer12 {
+  stroke:#b1592899;
+  fill:#b1592899;
+  background:#b1592899;
+}
+*/
+
+#featureVisControls {
+  position:relative;
+  top: -40px;
+  font-size: xx-small;
+}
+
+
+.selectDynamicsAggregate { 
+  margin-left:1em;
+  border-bottom: 2px solid lightgrey;
+  display: inline-block;
+  line-height: 0.85;
+}
