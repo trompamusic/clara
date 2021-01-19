@@ -252,9 +252,26 @@ class FeatureVis extends Component {
                 >None</span>
               </span>
         </div>
-        { this.state.displayTempoCurves 
-         ? <> <div className="visLabel"> Tempo </div>
-            <TempoCurveVis
+        <div className = { this.state.displayTempoCurves ? "" : "removedFromDisplay"}>
+          <div className = { this.state.displayTempoCurves ? "visLabel" : "removedFromDisplay"}> Tempo </div>
+          <TempoCurveVis
+            width = { this.state.width }
+            height = { this.state.height }
+            currentTimeline = { this.props.currentTimeline }
+            barlinesOnPage = { this.props.barlinesOnPage }
+            convertCoords = { this.props.convertCoords }
+            handleClick = { this.handleClick }
+            displayTempoCurves = { this.state.displayTempoCurves } 
+            instantsByScoretime = { this.state.instantsByScoretime }
+            instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
+            timelinesToVis = { this.props.timelinesToVis }
+            noteElementsForInstant = { this.noteElementsForInstant }
+            makePoint = { this.makePoint }
+            makeLine = { this.makeLine }
+          />
+        </div>
+        <div>
+            <DynamicsVis
               width = { this.state.width }
               height = { this.state.height }
               currentTimeline = { this.props.currentTimeline }
@@ -267,34 +284,14 @@ class FeatureVis extends Component {
               noteElementsForInstant = { this.noteElementsForInstant }
               makePoint = { this.makePoint }
               makeLine = { this.makeLine }
-            /></>
-          : <></>
-        }
-        { this.state.displayDynamicsSummary || this.state.displayDynamicsPerLayer.size
-          ? <>
-              <DynamicsVis
-                width = { this.state.width }
-                height = { this.state.height }
-                currentTimeline = { this.props.currentTimeline }
-                barlinesOnPage = { this.props.barlinesOnPage }
-                convertCoords = { this.props.convertCoords }
-                handleClick = { this.handleClick }
-                instantsByScoretime = { this.state.instantsByScoretime }
-                instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
-                timelinesToVis = { this.props.timelinesToVis }
-                noteElementsForInstant = { this.noteElementsForInstant }
-                makePoint = { this.makePoint }
-                makeLine = { this.makeLine }
-                makePolygon = { this.makePolygon }
-                performedElements = { this.props.performedElements } 
-                layermap = { this.state.layermap }
-                scoreComponent = { this.props.scoreComponent }
-                displayDynamicsSummary = { this.state.displayDynamicsSummary }
-                displayDynamicsPerLayer =  { this.state.displayDynamicsPerLayer }
-              />
-            </>
-          : <></>
-        }
+              makePolygon = { this.makePolygon }
+              performedElements = { this.props.performedElements } 
+              layermap = { this.state.layermap }
+              scoreComponent = { this.props.scoreComponent }
+              displayDynamicsSummary = { this.state.displayDynamicsSummary }
+              displayDynamicsPerLayer =  { this.state.displayDynamicsPerLayer }
+            />
+          </div>
       </div>
     )
   }

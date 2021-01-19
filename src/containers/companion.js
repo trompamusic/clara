@@ -373,7 +373,8 @@ class Companion extends Component {
       }
       let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#at"]
       nDur = nDur.substr(1, nDur.length-2);
-      if(parseInt(nDur) === -1) { 
+      if(parseInt(nDur) === -1) {
+        console.log("Deleted note detected: ", noteId);
         clickableBoundDiv.setAttribute("title", "This note was not sounded during the selected performance");
       } else { 
         clickableBoundDiv.setAttribute("title", "time: " + nDur.substr(1, nDur.length-2) + 

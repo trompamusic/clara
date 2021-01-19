@@ -314,13 +314,12 @@ export default class DynamicsVis extends Component {
     })
     return(
       <div id="dynamicsVis">
-        { this.props.displayDynamicsSummary 
-          ? <><div className="visLabel"> Dynamics (summary)</div>
+          <div className = { this.props.displayDynamicsSummary ? "" : "removedFromDisplay"} >
+            <div className="visLabel"> Dynamics (summary)</div>
             <svg id="dynamicsVisSummary" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.dynamicsSvg }>
                 { dynamicsSummarySvg }
-            </svg></>
-          : <></>
-        }
+            </svg>
+          </div>
         {/* Code to draw legend - maybe no longer required?
         { this.props.displayDynamicsPerLayer.size 
           ? <span id="dynamicsLegend">Layers on page: 
@@ -329,19 +328,18 @@ export default class DynamicsVis extends Component {
               }
              </span>
           : <></>
-          */}
-        { this.props.displayDynamicsPerLayer.size
-          ? <> { [...this.props.displayDynamicsPerLayer].sort().map( (n) =>  
-              <>
-                <div className="visLabel"> Dynamics (min/max) for layer {n}</div>
-                  <svg id={"dynamicsLayer"+n} key={"dynamicsLayer"+n} xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)">
-                    { [...svgElements, ...polygons.filter((p)=>p.props.className.endsWith("layer"+n))] }
-                  </svg>
-              </>
-            ) } </>
-          : <></>
         }
-        
+          */}
+        <div className = { this.props.displayDynamicsPerLayer ? "" : "removedFromDisplay" }> 
+          { [...this.props.displayDynamicsPerLayer].sort().map( (n) =>  
+            <>
+              <div className="visLabel"> Dynamics (min/max) for layer {n}</div>
+                <svg id={"dynamicsLayer"+n} key={"dynamicsLayer"+n} xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)">
+                  { [...svgElements, ...polygons.filter((p)=>p.props.className.endsWith("layer"+n))] }
+                </svg>
+            </>
+          ) } 
+        </div>
       </div>
     )
   }

@@ -40,6 +40,8 @@ export default class TempoCurveVis extends Component {
       // recalculate points per timeline
         this.setPointsPerTimeline()
     }
+
+
   }
 
   setPointsPerTimeline() {
@@ -96,7 +98,7 @@ export default class TempoCurveVis extends Component {
   }
 
   render() {
-    if(Object.keys(this.state.pointsPerTimeline).length) {
+    if(this.props.displayTempoCurves && Object.keys(this.state.pointsPerTimeline).length) {
       let svgElements = [];
       // generate barlines
       Array.from(this.props.barlinesOnPage).forEach((bl,ix) => {
