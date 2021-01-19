@@ -15,8 +15,9 @@ const vrvOptionsPageView = {
   adjustPageHeight: 1,
 	pageHeight:1200,
 	pageWidth: 2200,
-	noFooter: 1,
-	unit: 6
+  footer: "none",
+	unit: 6,
+  breaks: "line"
 };
 
 const vrvOptionsFeatureVis = {
@@ -24,9 +25,10 @@ const vrvOptionsFeatureVis = {
   adjustPageHeight: 1,
 	pageHeight: 400,
 	pageWidth:  2800,
-	noFooter: 1,
-	noHeader: 1,
-	unit: 6
+  footer: "none",
+  header: "none",
+	unit: 6,
+  breaks: "line"
 };
 
 class Companion extends Component {
@@ -67,7 +69,8 @@ class Companion extends Component {
       latestObservedPageNum: 0,
       observingScore: false, // control behaviour of DOM change observer (to catch Verovio SVG render completions)
       scoreComponentLoadingStarted: false,
-      scoreComponentLoaded: false // know when to initially start the DOM observer
+      scoreComponentLoaded: false, // know when to initially start the DOM observer
+      performedElements: {}
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -83,6 +86,7 @@ class Companion extends Component {
     this.ensureArray = this.ensureArray.bind(this);
     this.seekToInstant = this.seekToInstant.bind(this);
     this.handleDOMChangeObserved = this.handleDOMChangeObserved.bind(this);
+    this.convertCoords = this.convertCoords.bind(this);
 
     this.player = React.createRef();
     this.featureVis = React.createRef();
@@ -94,7 +98,8 @@ class Companion extends Component {
     this.props.setTraversalObjectives([
       { "@type": "http://purl.org/ontology/mo/Performance" },
       { "@type": "http://www.linkedmusic.org/ontologies/segment/Segment" },
-      { "@type": "http://purl.org/NET/c4dm/timeline.owl#Instant" }
+      { "@type": "http://purl.org/NET/c4dm/timeline.owl#Instant" },
+      { "@type": "http://www.w3.org/ns/oa#Annotation" }
     ]);
   }
 
@@ -102,8 +107,8 @@ class Companion extends Component {
     console.log("Attempting to start traversal with ", this.props.uri);
     const params = {
       numHops:6, 
-      objectPrefixWhitelist:["https://trompa.solidcommunity.net", "https://trompa.mdw.ac.at", "https://raw.githubusercontent.com/trompamusic-encodings"],
-      objectPrefixBlacklist:["https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO80_BreitkopfHaertel/master/Beethoven_WoO80.mei", "https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei", "https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei#", "https://raw.githubusercontent.com/trompamusic-encodings/", "https://trompa.mdw.ac.at/videos/"]
+      objectPrefixBlacklist:["https://raw.githubusercontent.com/trompamusic-encodings/"],
+      objectPrefixWhitelist:[]
     }
     if(this.props.userPOD) {
       console.log("Adding ", this.props.userPOD);
@@ -167,6 +172,7 @@ class Companion extends Component {
       const nextTraversalParams = this.props.traversalPool.pool[nextTraversalUri];
       this.props.traverse(nextTraversalUri, nextTraversalParams);
     }
+
     if("score" in prevProps && this.state.selectedPerformance &&
        (prevProps.score.latestRenderedPageNum!== this.props.score.latestRenderedPageNum) // page flipped while performance selected
     ) { 
@@ -245,7 +251,7 @@ class Companion extends Component {
       const thisTime = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
       const thisTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
       const deletedNotesInstant = this.state.instantsByPerfTime[thisTimeline].filter( (i) => { 
-        let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        let dur = i["http://purl.org/NET/c4dm/timeline.owl#at"];
         dur = parseInt(dur.substr(1, dur.length-2));
         return dur === -1; // all deleted notes "occur" at this instant
       })
@@ -277,7 +283,7 @@ class Companion extends Component {
     Array.prototype.map.call(notes, (n) => { 
       // associate notes on this page with their instant duration
       if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
-        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#at"];
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
         if(nDur in notesOnPagePerInstant) { 
           notesOnPagePerInstant[nDur].push(n);
@@ -303,11 +309,11 @@ class Companion extends Component {
       notesOnPagePerInstant[i].forEach( (n) => { 
         // to contain all notes, we want to minimise left and top, 
         // and maximise right and bottom
-        const boundRect = n.getBoundingClientRect();
-        boxLeft = boundRect.left + window.scrollX < boxLeft ? boundRect.left + window.scrollX : boxLeft; 
-        boxTop  = boundRect.top + window.scrollY < boxTop ? boundRect.top + window.scrollY: boxTop; 
-        boxRight= boundRect.right > boxRight? boundRect.right : boxRight; 
-        boxBottom= boundRect.bottom > boxBottom ? boundRect.bottom: boxBottom; 
+        const boundRect = this.convertCoords(n);
+        boxLeft = boundRect.x < boxLeft ? boundRect.x : boxLeft; 
+        boxTop  = boundRect.y < boxTop ? boundRect.y : boxTop; 
+        boxRight= boundRect.x2 > boxRight ? boundRect.x2 : boxRight; 
+        boxBottom= boundRect.y2 > boxBottom ? boundRect.y2 : boxBottom; 
         // remember a note ID for indexing into instantsByNoteId (to retrieve confidence) further below
         noteId = n.getAttribute("id"); 
       });
@@ -327,8 +333,8 @@ class Companion extends Component {
          "top:"   + Math.floor(boxTop) + "px;" + 
          "width:" + Math.ceil(boxRight - boxLeft) + "px;" + 
          "height:"+ Math.ceil(boxBottom - boxTop) + "px;" + 
-         "background: rgba(255,0,0," + parseFloat(1 - this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"] * .01) + ");" + 
-         "z-index: -1;"
+         "background: rgba(0,0,0," + parseFloat(1 - this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"] * .01) + ");" + 
+         "z-index: -2;"
       );
       clickableBoundDiv.setAttribute("id", "conf-" + i);
       clickableBoundDiv.classList.add("clickableBoundedInstant");
@@ -345,7 +351,7 @@ class Companion extends Component {
          "z-index: 1;"
       );
       clickableBoundDiv.onclick = (e) => { 
-        let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+        let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#at"]
         if(parseInt(nDur.substr(1,nDur.length-2)) === -1) {
           // this is a deleted (i.e. unperformed) note; thus we can't seek to it!
           return
@@ -365,7 +371,7 @@ class Companion extends Component {
           n.style.stroke="";
         })
       }
-      let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+      let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#at"]
       nDur = nDur.substr(1, nDur.length-2);
       if(parseInt(nDur) === -1) { 
         clickableBoundDiv.setAttribute("title", "This note was not sounded during the selected performance");
@@ -381,6 +387,27 @@ class Companion extends Component {
       boundingBoxesWrapper.appendChild(clickableBoundDiv);
     })
   }
+    // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group
+  convertCoords(elem) {
+    if(document.getElementById(elem.getAttribute("id"))
+      && elem.style.display !== "none" && (elem.getBBox().x !== 0 || elem.getBBox().y !== 0)) {
+      const x = elem.getBBox().x;
+      const width = elem.getBBox().width;
+      const y = elem.getBBox().y;
+      const height = elem.getBBox().height;
+      const offset = elem.closest("svg").parentElement.getBoundingClientRect();
+      const matrix = elem.getScreenCTM();
+      return {
+          x: (matrix.a * x) + (matrix.c * y) + matrix.e - offset.left,
+          y: (matrix.b * x) + (matrix.d * y) + matrix.f - offset.top,
+          x2: (matrix.a * (x + width)) + (matrix.c * y) + matrix.e - offset.left,
+          y2: (matrix.b * x) + (matrix.d * (y + height)) + matrix.f - offset.top
+      };
+    } else {
+      console.warn("Element unavailable on page: ", elem.getAttribute("id"));
+      return { x:0, y:0, x2:0, y2:0 }
+    }
+  }
 
   assignClickHandlersToNotes() {
     // check if our score page has updated
@@ -388,7 +415,7 @@ class Companion extends Component {
     const notes = ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note");
     Array.prototype.map.call(notes, (n) => { 
       if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
-        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#at"]
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         n.onclick = (e) => { 
           console.log("On note click, attempting to  seek to: ", nDur);
@@ -416,17 +443,19 @@ class Companion extends Component {
         vrvOptions = vrvOptionsFeatureVis;
       }
       let featureVisElement = "";
-      if(this.state.mode === "featureVis" &&
-         this.state.scoreComponentLoaded
-         ) { 
+      if(this.state.scoreComponentLoaded) { 
         featureVisElement = <FeatureVis 
-            notesOnPage={ this.state.notesOnPage } 
-            barlinesOnPage={ this.state.barlinesOnPage } 
-            instantsByNoteId={ this.state.instantsByNoteId } 
+            performedElements = { this.state.performedElements }
+            notesOnPage = { this.state.notesOnPage } 
+            barlinesOnPage = { this.state.barlinesOnPage } 
+            instantsByNoteId = { this.state.instantsByNoteId } 
             timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
             currentTimeline = { currentTimeline } 
             currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
             seekToInstant = { this.seekToInstant } 
+            scoreComponent = { this.scoreComponent }
+            convertCoords = { this.convertCoords } 
+            mode = { this.state.mode }
             ref = { this.featureVis } />
       };
 
@@ -443,8 +472,8 @@ class Companion extends Component {
               onClick={() => window.open("http://www.mdw.ac.at/", "_blank", "noopener,noreferrer")} />
           </div>
             
-          <div id="instantBoundingBoxes" />
           { featureVisElement }
+          <div id="instantBoundingBoxes" />
           {  currentScore }
         <div id="pageControlsWrapper" ref="pageControlsWrapper" className={ this.state.mode + " following" }>
           { this.props.score.pageNum > 1 
@@ -530,7 +559,7 @@ class Companion extends Component {
                           }
                         }}
                       />
-                      Visualise tempo curves 
+                      Feature visualisation
                   </span>
                 </span>
                 <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank" rel="noopener noreferrer">More information</a></span>
@@ -586,7 +615,7 @@ class Companion extends Component {
       const timelineSegment = this.findInstantToSeekTo(selected[0]);
       console.log("timelineSegment: ", timelineSegment)
       if(timelineSegment.length) { 
-        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#at"];
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         // HACK: Offsets should be incorporated into data model through timeline maps
         startTime += parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
@@ -606,7 +635,7 @@ class Companion extends Component {
     } else { 
       const selectedPerformance = performances[0];
       const selectedVideo = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
-      let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+      let dur = instant["http://purl.org/NET/c4dm/timeline.owl#at"];
       dur = parseFloat(dur.substr(1, dur.length-2));
       let seekTo = dur + parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
       document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
@@ -629,7 +658,7 @@ class Companion extends Component {
       // set up a jump to the currently selected segment in this performance
       const timelineSegment = this.findInstantToSeekTo(this.state.currentSegment, selectedPerformance);
       if(timelineSegment.length) {
-        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#at"];
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         startTime += parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         newState["seekTo"] = startTime;
@@ -664,13 +693,13 @@ class Companion extends Component {
     })
     // returned them in chronological order
     const sorted = timelineSegment.sort( (a, b) => { 
-      let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
-      let bDur = b["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+      let aDur = a["http://purl.org/NET/c4dm/timeline.owl#at"]
+      let bDur = b["http://purl.org/NET/c4dm/timeline.owl#at"]
       return parseFloat(aDur.substr(1, aDur.length-2)) - parseFloat(bDur.substr(1, bDur.length-2))
     })
     // remove any occurring at -1 (indicating deleted notes)
     const filtered = sorted.filter( (n) => {
-      let dur = n["http://purl.org/NET/c4dm/timeline.owl#atDuration"]; 
+      let dur = n["http://purl.org/NET/c4dm/timeline.owl#at"]; 
       dur = parseInt(dur.substr(1, dur.length-2));
       return(dur !== -1)
     })
@@ -698,7 +727,7 @@ class Companion extends Component {
       const thisTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
       const thisOffset = this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"];
       let closestInstantIndices = this.state.instantsByPerfTime[thisTimeline].reduce( (indices, instant, thisIndex) => { 
-        let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        let dur = instant["http://purl.org/NET/c4dm/timeline.owl#at"];
         dur = dur.substr(1, dur.length-2);
         const offsetDur = parseFloat(dur) + parseFloat(thisOffset);
         if(offsetDur > (t - this.state.activeWindow) && offsetDur <= t) { 
@@ -809,10 +838,12 @@ class Companion extends Component {
     let instants = [];
     let instantsByPerfTime = {};
     let instantsByNoteId = {};
-    if(outcomes.length === 3 && 
+    let performedElements = {}
+    if(outcomes.length === 4 && 
       typeof outcomes[0] !== 'undefined' && 
       typeof outcomes[1] !== 'undefined' &&
-      typeof outcomes[2] !== 'undefined') { 
+      typeof outcomes[2] !== 'undefined' &&
+      typeof outcomes[3] !== 'undefined') { 
       outcomes[0]["@graph"].forEach( (outcome) => {
         performances.push(outcome)
       });
@@ -844,11 +875,36 @@ class Companion extends Component {
           }
         })
       });
+
+      // filter annotations to only those which are oa#describing (i.e., describing dynamics)
+      // TODO: consider a custom TROMPA motivation to be more restrictive here
+      outcomes[3]["@graph"].filter((outcome) => {
+        if("http://www.w3.org/ns/oa#motivatedBy" in outcome &&
+          outcome["http://www.w3.org/ns/oa#motivatedBy"]["@id"] === "http://www.w3.org/ns/oa#describing") { 
+          return true
+        }
+      }).forEach( (outcome) => { 
+        // the annotation target's source is the MEI element
+        // and its scope is the performance timeline.
+        // Build a look-up table of:
+        // { mei-element: { timeline: velocityVal } }
+        let target = outcome["http://www.w3.org/ns/oa#hasTarget"];
+        let targetMEI = target["http://www.w3.org/ns/oa#hasSource"]["@id"].split("#")[1];
+        let targetScope = target["http://www.w3.org/ns/oa#hasScope"]["@id"];
+        // FIXME The velocity value should hang off the annotation, not off the target
+        let velocity = target["http://www.w3.org/ns/oa#bodyValue"];
+        if(targetMEI in performedElements) { 
+          performedElements[targetMEI][targetScope] = velocity;
+        } else { 
+          performedElements[targetMEI] = { [targetScope]: velocity }
+        }
+      })
+
       Object.keys(instantsByPerfTime).forEach( (tl) => { 
         // order the instances along each timeline
         instantsByPerfTime[tl] = instantsByPerfTime[tl].sort( (a, b) => { 
-          let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
-          let bDur = b["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+          let aDur = a["http://purl.org/NET/c4dm/timeline.owl#at"];
+          let bDur = b["http://purl.org/NET/c4dm/timeline.owl#at"];
           return parseFloat(aDur.substr(1, aDur.length-2)) - parseFloat(bDur.substr(1, bDur.length-2))
         })
       })
@@ -861,7 +917,7 @@ class Companion extends Component {
         console.log("Current performance: ", currentPerformance)
         const currentScore = currentPerformance["http://purl.org/ontology/mo/published_as"]["@id"];
         this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
-        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore });
+        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore, performedElements });
       }
     }
   }

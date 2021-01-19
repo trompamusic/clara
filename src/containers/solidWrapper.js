@@ -34,8 +34,8 @@ export default function SolidWrapper(props) {
           }
         </LoggedOut>
         <LoggedIn>
-          <p><LogoutButton>Log out</LogoutButton> You are logged in as <Value src="user.name"/></p>
-          { typeof userPOD !== "undefined"
+          <p><LogoutButton>Log out</LogoutButton> You are logged in as <Value src="user.name"/> (<Value src="user"/>)</p>
+          { typeof userPOD !== "undefined" && typeof performanceCollection !== "undefined"
            ? <Companion userPOD = { `${userPOD}` } uri = { `${performanceCollection}` } />
            : <div>Loading... </div>
           }

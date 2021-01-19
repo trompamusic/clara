@@ -39,11 +39,18 @@ body {
 .scorepane { 
   min-height: 520px;
   max-height: 520px;
+  display:block;
+  position: relative;
+  z-index: -1;
 }
 
 .scorepane.featureVis { 
   min-height: 230px;
   max-height: 230px;
+}
+
+#instantBoundingBoxes { 
+  position: absolute;
 }
 
 .errorDetected { 
@@ -138,49 +145,63 @@ body {
   visibility:hidden;
 }
 
-#featureVis, #featureVisLoading {
+.removedFromDisplay { 
+  display: none;
+}
+
+#featureVisContainer, #featureVisContainerLoading {
   margin-top: 80px;
   margin-bottom:-80px;
   overflow:visible;
-  height:120px;
+  height:auto;
   width:1280px;
 }
 
-#featureVis { 
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(180, 180, 180, .2) 5%, rgba(180, 180, 180, .2) 95%, rgba(255, 255, 255, .2) 100%)
+#tempoCurve, #dynamicsVis svg { 
+  display:block;
+  margin-block: .5em;
 }
 
-#featureVis line, #featureVis ellipse { 
-  stroke:black;
-  fill: #ffffff00;
+#dynamicsVis svg { 
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(220, 220, 220, .2) 5%, rgba(220, 220, 220, .2) 95%, rgba(255, 255, 255, .2) 100%);
+}
+
+#tempoCurve { 
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(220, 220, 220, .2) 5%, rgba(220, 220, 220, .2) 95%, rgba(255, 255, 255, .2) 100%);
+}
+
+#featureVisContainer line, #featureVisContainer ellipse { 
+  stroke:lightgrey;
+  fill: lightgrey;
   cursor: pointer;
+  display:block;
 }
 
-#featureVis line.currentTl, #featureVis ellipse.currentTl{
-  stroke:red;
-  fill:red;
+#featureVisContainer line.currentTl, #featureVisContainer ellipse.currentTl, #featureVisContainer polygon.currentTl{
+  stroke:rgb(255, 102, 0);
+  fill:rgb(255, 102, 0);
   stroke-width:2px;
 }
 
-#featureVis line.active, #featureVis ellipse.active{
+#featureVisContainer line.active, #featureVisContainer ellipse.active{
   stroke:orange !important;
   fill:orange !important;
 }
 
-#featureVis line.barLineAttr { 
+#featureVisContainer line.barLineAttr { 
   stroke:lightgrey;
 }
 
-#featureVis line.bpmMarker { 
+#featureVisContainer line.bpmMarker { 
   stroke-dasharray:1;
   stroke:lightgrey;
 }
 
-#featureVis line.estimated { 
+#featureVisContainer line.estimated { 
   stroke-dasharray: 1.5;
 }
 
-#featureVis text.bpmLabel {
+#featureVisContainer text.bpmLabel {
   font-size: 6px;
   fill: lightgrey;
 }
@@ -189,5 +210,11 @@ body {
   cursor:pointer;
 }
 
+#dynamicsVis ellipse, #dynamicsVis .dynamicsConnector,
+#tempoCurve ellipse, #tempoCurve .tempoConnector{ 
+  stroke:black;
+  fill:black;
+  stroke-width:1px;
+}
 
 
