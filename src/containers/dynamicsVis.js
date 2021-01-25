@@ -54,8 +54,7 @@ export default class DynamicsVis extends Component {
   }
 
   setPointsPerTimeline() { 
-    let pointsPerTimeline={};
-    let instantsByTimelineScoretimeLayer = {};
+    let pointsPerTimeline = {};
     // for each timeline
     this.props.timelinesToVis.forEach( (tl) => { 
       // scoretimes (verovio qtimes) in this timeline:
@@ -68,8 +67,8 @@ export default class DynamicsVis extends Component {
         const instantsAtQt = this.props.instantsByScoretime[tl][qt]
         let performedNoteElementsAtQt = [];
         let instantByNoteElement = {};
-        let instantsByQtLayer = {}
-        let noteElementsByQtLayer = {}
+        let instantsByQtStaffLayer = {};
+        let noteElementsByQtStaffLayer = {};
         instantsAtQt.forEach((inst) => {
           // for MEI elements associated with each instant,
           // determine note element per scoretime AND instant by note element
@@ -77,41 +76,79 @@ export default class DynamicsVis extends Component {
           noteElementsAtInstant.forEach( (noteEl) => instantByNoteElement[noteEl.getAttribute("id")] = inst);
           performedNoteElementsAtQt = [...performedNoteElementsAtQt, ...noteElementsAtInstant]
         })
-        // arrange instants performed at this qt by the layers of their note elements
+        // arrange instants performed at this qt by the staffs and layers of their note elements
         performedNoteElementsAtQt.forEach((noteElement) => { 
+          const staffId = noteElement.closest(".staff").getAttribute("id");
           const layerId = noteElement.closest(".layer").getAttribute("id");
-          if(layerId in instantsByQtLayer) { 
-            instantsByQtLayer[layerId].push(instantByNoteElement[noteElement.getAttribute("id")])
-            noteElementsByQtLayer[layerId].push(noteElement);
+
+          if(!(staffId in instantsByQtStaffLayer)) {
+            instantsByQtStaffLayer[staffId] = {};
+            noteElementsByQtStaffLayer[staffId] = {};
+          }
+          if(layerId in instantsByQtStaffLayer[staffId]) { 
+            instantsByQtStaffLayer[staffId][layerId].push(instantByNoteElement[noteElement.getAttribute("id")])
+            noteElementsByQtStaffLayer[staffId][layerId].push(noteElement);
           } else { 
-            instantsByQtLayer[layerId] = [ instantByNoteElement[noteElement.getAttribute("id")] ]
-            noteElementsByQtLayer[layerId] = [ noteElement ];
+            instantsByQtStaffLayer[staffId][layerId] = [ instantByNoteElement[noteElement.getAttribute("id")] ]
+            noteElementsByQtStaffLayer[staffId][layerId] = [ noteElement ];
           }
         })
-        // Now that we have the performed notes per layer for this Qt, figure out 
+        // Now that we have the performed notes per staff per layer for this Qt, figure out 
         // what to draw in our visualisation.
-        // We want to visualise the minimum and maximum velocity. Our x-coord for both
-        // should be the average x-coord of the layer's note elements at this qtime
-        Object.keys(instantsByQtLayer).forEach( (layerId) => {
-          const avgX = noteElementsByQtLayer[layerId].reduce((sumX, note) => { 
-            let absolute = this.props.convertCoords(note);
-            return sumX + (absolute.x + absolute.x2) / 2;
-          }, 0) / noteElementsByQtLayer[layerId].length;
-          const localVelocities = noteElementsByQtLayer[layerId].map(
-            (el) => this.props.performedElements[el.getAttribute("id")][tl]
-          )
-          const yMin = Math.min(...localVelocities);
-          const yMax = Math.max(...localVelocities);
-          // now add an entry for these points:
-          if(tl in pointsPerTimeline) { 
-            if(qt in pointsPerTimeline) { 
-              pointsPerTimeline[tl][qt][layerId] = { avgX, yMin, yMax }
-            } else { 
-              pointsPerTimeline[tl][qt] = { [layerId]: { avgX, yMin, yMax } }
+        // We want to visualise the minimum and maximum velocity, for staffs and for layers-per-staff. 
+        // Our x-coords should in each case be the average x-coord of the staff / layer's note elements at this qtime
+        // y-coords should correspond to min/max velocity (per staff, or per staff-layer)
+        Object.keys(instantsByQtStaffLayer).forEach( (staffId) => {
+          Object.keys(instantsByQtStaffLayer[staffId]).forEach( (layerId) => { 
+            // pull out and flatten note elements within the staff's layers:
+            const staffNoteElements = Object.keys(noteElementsByQtStaffLayers[staffId]
+              .map( (layerId) => Object.values(noteElementsByQtStaffLayer[staffId][layerId]) ).flat();
+            // figure out avg staff X
+            const avgStaffX = staffNoteElements
+              .reduce((sumX, note) => { 
+                let absolute = this.props.convertCoords(note);
+                return sumX + (absolute.x + absolute.x2) / 2;
+              }, 0) / noteElementsByQtStaffLayer[layerId].length;
+            // figure out staff min and max velocity (min and max y)
+            const staffVelocities = staffNoteElements
+              .map( (el) => this.props.performedElements[el.getAttribute("id")[tl] )
+            const staffYMin = Math.min(...staffVelocities);
+            const staffYMax = Math.max(...staffVelocities);
+
+            // figure out avg X, minY and maxY per staff-layer
+            const pointsPerStaffLayer = Object.keys(noteElementsByQtStaffLayer[staffId]).map( (layerId) => {
+                // avg X...
+                const avgXForThisLayer = noteElementsByQtStaffLayer[staffId][layerId].reduce( (sumX, note) => {
+                  let absolute = this.props.convertCoords(note);
+                  return sumX + (absolute.x + absolute.x2) / 2;
+                }, 0) / noteElementsByQtStaffLayer[staffId][layerId].length;
+                // min and max Y...
+                const velocitiesForThisLayer = noteElementsByQtStaffLayer[staffId][layerId].map(
+                  (el) => this.props.performedElements[el.getAttribute("id")][tl]
+                );
+                return { 
+                  [layerId]: { 
+                    avgX: avgXForThisLayer,
+                    yMin: Math.min(...velocitiesForThisLayer),
+                    yMax: Math.max(...velocitiesForThisLayer)
+                  }
+                }
+            });
+
+            // now add entries for these points:
+            if(!(tl in pointsPerTimeline)) { 
+              pointsPerTimeline[tl] = {};
             }
-          } else { 
-            pointsPerTimeline[tl] = { [qt]: { [layerId]: { avgX, yMin, yMax } } }
-          }
+            if(!(qt in pointsPerTimeline[tl])) { 
+              pointsPerTimeline[tl][qt] = {};
+            }
+            pointsPerTimeline[tl][qt][staffId] = { 
+              avgX: avgStaffX, 
+              yMin: staffYMin, 
+              yMax: staffYMax,
+              layers: pointsPerStaffLayer
+            }
+          })
         })
       })
     })
