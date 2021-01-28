@@ -225,15 +225,10 @@ export default class DynamicsVis extends Component {
     timelinesInOrder.forEach((tl) => { 
       let className = tl === this.props.currentTimeline ? "currentTl" : "";
       // for each timeline...
-      let lines = [];
-      let points = [];
-
       let maxPoints = []; 
       let minPoints = [];
-      let maxPointsPerLayer = []; 
-      let minPointsPerLayer = [];
       let maxLines = [];
-      let minLines = [];
+      //let minLines = [];
       if(tl in this.state.pointsPerTimeline) { 
         const sortedTlPoints = Object.keys(this.state.pointsPerTimeline[tl]).sort( (a, b) => a-b )
         minPoints = sortedTlPoints.map( (qstamp) => { 
@@ -292,7 +287,7 @@ export default class DynamicsVis extends Component {
           })
         })
         // now connect the points!
-        minLines = minPoints.map((p, ix) => {
+/*        minLines = minPoints.map((p, ix) => {
           if(ix < minPoints.length-1) { 
             let from = p[0].staffPoint.props;
             let to = minPoints[ix+1][0].staffPoint.props;
@@ -306,6 +301,7 @@ export default class DynamicsVis extends Component {
             } else return false;
           } else return false;
         })
+*/
         maxLines = maxPoints.map((p, ix) => {
           if(ix < maxPoints.length-1) { 
             let from = p[0].staffPoint.props;
@@ -359,10 +355,10 @@ export default class DynamicsVis extends Component {
             staffId + " on timeline " + tl
           )
         })]
-        points = [
+        /*points = [
           ...minPoints.map((p) => p.staffPoint), 
           ...maxPoints.map((p) => p.staffPoint)
-        ];
+        ];*/
 
         const polygonPointsStringByStaffLayerList = Array.from(this.props.stafflayertuples).sort().map( (tuple) => {
           const staffId = "staff" + tuple.split(":")[0];
@@ -372,11 +368,12 @@ export default class DynamicsVis extends Component {
             .filter((lp) => lp.props.className.split(" ").includes(staffId) &&
                             lp.props.className.split(" ").includes(layerId)
             );
-          const maxPointsForAllStaffLayers = maxPoints.map( (p) => p[0].layerPoints).flat();
+/*          const maxPointsForAllStaffLayers = maxPoints.map( (p) => p[0].layerPoints).flat();
           const maxPointsForThisStaffLayer = maxPointsForAllStaffLayers
             .filter( (lp) => lp.props.className.split(" ").includes(staffId) &&
                                lp.props.className.split(" ").includes(layerId)
             )
+*/
           const polygonPointsForThisStaffLayer = [
             ...minPointsForThisStaffLayer.map( (lp) => { 
              return { x: lp.props.cx, y: lp.props.cy }
@@ -402,7 +399,7 @@ export default class DynamicsVis extends Component {
           )
         })]
 
-        lines = [...minLines, ...maxLines];
+        //lines = [...minLines, ...maxLines];
       }
       // if we haven't added the svgElements to dynamicsSummarySvg yet, do so:
       dynamicsSummarySvg = dynamicsSummarySvg.length ? dynamicsSummarySvg : [...svgElements]

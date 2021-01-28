@@ -883,7 +883,7 @@ class Companion extends Component {
         if("http://www.w3.org/ns/oa#motivatedBy" in outcome &&
           outcome["http://www.w3.org/ns/oa#motivatedBy"]["@id"] === "http://www.w3.org/ns/oa#describing") { 
           return true
-        }
+        } else return false
       }).forEach( (outcome) => { 
         // the annotation target's source is the MEI element
         // and its scope is the performance timeline.
