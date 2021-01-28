@@ -241,7 +241,7 @@ export default class DynamicsVis extends Component {
             const staff = this.state.pointsPerTimeline[tl][qstamp][staffId];
             const staffNum = this.props.staffmap[staffId]
             const staffPoint = this.props.makePoint(
-              className + "staffPoint staff" + staffNum,
+              className + " staffPoint staff" + staffNum,
               qstamp, 
               tl,
               Math.round(staff.avgX), Math.round(staff.yMin), 
@@ -269,7 +269,7 @@ export default class DynamicsVis extends Component {
             let staff = this.state.pointsPerTimeline[tl][qstamp][staffId];
             let staffNum = this.props.staffmap[staffId]
             const staffPoint = this.props.makePoint(
-              className + "staffPoint staff" + staffNum,
+              className + " staffPoint staff" + staffNum,
               qstamp, 
               tl,
               Math.round(staff.avgX), Math.round(staff.yMax), 
@@ -377,7 +377,6 @@ export default class DynamicsVis extends Component {
             .filter( (lp) => lp.props.className.split(" ").includes(staffId) &&
                                lp.props.className.split(" ").includes(layerId)
             )
-          console.log("!", staffId, layerId, maxPointsForThisStaffLayer, maxPoints);
           const polygonPointsForThisStaffLayer = [
             ...minPointsForThisStaffLayer.map( (lp) => { 
              return { x: lp.props.cx, y: lp.props.cy }
@@ -391,10 +390,9 @@ export default class DynamicsVis extends Component {
         const polygonPointsStringByStaffLayer = polygonPointsStringByStaffLayerList
           // turn list of kv pairs into single object
           .reduce( (obj, str) => obj = {...obj, ...str}, {} )
-        polygonsByStaffLayer = [...Array.from(this.props.stafflayertuples).sort().map( (staffLayer) => { 
+        polygonsByStaffLayer = [...polygonsByStaffLayer, ...Array.from(this.props.stafflayertuples).sort().map( (staffLayer) => { 
           const staffId = "staff" + staffLayer.split(":")[0]
           const layerId= "layer" + staffLayer.split(":")[1]
-          console.log(staffLayer, polygonPointsStringByStaffLayer);
           return this.props.makePolygon(
             className + " " + staffId + " " + layerId,
             tl,
@@ -404,7 +402,6 @@ export default class DynamicsVis extends Component {
           )
         })]
 
-        console.log("pBSL", polygonsByStaffLayer);
         lines = [...minLines, ...maxLines];
       }
       // if we haven't added the svgElements to dynamicsSummarySvg yet, do so:
@@ -412,7 +409,7 @@ export default class DynamicsVis extends Component {
       // fill in this timeline's maxPoints and maxLines
       dynamicsSummarySvg = [
         ...dynamicsSummarySvg, 
-        ...maxPoints.map((p) => p.staffPoint), 
+        ...maxPoints.map((p) => p[0].staffPoint), 
         ...maxLines
       ]; // dynamics summary
     })
