@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom'
-import jsonld from 'jsonld'
 
 const defaultR = 3; // default point radius
 const permissibleQstampGap = 4; // only connect dynamics points not further apart than this
@@ -101,22 +100,23 @@ export default class DynamicsVis extends Component {
         Object.keys(instantsByQtStaffLayer).forEach( (staffId) => {
           Object.keys(instantsByQtStaffLayer[staffId]).forEach( (layerId) => { 
             // pull out and flatten note elements within the staff's layers:
-            const staffNoteElements = Object.keys(noteElementsByQtStaffLayers[staffId]
+            const staffNoteElements = Object.keys(noteElementsByQtStaffLayer[staffId])
               .map( (layerId) => Object.values(noteElementsByQtStaffLayer[staffId][layerId]) ).flat();
             // figure out avg staff X
             const avgStaffX = staffNoteElements
               .reduce((sumX, note) => { 
                 let absolute = this.props.convertCoords(note);
                 return sumX + (absolute.x + absolute.x2) / 2;
-              }, 0) / noteElementsByQtStaffLayer[layerId].length;
+              }, 0) / staffNoteElements.length;
             // figure out staff min and max velocity (min and max y)
             const staffVelocities = staffNoteElements
-              .map( (el) => this.props.performedElements[el.getAttribute("id")[tl] )
+              .map( (el) => this.props.performedElements[el.getAttribute("id")][tl] )
             const staffYMin = Math.min(...staffVelocities);
             const staffYMax = Math.max(...staffVelocities);
 
             // figure out avg X, minY and maxY per staff-layer
-            const pointsPerStaffLayer = Object.keys(noteElementsByQtStaffLayer[staffId]).map( (layerId) => {
+            const pointsPerStaffLayer = {}
+            Object.keys(noteElementsByQtStaffLayer[staffId]).forEach( (layerId) => {
                 // avg X...
                 const avgXForThisLayer = noteElementsByQtStaffLayer[staffId][layerId].reduce( (sumX, note) => {
                   let absolute = this.props.convertCoords(note);
@@ -126,12 +126,10 @@ export default class DynamicsVis extends Component {
                 const velocitiesForThisLayer = noteElementsByQtStaffLayer[staffId][layerId].map(
                   (el) => this.props.performedElements[el.getAttribute("id")][tl]
                 );
-                return { 
-                  [layerId]: { 
-                    avgX: avgXForThisLayer,
-                    yMin: Math.min(...velocitiesForThisLayer),
-                    yMax: Math.max(...velocitiesForThisLayer)
-                  }
+                pointsPerStaffLayer[layerId] = { 
+                  avgX: avgXForThisLayer,
+                  yMin: Math.min(...velocitiesForThisLayer),
+                  yMax: Math.max(...velocitiesForThisLayer)
                 }
             });
 
@@ -158,13 +156,8 @@ export default class DynamicsVis extends Component {
   render() { 
     let svgElements = [];
     let polygons = [];
+    let polygonsByStaffLayer = [];
     let dynamicsSummarySvg = [];
-    // generate layer-to-colour mappings
-    // FIXME: these will be inconsistent between pages when a layer is added or removed
-    // ... to fix, need to build from MEI rather than from SVG
-    const distinctLayerIdsOnPage= [...new Set(
-      Array.from(document.querySelectorAll(".layer")).map((el) => el.getAttribute("id"))
-    )]
 
     // generate barlines
     Array.from(this.props.barlinesOnPage).forEach((bl,ix) => { 
@@ -215,7 +208,7 @@ export default class DynamicsVis extends Component {
          </text>
       );
     })
-    // generate points and lines for each timeline and each layer
+    // generate points and lines for each timeline, staff, and layer
     // ensure that the currently active timeline (if any) is painted last, to paint over the others
     // (no z-index CSS for SVGs...)
     let timelinesInOrder = this.props.timelinesToVis;
@@ -237,117 +230,191 @@ export default class DynamicsVis extends Component {
 
       let maxPoints = []; 
       let minPoints = [];
+      let maxPointsPerLayer = []; 
+      let minPointsPerLayer = [];
       let maxLines = [];
       let minLines = [];
       if(tl in this.state.pointsPerTimeline) { 
         const sortedTlPoints = Object.keys(this.state.pointsPerTimeline[tl]).sort( (a, b) => a-b )
         minPoints = sortedTlPoints.map( (qstamp) => { 
-          return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (layerId) => {
-            let layer = this.state.pointsPerTimeline[tl][qstamp][layerId];
-            let layerNum = this.props.layermap[layerId]
-            return this.props.makePoint(
-              className + " layer" + layerNum,
+          return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (staffId) => {
+            const staff = this.state.pointsPerTimeline[tl][qstamp][staffId];
+            const staffNum = this.props.staffmap[staffId]
+            const staffPoint = this.props.makePoint(
+              className + "staffPoint staff" + staffNum,
               qstamp, 
               tl,
-              Math.round(layer.avgX), Math.round(layer.yMin), 
+              Math.round(staff.avgX), Math.round(staff.yMin), 
               defaultR, defaultR,
-              encodeURIComponent(tl) + "-" + qstamp + "-" + layerId,
-              "Minimum velocity for this layer: " + Math.round(layer.yMin)
+              encodeURIComponent(tl) + "-" + qstamp + "-" + staffId + "-min",
+              "Minimum velocity for this staff: " + Math.round(staff.yMin)
             )
+            const layerPoints = Object.keys(staff.layers).map( (layerId) => { 
+              const point = this.props.makePoint(
+                className + "layerPoint staff" + staffNum + " layer" + this.props.stafflayermap[staffId][layerId],
+                qstamp,
+                tl,
+                Math.round(staff.layers[layerId].avgX), Math.round(staff.layers[layerId].yMin),
+                defaultR, defaultR,
+                encodeURIComponent(tl) + "-" + qstamp + "-" + staffId + "-" + layerId + "-min",
+                "Minimum velocity for layer in the staff: " + Math.round(staff.layers[layerId].yMin)
+              )
+              return point;
+            })
+            return { staffPoint, layerPoints }
           })
         })
         maxPoints = sortedTlPoints.map( (qstamp) => { 
-          return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (layerId) => {
-            let layer = this.state.pointsPerTimeline[tl][qstamp][layerId];
-            let layerNum = this.props.layermap[layerId]
-            return this.props.makePoint(
-              className + " layer" + layerNum,
+          return Object.keys(this.state.pointsPerTimeline[tl][qstamp]).map( (staffId) => {
+            let staff = this.state.pointsPerTimeline[tl][qstamp][staffId];
+            let staffNum = this.props.staffmap[staffId]
+            const staffPoint = this.props.makePoint(
+              className + "staffPoint staff" + staffNum,
               qstamp, 
               tl,
-              Math.round(layer.avgX), Math.round(layer.yMax), 
+              Math.round(staff.avgX), Math.round(staff.yMax), 
               defaultR, defaultR,
-              encodeURIComponent(tl) + "-" + qstamp + "-" + layerId,
-              encodeURIComponent(tl) + "-" + qstamp + "-" + layerId,
-              "Maximum velocity for this layer: " + Math.round(layer.yMax)
+              encodeURIComponent(tl) + "-" + qstamp + "-" + staffId + "-max",
+              "Maximum velocity for this staff: " + Math.round(staff.yMax)
             )
+            const layerPoints = Object.keys(staff.layers).map( (layerId) =>  
+              this.props.makePoint(
+                className + "layerPoint staff" + staffNum + " layer" + this.props.stafflayermap[staffId][layerId],
+                qstamp,
+                tl,
+                Math.round(staff.layers[layerId].avgX), Math.round(staff.layers[layerId].yMax),
+                defaultR, defaultR,
+                encodeURIComponent(tl) + "-" + qstamp + "-" + staffId + "-" + layerId + "-max",
+                "Maximum velocity for layer in the staff: " + Math.round(staff.layers[layerId].yMax)
+              )
+            )
+            return { staffPoint, layerPoints }
           })
         })
         // now connect the points!
         minLines = minPoints.map((p, ix) => {
           if(ix < minPoints.length-1) { 
-            let from = p[0].props;
-            let to = minPoints[ix+1][0].props;
+            let from = p[0].staffPoint.props;
+            let to = minPoints[ix+1][0].staffPoint.props;
             if(to["data-qstamp"] - from["data-qstamp"] <= permissibleQstampGap) { 
               return this.props.makeLine("dynamicsConnector " + from.className,
                 from["data-qstamp"], 
                 from.tl, from.cx, from.cy, to.cx, to.cy, 
-                "min---" + p[0].key + "---" + minPoints[ix+1][0].key,
+                "min---" + p[0].staffPoint.key + "---" + minPoints[ix+1][0].key,
                 "qstamp from: " + from["data-qstamp"] + " qstamp to: " + to["data-qstamp"]
               );
-            }
-          }
+            } else return false;
+          } else return false;
         })
         maxLines = maxPoints.map((p, ix) => {
           if(ix < maxPoints.length-1) { 
-            let from = p[0].props;
-            let to = maxPoints[ix+1][0].props;
+            let from = p[0].staffPoint.props;
+            let to = maxPoints[ix+1][0].staffPoint.props;
             if(to["data-qstamp"] - from["data-qstamp"] <= permissibleQstampGap) { 
               return this.props.makeLine("dynamicsConnector " + from.className,
                 from["data-qstamp"],
                 from.tl, from.cx, from.cy, to.cx, to.cy, 
-                "max---" + p[0].key + "---" + maxPoints[ix+1][0].key,
+                "max---" + p[0].staffPoint.key + "---" + maxPoints[ix+1][0].key,
                 "qstamp from: " + from["data-qstamp"] + "qstamp to: " + to["data-qstamp"]
               );
-            }
-          }
+            } else return false;
+          } else return false;
         })
         // connect the points into a polygon
-        // we want to envelope each layer along its min and max points
+        // we want to envelope each staff along its min and max points
         // order matters! draw a line from the left- to the right-most minimum,
         // then up to the right-most maximum and back to the left-most maximum.
         // We don't need to connect the final (left-most) maximum back to the first
         // (left-most) minimum, as closing the polygon is implied in SVG
         
-        // for each layer...
-        const layerNums = [...new Set(Object.values(this.props.layermap))]
-        const polygonPointsStringByLayerList = layerNums.map( (layerN) => { 
-          const layerId = "layer" + layerN;
-          const minPointsForThisLayer = minPoints.filter( (p) => p[0].props.className.endsWith(layerId) )
-          const maxPointsForThisLayer = maxPoints.filter( (p) => p[0].props.className.endsWith(layerId) )
-          const polygonPointsForThisLayer = [
-            ...minPointsForThisLayer.map( (p) => {
-              return { x: p[0].props.cx, y: p[0].props.cy } 
+        // for each staff...
+        const staffNums = [...new Set(Object.values(this.props.staffmap))]
+        const polygonPointsStringByStaffList = staffNums.map( (staffN) => { 
+          const staffId = "staff" + staffN;
+          const minPointsForThisStaff = minPoints.filter( (p) => p[0].staffPoint.props.className.split(" ").includes(staffId) )
+          const maxPointsForThisStaff = maxPoints.filter( (p) => p[0].staffPoint.props.className.split(" ").includes(staffId) )
+          const polygonPointsForThisStaff = [
+            ...minPointsForThisStaff.map( (p) => {
+              return { x: p[0].staffPoint.props.cx, y: p[0].staffPoint.props.cy } 
             }), 
-            ...maxPointsForThisLayer.slice(0).reverse().map( (p) => { 
-              return { x: p[0].props.cx, y: p[0].props.cy } 
+            ...maxPointsForThisStaff.slice(0).reverse().map( (p) => { 
+              return { x: p[0].staffPoint.props.cx, y: p[0].staffPoint.props.cy } 
             })
           ]
-          const polygonPointsStringForThisLayer = polygonPointsForThisLayer.reduce(
+          const polygonPointsStringForThisStaff = polygonPointsForThisStaff.reduce(
             (pStr, p) => pStr += p.x + "," + p.y + " ",
           "");
-          return { [layerId]: polygonPointsStringForThisLayer }
+          return { [staffId]: polygonPointsStringForThisStaff }
         })
-        const polygonPointsStringByLayer = polygonPointsStringByLayerList
+        const polygonPointsStringByStaff = polygonPointsStringByStaffList
           // turn list of kv pairs into single object
           .reduce( (obj, str) => obj = {...obj, ...str}, {} )
-        //polygons = [this.props.makePolygon("test", "test", polygonPointsString, "test")];  
-        polygons = [...polygons, ...layerNums.map((layerNum) => {
-          const layerId = "layer"+layerNum;
+        polygons = [...polygons, ...staffNums.map((staffNum) => {
+          const staffId = "staff"+staffNum;
           return this.props.makePolygon(
-            className + " " + layerId, 
+            className + " " + staffId, 
             tl,
-            polygonPointsStringByLayer[layerId],
-            "poly" + tl + layerId,
-            layerId + " on timeline " + tl
+            polygonPointsStringByStaff[staffId],
+            "poly" + tl + staffId,
+            staffId + " on timeline " + tl
           )
         })]
-        points = [...minPoints, ...maxPoints];
+        points = [
+          ...minPoints.map((p) => p.staffPoint), 
+          ...maxPoints.map((p) => p.staffPoint)
+        ];
+
+        const polygonPointsStringByStaffLayerList = Array.from(this.props.stafflayertuples).sort().map( (tuple) => {
+          const staffId = "staff" + tuple.split(":")[0];
+          const layerId = "layer" + tuple.split(":")[1];
+          const minPointsForAllStaffLayers = minPoints.map( (p) => p[0].layerPoints).flat();
+          const minPointsForThisStaffLayer = minPointsForAllStaffLayers
+            .filter((lp) => lp.props.className.split(" ").includes(staffId) &&
+                            lp.props.className.split(" ").includes(layerId)
+            );
+          const maxPointsForAllStaffLayers = maxPoints.map( (p) => p[0].layerPoints).flat();
+          const maxPointsForThisStaffLayer = maxPointsForAllStaffLayers
+            .filter( (lp) => lp.props.className.split(" ").includes(staffId) &&
+                               lp.props.className.split(" ").includes(layerId)
+            )
+          console.log("!", staffId, layerId, maxPointsForThisStaffLayer, maxPoints);
+          const polygonPointsForThisStaffLayer = [
+            ...minPointsForThisStaffLayer.map( (lp) => { 
+             return { x: lp.props.cx, y: lp.props.cy }
+           })
+          ]
+          const polygonPointsStringForThisStaffLayer = polygonPointsForThisStaffLayer.flat().reduce(
+            (pStr, p) => pStr += p.x + "," + p.y + " ",
+          "");
+          return { [tuple]: polygonPointsStringForThisStaffLayer }
+        })
+        const polygonPointsStringByStaffLayer = polygonPointsStringByStaffLayerList
+          // turn list of kv pairs into single object
+          .reduce( (obj, str) => obj = {...obj, ...str}, {} )
+        polygonsByStaffLayer = [...Array.from(this.props.stafflayertuples).sort().map( (staffLayer) => { 
+          const staffId = "staff" + staffLayer.split(":")[0]
+          const layerId= "layer" + staffLayer.split(":")[1]
+          console.log(staffLayer, polygonPointsStringByStaffLayer);
+          return this.props.makePolygon(
+            className + " " + staffId + " " + layerId,
+            tl,
+            polygonPointsStringByStaffLayer[staffLayer],
+            "poly" + tl + staffId + layerId,
+            staffId + " " + layerId + " on timeline " + tl
+          )
+        })]
+
+        console.log("pBSL", polygonsByStaffLayer);
         lines = [...minLines, ...maxLines];
       }
       // if we haven't added the svgElements to dynamicsSummarySvg yet, do so:
       dynamicsSummarySvg = dynamicsSummarySvg.length ? dynamicsSummarySvg : [...svgElements]
       // fill in this timeline's maxPoints and maxLines
-      dynamicsSummarySvg = [...dynamicsSummarySvg, ...maxPoints, ...maxLines]; // dynamics summary
+      dynamicsSummarySvg = [
+        ...dynamicsSummarySvg, 
+        ...maxPoints.map((p) => p.staffPoint), 
+        ...maxLines
+      ]; // dynamics summary
     })
     return(
       <div id="dynamicsVis">
@@ -358,21 +425,34 @@ export default class DynamicsVis extends Component {
             </svg>
           </div>
         {/* Code to draw legend - maybe no longer required?
-        { this.props.displayDynamicsPerLayer.size 
-          ? <span id="dynamicsLegend">Layers on page: 
-              { [...new Set(Object.values(this.props.layermap).sort())].map( (n) => 
-                <><span className={"layer" + n}>&nbsp;</span>{n}</>)
+        { this.props.displayDynamicsPerStaff.size 
+          ? <span id="dynamicsLegend">Staffs on page: 
+              { [...new Set(Object.values(this.props.staffmap).sort())].map( (n) => 
+                <><span className={"staff" + n}>&nbsp;</span>{n}</>)
               }
              </span>
           : <></>
         }
           */}
-        <div className = { this.props.displayDynamicsPerLayer ? "" : "removedFromDisplay" }> 
-          { [...this.props.displayDynamicsPerLayer].sort().map( (n) =>  
+        <div className = { this.props.displayDynamicsPerStaff ? "" : "removedFromDisplay" }> 
+          { [...this.props.displayDynamicsPerStaff].sort().map( (n) =>  
             <>
-              <div className="visLabel"> Dynamics (min/max) for layer {n}</div>
-                <svg id={"dynamicsLayer"+n} key={"dynamicsLayer"+n} xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)">
-                  { [...svgElements, ...polygons.filter((p)=>p.props.className.endsWith("layer"+n))] }
+              <div className="visLabel"> Dynamics (min/max) for staff {n}</div>
+                <svg id={"dynamicsStaff"+n} key={"dynamicsStaff"+n} xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)">
+                  { [...svgElements, ...polygons.filter((p)=>p.props.className.split(" ").includes("staff"+n))] }
+                </svg>
+            </>
+          ) } 
+        </div>
+        <div className = { this.props.displayDynamicsPerStaffLayer ? "" : "removedFromDisplay" }> 
+          { [...this.props.displayDynamicsPerStaffLayer].sort().map( (tuple) =>  
+            <>
+              <div className="visLabel"> Dynamics (min/max) for staff { tuple.split(":")[0] } layer {tuple.split(":")[1]}</div>
+                <svg id={"dynamicsStaffLayer"+tuple} key={"dynamicsStaffLayer"+tuple} xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)">
+                  { [...svgElements, ...polygonsByStaffLayer.filter(
+                      (p) => p.props.className.split(" ").includes("staff"+tuple.split(":")[0]) &&
+                             p.props.className.split(" ").includes("layer"+tuple.split(":")[1])
+                  )] }
                 </svg>
             </>
           ) } 

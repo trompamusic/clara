@@ -16,12 +16,15 @@ class FeatureVis extends Component {
       noteElementsByNoteId: {},
       timemap: [],
       timemapByNoteId: {},
-      layermap: {},
+      staffmap: {}, // keeps the mapping from staff xml:id to staff n's
+      stafflayermap: {}, // mapping from staff xml:id to contained layer id's, and from there to layer n's
+      stafflayertuples: new Set(), // set of staff n : layer n tuples
       currentTimeline: this.props.currentTimeline,
       currentQstamp: "",
       displayTempoCurves: true, 
       displayDynamicsSummary: true, 
-      displayDynamicsPerLayer: new Set() // display detailed dynamics for these layer numbers
+      displayDynamicsPerStaff: new Set(), // display detailed dynamics for these staff numbers
+      displayDynamicsPerStaffLayer: new Set() // display detailed dynamics for these staff-layer numbers
     }
     this.setInstantsOnPage = this.setInstantsOnPage.bind(this);
     this.setInstantsByScoretime = this.setInstantsByScoretime.bind(this);
@@ -59,13 +62,29 @@ class FeatureVis extends Component {
               }
           });
       });
-      // map layer IDs to layer numbers
+      // map staff IDs to staff numbers
       const mei = this.props.score.vrvTk.getMEI();
       const meiDoc = new DOMParser().parseFromString(mei, "text/xml");
+      const staffElements = Array.from(meiDoc.getElementsByTagName("staff"));
       const layerElements = Array.from(meiDoc.getElementsByTagName("layer"));
-      let layermap = {};
-      layerElements.map((l) => layermap[l.getAttribute("xml:id")] = l.getAttribute("n"));
-      this.setState({ timemapByNoteId, layermap });
+      let staffmap = {};
+      let stafflayermap = {};
+      const newTuples = new Set(this.state.stafflayertuples);
+      staffElements.forEach((s) => staffmap[s.getAttribute("xml:id")] = s.getAttribute("n"));
+      layerElements.forEach((l) => { 
+        const layerId = l.getAttribute("xml:id");
+        const layerN = l.getAttribute("n");
+        const s = l.closest("staff");
+        const staffId = s.getAttribute("xml:id");
+        const staffN = s.getAttribute("n");
+        if(!(staffId in stafflayermap)) { 
+          stafflayermap[staffId] = { [layerId]: l.getAttribute("n") }
+        } else { 
+          stafflayermap[staffId][layerId] = l.getAttribute("n")
+        }
+        newTuples.add(staffN + ":" + layerN);
+      });
+      this.setState({ timemapByNoteId, staffmap, stafflayermap, stafflayertuples: newTuples });
     })
   }
 
@@ -223,34 +242,61 @@ class FeatureVis extends Component {
                 onChange={ () => 
                   { this.setState({ displayDynamicsSummary: !this.state.displayDynamicsSummary }) }
                 }
-              /> Dynamics (summary)
-              <span id="dynamicsPerLayerControls">        
-                Detailed dynamics per layer: 
-                { [...new Set(Object.values(this.state.layermap).sort())].map( (n) => 
-                  <span key={ "dynamicsPerLayerCheckboxWrapper" + n }> 
+              /> Max dynamics (summary) &nbsp;
+              <div id="dynamicsPerStaffControls">        
+                Dynamics per staff: 
+                { [...new Set(Object.values(this.state.staffmap).sort())].map( (n) => 
+                  <span key={ "dynamicsPerStaffCheckboxWrapper" + n }> 
                     <input 
                       type="checkbox" 
-                      checked={ this.state.displayDynamicsPerLayer.has(n) }
-                      key={ "dynamicsPerLayerCheckbox" + n }
+                      checked={ this.state.displayDynamicsPerStaff.has(n) }
+                      key={ "dynamicsPerStaffCheckbox" + n }
                       onChange={ () => {
-                        const updated = new Set(this.state.displayDynamicsPerLayer);
+                        const updated = new Set(this.state.displayDynamicsPerStaff);
                         updated.has(n) ? updated.delete(n) : updated.add(n);
-                        this.setState({ displayDynamicsPerLayer: updated });
+                        this.setState({ displayDynamicsPerStaff: updated });
                       }}
                     />{n}
                   </span>
                 )}
                 <span className="selectDynamicsAggregate" id="selectAllDynamics"
                   onClick= { () => this.setState({ 
-                    displayDynamicsPerLayer: new Set(Object.values(this.state.layermap))
+                    displayDynamicsPerStaff: new Set(Object.values(this.state.staffmap))
                   })}
                 >All</span>
                 <span className="selectDynamicsAggregate" id="selectNoDynamics"
                   onClick= { () => this.setState({ 
-                    displayDynamicsPerLayer: new Set()
+                    displayDynamicsPerStaff: new Set()
                   })}
                 >None</span>
-              </span>
+              </div>
+              <div id="dynamicsPerStaffLayerControls">        
+                Detailed dynamics per staff and layer: 
+                { [...this.state.stafflayertuples].sort().map( (n) => 
+                  <span key={ "dynamicsPerStaffLayerCheckboxWrapper" + n }> 
+                    <input 
+                      type="checkbox" 
+                      checked={ this.state.displayDynamicsPerStaffLayer.has(n) }
+                      key={ "dynamicsPerStaffLayerCheckbox" + n }
+                      onChange={ () => {
+                        const updated = new Set(this.state.displayDynamicsPerStaffLayer);
+                        updated.has(n) ? updated.delete(n) : updated.add(n);
+                        this.setState({ displayDynamicsPerStaffLayer: updated });
+                      }}
+                    />{n}
+                  </span>
+                )}
+                <span className="selectDynamicsAggregate" id="selectAllStaffLayerDynamics"
+                  onClick= { () => this.setState({ 
+                    displayDynamicsPerStaffLayer: new Set(this.state.stafflayertuples)
+                  })}
+                >All</span>
+                <span className="selectDynamicsAggregate" id="selectNoStaffLayerDynamics"
+                  onClick= { () => this.setState({ 
+                    displayDynamicsPerStaffLayer: new Set()
+                  })}
+                >None</span>
+              </div>
         </div>
         <div className = { this.state.displayTempoCurves ? "" : "removedFromDisplay"}>
           <div className = { this.state.displayTempoCurves ? "visLabel" : "removedFromDisplay"}> Tempo </div>
@@ -286,10 +332,13 @@ class FeatureVis extends Component {
               makeLine = { this.makeLine }
               makePolygon = { this.makePolygon }
               performedElements = { this.props.performedElements } 
-              layermap = { this.state.layermap }
+              staffmap = { this.state.staffmap }
+              stafflayermap = { this.state.stafflayermap }
+              stafflayertuples = { this.state.stafflayertuples }
               scoreComponent = { this.props.scoreComponent }
               displayDynamicsSummary = { this.state.displayDynamicsSummary }
-              displayDynamicsPerLayer =  { this.state.displayDynamicsPerLayer }
+              displayDynamicsPerStaff = { this.state.displayDynamicsPerStaff }
+              displayDynamicsPerStaffLayer = { this.state.displayDynamicsPerStaffLayer }
             />
           </div>
       </div>
