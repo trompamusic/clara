@@ -5,6 +5,7 @@ import { bindActionCreators } from 'redux';
 import ReactPlayer from 'react-player'
 
 import Score from 'meld-clients-core/lib/containers/score';
+import SelectableScore from 'selectable-score/lib/selectable-score';
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/index';
 
@@ -35,6 +36,7 @@ class Companion extends Component {
   constructor(props) {
     super(props);
     this.state = { 
+      selection: [],
       performances: [], 
       segments: [], 
       instants: [],
@@ -87,6 +89,7 @@ class Companion extends Component {
     this.seekToInstant = this.seekToInstant.bind(this);
     this.handleDOMChangeObserved = this.handleDOMChangeObserved.bind(this);
     this.convertCoords = this.convertCoords.bind(this);
+    this.handleSelectionChange = this.handleSelectionChange.bind(this);
 
     this.player = React.createRef();
     this.featureVis = React.createRef();
@@ -426,6 +429,12 @@ class Companion extends Component {
       }
     });
   }
+  
+  handleSelectionChange(selection) {
+    console.log("selected: ", selection)
+    this.setState({ selection });
+    /* and anything else your app needs to do when the selection changes */
+  }
 
 
   render() { 
@@ -462,7 +471,15 @@ class Companion extends Component {
 
       let currentScore = <div className="loadingMsg">Loading score, please wait...</div>;
       if(this.state.currentScore) { 
-         currentScore = <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={ this.scoreComponent }/>
+        // currentScore = <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={ this.scoreComponent }/>
+        currentScore = <SelectableScore 
+          uri={ this.state.currentScore } 
+          key = { this.state.currentScore } 
+          options = { vrvOptions } 
+          ref={ this.scoreComponent } 
+          selectorString = ".note" 
+          onSelectionChange={this.handleSelectionChange}
+        />
       }
       return(
         <div id="wrapper">

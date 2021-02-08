@@ -2,6 +2,10 @@ body {
   font-family: sans-serif;
 }
 
+.selected {
+  fill: rgb(35, 144, 194) !important;
+}
+
 .videoWrapper { 
   max-width:945px;
   margin-left:20px;
