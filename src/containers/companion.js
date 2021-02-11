@@ -107,7 +107,6 @@ class Companion extends Component {
     console.log("Attempting to start traversal with ", this.props.uri);
     const params = {
       numHops:6, 
-      objectPrefixBlacklist:["https://raw.githubusercontent.com/trompamusic-encodings/"],
       objectPrefixWhitelist:[]
     }
     if(this.props.userPOD) {

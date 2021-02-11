@@ -19,14 +19,14 @@ export default function SolidWrapper(props) {
     })
     const performanceCollection = useLDflexValue("user.trompa_hasPerformanceCollection");
     const userPOD = useLDflexValue('user.storage');
-    const publicPerformanceCollection = 'https:///clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld';
+    const publicPerformanceCollection = 'https://clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld';
     const [showPublicDemo, setShowPublicDemo] = useState(false);
 
     return(
       <div id="authWrapper">
         <LoggedOut>
           { showPublicDemo
-            ? <Companion uri = { publicPerformanceCollection } />
+            ? <Companion uri = {  publicPerformanceCollection } userPOD = { `https://clara.trompa-solid.upf.edu/` } />
             : <div>
                 <p><button onClick = { () => setShowPublicDemo(true) }>Launch demo</button></p>
                 <p><LoginButton popup="auth-popup.html">Log in with Solid</LoginButton></p>
