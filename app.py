@@ -9,7 +9,7 @@ app = Flask(__name__)
 CORS(app)
 
 codesToInclude = [64, 144]
-ticks_per_beat = 50
+ticks_per_beat = 5000
 tempo = bpm2tempo(120)
 
 @app.route("/midiBatch", methods=['POST'])
@@ -22,7 +22,7 @@ def receiveMidiBatch():
     track = MidiTrack()
     midiFile.tracks.append(track)
 
-    startTime = midiNotes[0]["timestamp"] 
+    prevTime = midiNotes[0]["timestamp"] 
     
     for note in midiNotes:
         # write into MIDI file with seconds2ticks for timestamp
@@ -30,8 +30,8 @@ def receiveMidiBatch():
         code = note["data"]["_data"]["0"]
         key = note["data"]["_data"]["1"]
         velocity = note["data"]["_data"]["2"]
-        print("timestamp: ", (note["timestamp"] - startTime) / 1000)
-        time = round(second2tick((note["timestamp"]-startTime) / 1000, ticks_per_beat=ticks_per_beat, tempo=tempo))
+        print("timestamp: ", (note["timestamp"] - prevTime) / 1000)
+        time = round(second2tick((note["timestamp"]-prevTime) / 1000, ticks_per_beat=ticks_per_beat, tempo=tempo))
         print("time in ticks: ", time)
         if code == 144:
             eventType = "note_on"
@@ -40,7 +40,7 @@ def receiveMidiBatch():
         else:
             print("UNKNOWN CODE WAS ", code)
         track.append(Message(eventType, note=key, velocity=velocity, time=time))
-
+        prevTime = note["timestamp"]
     midiFile.save("test_song.mid")
 
     return json.dumps({'success':True}), 202, {'ContentType':'application/json'}
