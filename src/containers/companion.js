@@ -70,7 +70,8 @@ class Companion extends Component {
       observingScore: false, // control behaviour of DOM change observer (to catch Verovio SVG render completions)
       scoreComponentLoadingStarted: false,
       scoreComponentLoaded: false, // know when to initially start the DOM observer
-      performedElements: {}
+      performedElements: {},
+      performanceErrors: {}
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -158,7 +159,7 @@ class Companion extends Component {
     if("graph" in prevProps) { 
       // check our traversal objectives if the graph has updated
       if(prevProps.graph.outcomesHash !== this.props.graph.outcomesHash) { 
-        // outcomes have changed, need to update our projections!
+        // ouecomes have changed, need to update our projections!
         this.processTraversalOutcomes(this.props.graph.outcomes);
       }
     }
@@ -446,6 +447,7 @@ class Companion extends Component {
       if(this.state.scoreComponentLoaded) { 
         featureVisElement = <FeatureVis 
             performedElements = { this.state.performedElements }
+            performanceErrors = { this.state.performanceErrors }
             notesOnPage = { this.state.notesOnPage } 
             barlinesOnPage = { this.state.barlinesOnPage } 
             instantsByNoteId = { this.state.instantsByNoteId } 
@@ -456,7 +458,9 @@ class Companion extends Component {
             scoreComponent = { this.scoreComponent }
             convertCoords = { this.convertCoords } 
             mode = { this.state.mode }
-            ref = { this.featureVis } />
+            ref = { this.featureVis }
+            ensureArray = { this.ensureArray }
+        />
       };
 
       let currentScore = <div className="loadingMsg">Loading score, please wait...</div>;
@@ -838,7 +842,8 @@ class Companion extends Component {
     let instants = [];
     let instantsByPerfTime = {};
     let instantsByNoteId = {};
-    let performedElements = {}
+    let performedElements = {};
+    let performanceErrors = {};
     if(outcomes.length === 4 && 
       typeof outcomes[0] !== 'undefined' && 
       typeof outcomes[1] !== 'undefined' &&
@@ -874,8 +879,45 @@ class Companion extends Component {
             instantsByNoteId[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]] = { [eId]: outcome };
           }
         })
+        // performance errors: 
+        // * deleted (omitted) notes exist in the MEI but were not performed;
+        // they have a score time (MEI embodiment) but not a performed time
+        // instead, the alignment process gives them a fake performed time of -1. 
+        if(this.ensureArray(outcome["http://purl.org/NET/c4dm/timeline.owl#at"])[0] === "P-1S") {
+          // this timeline has one or more deleted / omitted notes!
+          if(outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] in performanceErrors) { 
+            performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]].deleted = 
+              outcome["http://purl.org/vocab/frbr/core#embodimentOf"]
+          } else { 
+            performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]] = { 
+              deleted: outcome["http://purl.org/vocab/frbr/core#embodimentOf"]
+            }
+          }
+        }
+        // * inserted notes do not exist in the MEI, but *were* performed;
+        // they have a performed time but not a score time (MEI embodiment)
+        // instead, the alignment process gives them an embodiment representing the note played, like:
+        // "https://terms.trompamusic.eu/maps#inserted_G4"
+        let inserted = this.ensureArray(outcome["http://purl.org/vocab/frbr/core#embodimentOf"]).filter( (embodiment) => 
+          embodiment["@id"].startsWith("https://terms.trompamusic.eu/maps#inserted")
+        );
+        if(inserted.length) { 
+          console.log("FOUND INSERTED: ", inserted);
+          console.log("Outcome is: ", outcome, performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]]);
+          // this timeline has one or more inserted notes!
+          if(outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] in performanceErrors) { 
+            if("inserted" in performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]]) { 
+              performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]].inserted.push(outcome);
+            } else { 
+              performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]].inserted = [outcome];
+            }
+          } else { 
+            performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]] = { 
+              inserted: [outcome]
+            }
+          }
+        }
       });
-
       // filter annotations to only those which are oa#describing (i.e., describing dynamics)
       // TODO: consider a custom TROMPA motivation to be more restrictive here
       outcomes[3]["@graph"].filter((outcome) => {
@@ -917,7 +959,7 @@ class Companion extends Component {
         console.log("Current performance: ", currentPerformance)
         const currentScore = currentPerformance["http://purl.org/ontology/mo/published_as"]["@id"];
         this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
-        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore, performedElements });
+        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore, performedElements, performanceErrors });
       }
     }
   }

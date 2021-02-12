@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 import TempoCurveVis from './tempoCurveVis';
+import ErrorRibbonVis from './errorRibbonVis';
 import DynamicsVis from './dynamicsVis';
 
 
@@ -21,7 +22,9 @@ class FeatureVis extends Component {
       stafflayertuples: new Set(), // set of staff n : layer n tuples
       currentTimeline: this.props.currentTimeline,
       currentQstamp: "",
+      errors: {},
       displayTempoCurves: true, 
+      displayErrorRibbon: true, 
       displayDynamicsSummary: true, 
       displayDynamicsPerStaff: new Set(), // display detailed dynamics for these staff numbers
       displayDynamicsPerStaffLayer: new Set() // display detailed dynamics for these staff-layer numbers
@@ -29,12 +32,12 @@ class FeatureVis extends Component {
     this.setInstantsOnPage = this.setInstantsOnPage.bind(this);
     this.setInstantsByScoretime = this.setInstantsByScoretime.bind(this);
     this.setNoteElementsByNoteId = this.setNoteElementsByNoteId.bind(this);
-    this.ensureArray = this.ensureArray.bind(this);
     this.calculateQStampForInstant = this.calculateQStampForInstant.bind(this);
     this.noteElementsForInstant = this.noteElementsForInstant.bind(this);
     this.calculateAvgQstampFromNoteIds = this.calculateAvgQstampFromNoteIds.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.makePoint = this.makePoint.bind(this);
+    this.makeRect = this.makeRect.bind(this);
     this.makeLine = this.makeLine.bind(this);
     this.makePolygon = this.makePolygon.bind(this);
   }
@@ -124,7 +127,7 @@ class FeatureVis extends Component {
       // for each timeline instant
       this.state.instantsOnPage[tl].forEach( (inst) => {
         // average qstamps of note onsets at this instant
-        let embodimentsAtInstant = this.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"])
+        let embodimentsAtInstant = this.props.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"])
         let noteIdsAtInstant = embodimentsAtInstant.map((n) => {
           return n["@id"].substr(n["@id"].lastIndexOf("#")+1);
         })
@@ -156,7 +159,7 @@ class FeatureVis extends Component {
   }
 
   noteElementsForInstant(inst) {
-    let noteElements = this.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"])
+    let noteElements = this.props.ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"])
       // filter out inserted notes (as by definition they don't have corresponding MEI elements)
       .filter( (n) => !(n["@id"].startsWith("https://terms.trompamusic.eu/maps#inserted")))
       // return note (DOM) elements corresponding to each embodiment
@@ -198,11 +201,6 @@ class FeatureVis extends Component {
     }
   }
 
-
-  ensureArray(val) {
-    return Array.isArray(val) ? val : [val]
-  }
-
   calculateQStampForInstant(inst) {
     // qstamp == time in quarter notes (as per verovio timemap
     // as multiple notes (with potentially different qstamps) could share a performed
@@ -229,75 +227,82 @@ class FeatureVis extends Component {
       <div id="featureVisContainer" className={ this.props.mode === "featureVis" ? "" : "removedFromDisplay" }>
         <div id="featureVisControls">
           Features to visualise: 
-              <input 
-                type="checkbox" 
-                defaultChecked={ this.state.displayTempoCurves}
-                onChange={ () => 
-                  { this.setState({ displayTempoCurves: !this.state.displayTempoCurves }) }
-                }
-              /> Tempo curves
-              <input 
-                type="checkbox" 
-                defaultChecked={ this.state.displayDynamicsSummary }
-                onChange={ () => 
-                  { this.setState({ displayDynamicsSummary: !this.state.displayDynamicsSummary }) }
-                }
-              /> Max dynamics (summary) &nbsp;
-              <div id="dynamicsPerStaffControls">        
-                Dynamics per staff: 
-                { [...new Set(Object.values(this.state.staffmap).sort())].map( (n) => 
-                  <span key={ "dynamicsPerStaffCheckboxWrapper" + n }> 
-                    <input 
-                      type="checkbox" 
-                      checked={ this.state.displayDynamicsPerStaff.has(n) }
-                      key={ "dynamicsPerStaffCheckbox" + n }
-                      onChange={ () => {
-                        const updated = new Set(this.state.displayDynamicsPerStaff);
-                        updated.has(n) ? updated.delete(n) : updated.add(n);
-                        this.setState({ displayDynamicsPerStaff: updated });
-                      }}
-                    />{n}
-                  </span>
-                )}
-                <span className="selectDynamicsAggregate" id="selectAllDynamics"
-                  onClick= { () => this.setState({ 
-                    displayDynamicsPerStaff: new Set(Object.values(this.state.staffmap))
-                  })}
-                >All</span>
-                <span className="selectDynamicsAggregate" id="selectNoDynamics"
-                  onClick= { () => this.setState({ 
-                    displayDynamicsPerStaff: new Set()
-                  })}
-                >None</span>
-              </div>
-              <div id="dynamicsPerStaffLayerControls">        
-                Detailed dynamics per staff and layer: 
-                { [...this.state.stafflayertuples].sort().map( (n) => 
-                  <span key={ "dynamicsPerStaffLayerCheckboxWrapper" + n }> 
-                    <input 
-                      type="checkbox" 
-                      checked={ this.state.displayDynamicsPerStaffLayer.has(n) }
-                      key={ "dynamicsPerStaffLayerCheckbox" + n }
-                      onChange={ () => {
-                        const updated = new Set(this.state.displayDynamicsPerStaffLayer);
-                        updated.has(n) ? updated.delete(n) : updated.add(n);
-                        this.setState({ displayDynamicsPerStaffLayer: updated });
-                      }}
-                    />{n}
-                  </span>
-                )}
-                <span className="selectDynamicsAggregate" id="selectAllStaffLayerDynamics"
-                  onClick= { () => this.setState({ 
-                    displayDynamicsPerStaffLayer: new Set(this.state.stafflayertuples)
-                  })}
-                >All</span>
-                <span className="selectDynamicsAggregate" id="selectNoStaffLayerDynamics"
-                  onClick= { () => this.setState({ 
-                    displayDynamicsPerStaffLayer: new Set()
-                  })}
-                >None</span>
-              </div>
-        </div>
+          <input 
+            type="checkbox" 
+            defaultChecked={ this.state.displayTempoCurves}
+            onChange={ () => 
+              { this.setState({ displayTempoCurves: !this.state.displayTempoCurves }) }
+            }
+          /> Tempo curves
+          <input 
+            type="checkbox" 
+            defaultChecked={ this.state.displayErrorRibbon}
+            onChange={ () => 
+              { this.setState({ displayErrorRibbon: !this.state.displayErrorRibbon}) }
+            }
+          /> Error visualisation
+          <input 
+            type="checkbox" 
+            defaultChecked={ this.state.displayDynamicsSummary }
+            onChange={ () => 
+              { this.setState({ displayDynamicsSummary: !this.state.displayDynamicsSummary }) }
+            }
+          /> Max dynamics (summary) &nbsp;
+          <div id="dynamicsPerStaffControls">        
+            Dynamics per staff: 
+            { [...new Set(Object.values(this.state.staffmap).sort())].map( (n) => 
+              <span key={ "dynamicsPerStaffCheckboxWrapper" + n }> 
+                <input 
+                  type="checkbox" 
+                  checked={ this.state.displayDynamicsPerStaff.has(n) }
+                  key={ "dynamicsPerStaffCheckbox" + n }
+                  onChange={ () => {
+                    const updated = new Set(this.state.displayDynamicsPerStaff);
+                    updated.has(n) ? updated.delete(n) : updated.add(n);
+                    this.setState({ displayDynamicsPerStaff: updated });
+                  }}
+                />{n}
+              </span>
+            )}
+            <span className="selectDynamicsAggregate" id="selectAllDynamics"
+              onClick= { () => this.setState({ 
+                displayDynamicsPerStaff: new Set(Object.values(this.state.staffmap))
+              })}
+            >All</span>
+            <span className="selectDynamicsAggregate" id="selectNoDynamics"
+              onClick= { () => this.setState({ 
+                displayDynamicsPerStaff: new Set()
+              })}
+            >None</span>
+          </div> 
+          <div id="dynamicsPerStaffLayerControls">        
+            Detailed dynamics per staff and layer: 
+            { [...this.state.stafflayertuples].sort().map( (n) => 
+              <span key={ "dynamicsPerStaffLayerCheckboxWrapper" + n }> 
+                <input 
+                  type="checkbox" 
+                  checked={ this.state.displayDynamicsPerStaffLayer.has(n) }
+                  key={ "dynamicsPerStaffLayerCheckbox" + n }
+                  onChange={ () => {
+                    const updated = new Set(this.state.displayDynamicsPerStaffLayer);
+                    updated.has(n) ? updated.delete(n) : updated.add(n);
+                    this.setState({ displayDynamicsPerStaffLayer: updated });
+                  }}
+                />{n}
+              </span>
+            )}
+            <span className="selectDynamicsAggregate" id="selectAllStaffLayerDynamics"
+              onClick= { () => this.setState({ 
+                displayDynamicsPerStaffLayer: new Set(this.state.stafflayertuples)
+              })}
+            >All</span>
+            <span className="selectDynamicsAggregate" id="selectNoStaffLayerDynamics"
+              onClick= { () => this.setState({ 
+                displayDynamicsPerStaffLayer: new Set()
+              })}
+            >None</span>
+          </div> 
+        </div> 
         <div className = { this.state.displayTempoCurves ? "" : "removedFromDisplay"}>
           <div className = { this.state.displayTempoCurves ? "visLabel" : "removedFromDisplay"}> Tempo </div>
           <TempoCurveVis
@@ -316,35 +321,69 @@ class FeatureVis extends Component {
             makeLine = { this.makeLine }
           />
         </div>
-        <div>
-            <DynamicsVis
-              width = { this.state.width }
-              height = { this.state.height }
-              currentTimeline = { this.props.currentTimeline }
-              barlinesOnPage = { this.props.barlinesOnPage }
-              convertCoords = { this.props.convertCoords }
-              handleClick = { this.handleClick }
-              instantsByScoretime = { this.state.instantsByScoretime }
-              instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
-              timelinesToVis = { this.props.timelinesToVis }
-              noteElementsForInstant = { this.noteElementsForInstant }
-              makePoint = { this.makePoint }
-              makeLine = { this.makeLine }
-              makePolygon = { this.makePolygon }
-              performedElements = { this.props.performedElements } 
-              staffmap = { this.state.staffmap }
-              stafflayermap = { this.state.stafflayermap }
-              stafflayertuples = { this.state.stafflayertuples }
-              scoreComponent = { this.props.scoreComponent }
-              displayDynamicsSummary = { this.state.displayDynamicsSummary }
-              displayDynamicsPerStaff = { this.state.displayDynamicsPerStaff }
-              displayDynamicsPerStaffLayer = { this.state.displayDynamicsPerStaffLayer }
-            />
-          </div>
+        <div className = { this.state.displayErrorRibbon ? "" : "removedFromDisplay"}>
+          <div className = { this.state.displayErrorRibbon ? "visLabel" : "removedFromDisplay"}> Error visualisation </div>
+          <ErrorRibbonVis
+            width = { this.state.width }
+            height = { this.state.height }
+            currentTimeline = { this.props.currentTimeline }
+            timelinesToVis = { this.props.timelinesToVis }
+            barlinesOnPage = { this.props.barlinesOnPage }
+            convertCoords = { this.props.convertCoords }
+            handleClick = { this.handleClick }
+            displayTempoCurves = { this.state.displayTempoCurves } 
+            instantsByScoretime = { this.state.instantsByScoretime }
+            instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
+            noteElementsForInstant = { this.noteElementsForInstant }
+            notesOnPage = { this.props.notesOnPage }
+            performanceErrors = { this.props.performanceErrors }
+            timemapByNoteId = { this.state.timemapByNoteId }
+            makeRect = { this.makeRect }
+            makeLine = { this.makeLine }
+            ensureArray = { this.props.ensureArray }
+          />
+        </div>
+        <DynamicsVis
+          width = { this.state.width }
+          height = { this.state.height }
+          currentTimeline = { this.props.currentTimeline }
+          barlinesOnPage = { this.props.barlinesOnPage }
+          convertCoords = { this.props.convertCoords }
+          handleClick = { this.handleClick }
+          instantsByScoretime = { this.state.instantsByScoretime }
+          instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
+          timelinesToVis = { this.props.timelinesToVis }
+          noteElementsForInstant = { this.noteElementsForInstant }
+          makePoint = { this.makePoint }
+          makeLine = { this.makeLine }
+          makePolygon = { this.makePolygon }
+          performedElements = { this.props.performedElements } 
+          staffmap = { this.state.staffmap }
+          stafflayermap = { this.state.stafflayermap }
+          stafflayertuples = { this.state.stafflayertuples }
+          scoreComponent = { this.props.scoreComponent }
+          displayDynamicsSummary = { this.state.displayDynamicsSummary }
+          displayDynamicsPerStaff = { this.state.displayDynamicsPerStaff }
+          displayDynamicsPerStaffLayer = { this.state.displayDynamicsPerStaffLayer }
+        />
       </div>
     )
   }
 
+  makeRect(className, qstamp, tl, x, y, width, height, key, titleString) {
+    // return SVG for a "point" (e.g. ellipse) on the visualisation
+    return <rect
+      className={className} 
+      data-qstamp={qstamp} 
+      x = {x} y = {y}
+      width = {width} height = {height}
+      id={qstamp} 
+      key={key}
+      onClick={ () => this.handleClick(qstamp,tl) }>
+        <title>{titleString}</title>
+      </rect>;
+  }
+  
   makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString) {
     // return SVG for a "point" (e.g. ellipse) on the visualisation
     return <ellipse 
