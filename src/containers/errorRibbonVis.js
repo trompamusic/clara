@@ -42,7 +42,7 @@ export default class ErrorRibbonVis extends Component {
 
       const errorLineSpacing = (this.state.height * (1-padding)) / this.props.timelinesToVis.length;
       
-      this.props.timelinesToVis.forEach( (tl, ix) => { 
+      this.props.timelinesToVis.slice(0).sort().forEach( (tl, ix) => { 
         let className = tl === this.props.currentTimeline ? "currentTl" : "";
         // draw lines to represent each performance timeline
         const timelineY = (errorLineSpacing * ix+1) + (this.state.height * padding);
@@ -92,21 +92,7 @@ export default class ErrorRibbonVis extends Component {
           }
         }
       })
-      // generate points and lines for each timeline
-      // ensure that the currently active timeline (if any) is painted last, to paint over the others
-      // (no z-index CSS for SVGs...)
-      let timelinesInOrder = this.props.timelinesToVis;
-      if(this.props.currentTimeline) {
-        const currentTlIndex = timelinesInOrder.indexOf(this.props.currentTimeline);
-        if(currentTlIndex > -1) {
-          timelinesInOrder.splice(currentTlIndex,1);
-          timelinesInOrder.push(this.props.currentTimeline);
 
-        }
-        else {
-          console.warn("FeatureVis: Cannot find current timeline in timelinesToVis");
-        }
-      }
       svgElements = [...svgElements, ...deletedNoteIndicators, ...insertedNoteIndicators];
       return(
         <svg id="errorRibbon" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.errorRibbonSvg }>
