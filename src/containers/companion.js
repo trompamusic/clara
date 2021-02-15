@@ -451,6 +451,7 @@ class Companion extends Component {
             notesOnPage = { this.state.notesOnPage } 
             barlinesOnPage = { this.state.barlinesOnPage } 
             instantsByNoteId = { this.state.instantsByNoteId } 
+            instantsByPerfTime = { this.state.instantsByPerfTime } 
             timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
             currentTimeline = { currentTimeline } 
             currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }

@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom'
 const defaultY = 80; // for edge-case of only-one-note-on-page
 const padding = 0.1; // proportion of ribbon reserved for whitespace
 const errorIndicatorHeight = 20; // currently in pixels -- perhaps make a proportion instead?
+const insertedNoteWidth = 20; // in pixels: width of inserted note indicator
 
 export default class ErrorRibbonVis extends Component {
   constructor(props) {
@@ -11,13 +12,115 @@ export default class ErrorRibbonVis extends Component {
     this.state = {
       width: this.props.width || "1280",
       height: this.props.height || "120",
-      pointsPerTimeline: {}
+      pointsPerTimeline: {},
+      insertedNotesByScoretime: {}
     }
     this.errorRibbonSvg = React.createRef();
+    this.contextualiseInsertedNotes = this.contextualiseInsertedNotes.bind(this);
+    this.averageScoretime = this.averageScoretime.bind(this);
+    this.closestValidNote = this.closestValidNote.bind(this);
   }
 
   componentDidMount() {
-    console.log("error ribbon visualsiation mounted with props ", this.props);
+    console.log("error ribbon visualisation mounted with props ", this.props);
+  }
+
+  componentDidUpdate(prevProps, prevState) { 
+    if(Object.keys(prevProps.timemapByNoteId) < Object.keys(this.props.timemapByNoteId)) { 
+      this.contextualiseInsertedNotes();
+    }
+  }
+
+  averageScoretime(noteURIs) { 
+    // given a list of note elements, calculate their average scoretime
+    console.log("GOT NOTE URIS: ", noteURIs)
+    const noteIds = noteURIs.map((n) => n.substr(n.indexOf("#")+1));
+    console.log("finding notes: ", noteIds);
+    const knownNotes = noteIds.filter((n) => 
+      Object.keys(this.props.timemapByNoteId).includes(n)
+    )
+    console.log("Known notes: ", knownNotes, this.props.timemapByNoteId)
+    if(knownNotes.length) { 
+      // return average scoretime (qstamp)
+      return knownNotes.map((n) => this.props.timemapByNoteId[n].qstamp)
+        .reduce( (sum, scoretime) => 
+          sum + scoretime
+        ) / knownNotes.length
+    } else { 
+      console.warn("Attempting to calculate average scoretime without known notes: ", noteIds);
+    }
+  }
+
+  closestValidNote(candidates) { 
+    return candidates.find( (instant) => 
+      this.props.ensureArray(instant["http://purl.org/vocab/frbr/core#embodimentOf"])
+        .filter( (el) => !(el["@id"].startsWith("https://terms.trompamusic.eu/maps#inserted")) )
+        .length > 0
+    )
+  }
+
+  contextualiseInsertedNotes() {
+    // For inserted notes, we have a performance time but no score time. 
+    // In order to place them in our ribbon we need to approximate a score time.
+    // To do this, look for neighbouring "correctly performed" notes for hints.
+    let contextualisedInsertedNotes = {};
+    let insertedNotesByScoretime = {};
+    this.props.timelinesToVis.forEach( (tl, ix) => { 
+      if("inserted" in this.props.performanceErrors[tl]) { // we have inserted notes
+        // ensure ALL performed instants (correct and inserted notes) are sorted by time
+        const orderedInstants = this.props.instantsByPerfTime[tl].slice(0).sort( (a, b) =>  {
+          const instantTimeStringA = a["http://purl.org/NET/c4dm/timeline.owl#at"];
+          const instantTimeA = parseFloat(instantTimeStringA.substr(1, instantTimeStringA.length-2));
+          const instantTimeStringB = b["http://purl.org/NET/c4dm/timeline.owl#at"];
+          const instantTimeB = parseFloat(instantTimeStringB.substr(1, instantTimeStringB.length-2));
+          return instantTimeA - instantTimeB;
+        });
+        // locate the inserted notes within their performance context
+        const insertedWithIndices = this.props.performanceErrors[tl].inserted.map( (inserted) => { 
+          return {
+            index: orderedInstants.findIndex( (instant) => instant["http://purl.org/NET/c4dm/timeline.owl#at"] === 
+                                 inserted["http://purl.org/NET/c4dm/timeline.owl#at"]
+                  ),
+            instant: inserted
+          }
+        }) 
+        contextualisedInsertedNotes[tl] = insertedWithIndices.map((inserted) => { 
+          let averageScoretime;
+          const validNotesAtIndex = this.props.ensureArray(inserted.instant["http://purl.org/vocab/frbr/core#embodimentOf"])
+            .filter((el) => !(el["@id"].startsWith("https://terms.trompamusic.eu/maps#inserted")))
+          if(validNotesAtIndex.length) { 
+            // if there is a non-inserted note at that index, use its score time
+            averageScoretime = this.averageScoretime(validNotesAtIndex);
+          } else{
+            // otherwise, approximate a score time based on preceding and succeeding non-inserted notes
+            let closestValidPredecessorNotes = [];
+            let closestValidSuccessorNotes = [];
+            const predecessors = orderedInstants.slice(0, inserted.index-1).reverse();
+            const closestValidPredecessorInstant = this.closestValidNote(predecessors);
+            if(closestValidPredecessorInstant) { 
+              closestValidPredecessorNotes = this.props.ensureArray(closestValidPredecessorInstant["http://purl.org/vocab/frbr/core#embodimentOf"])
+              .map((embodiment) => embodiment["@id"])
+              .filter((id) => !(id.startsWith("https://terms.trompamusic.eu/maps#inserted")));
+            }
+            const successors = orderedInstants.slice(inserted.index+1);
+            const closestValidSuccessorInstant= this.closestValidNote(successors);
+            if(closestValidSuccessorInstant) { 
+              closestValidSuccessorNotes = this.props.ensureArray(closestValidSuccessorInstant["http://purl.org/vocab/frbr/core#embodimentOf"])
+                .map((embodiment) => embodiment["@id"])
+                .filter((id) => !(id.startsWith("https://terms.trompamusic.eu/maps#inserted")));
+            }
+            averageScoretime = this.averageScoretime([...closestValidPredecessorNotes, ...closestValidSuccessorNotes]);
+          }
+          inserted["approxScoretime"] = averageScoretime;
+          return inserted;
+        })
+      }
+      console.log("SETTING CONTEXTUALISED INSERTED: ", contextualisedInsertedNotes, this.props.timemapByNoteId);
+      insertedNotesByScoretime[tl] = Object.keys(contextualisedInsertedNotes).map((n) => {
+        return { [contextualisedInsertedNotes[n].approxScoretime]: contextualisedInsertedNotes[n].instant }
+      })
+    });
+    this.setState({insertedNotesByScoretime});
   }
 
   render() {
@@ -88,7 +191,45 @@ export default class ErrorRibbonVis extends Component {
             })
           }
           if("inserted" in this.props.performanceErrors[tl]) { 
-            // this timeline has inserted notes
+            // figure out whether there are inserted notes on this page
+            // heuristic: figure out scoretime (qstamp) of "first" (top-left) and "last" (bottom-right) 
+            // note element on page.  Render any inserted notes with approximate scoretimes in this range
+            const positionSortedNoteElements = Array.from(this.props.notesOnPage).slice(0).sort( (a, b) => 
+              a.getBoundingClientRect().x - b.getBoundingClientRect().x || 
+              a.getBoundingClientRect().y - b.getBoundingClientRect().y
+            );
+            const minPageScoretime = this.props.timemapByNoteId[positionSortedNoteElements[0].getAttribute("id")];
+            const maxPageScoretime = this.props.timemapByNoteId[positionSortedNoteElements[positionSortedNoteElements.length - 1].getAttribute("id")];
+            const scoretimesOfInsertedOnPage = Object.keys(this.state.insertedNotesByScoretime).filter( (t) => t >= minPageScoretime && t <= maxPageScoretime )
+            // for the inserted notes on page, find the closest predecessor and successor scoretimes and calculate their corresponding note elements' avg X positions
+            const orderedScoretimesOnPage = Object.keys(this.props.timemap).filter( (t) => t.qstamp >= minPageScoretime && t.qstamp <= maxPageScoretime ).sort()
+            console.log("~ MIN SCORETIME ON PAGE: ", minPageScoretime);
+            console.log("~ MAX SCORETIME ON PAGE: ", maxPageScoretime);
+            console.log("~ SCORETIMES OF INSERTED ON PAGE: ", scoretimesOfInsertedOnPage);
+            console.log("~ POSITION SORTED NOTE ELEMENTS: ", positionSortedNoteElements);
+            insertedNoteIndicators = [ ...insertedNoteIndicators, ...scoretimesOfInsertedOnPage.map( (t) => { 
+              const inserted = this.props.insertedNotesByScoretime[t];
+              const predecessors = orderedScoretimesOnPage.slice(0, t).reverse();
+              const closestPredecessorScoretime = predecessors.find((p) => p <= t);
+              const successors = orderedScoretimesOnPage.slice(t);
+              const closestSuccessorScoretime = successors.find((p) => p >= t);
+              const predecessorNoteElementXPositions = this.props.instantsByScoretime[closestPredecessorScoretime]
+                .map( (instant) => this.props.noteElementsForInstant(instant) )
+                .map( (noteElement) => this.props.convertCoords(noteElement).x )
+              const successorNoteElementXPositions = this.props.instantsByScoretime[closestSuccessorScoretime]
+                .map( (instant) => this.props.noteElementsForInstant(instant) )
+                .map( (noteElement) => this.props.convertCoords(noteElement).x )
+              const contextNoteElementXPositions = [...predecessorNoteElementXPositions, ...successorNoteElementXPositions]
+              const xPos = contextNoteElementXPositions.reduce( (sum, x) => sum + x ) / contextNoteElementXPositions.length;
+              return this.props.makeRect(
+                className + " inserted",
+                closestPredecessorScoretime, 
+                tl, 
+                xPos, timelineY, insertedNoteWidth, errorIndicatorHeight,
+                "inserted-" + inserted.instant["@id"],
+                "inserted point in timeline " + tl
+              )
+            })]
           }
         }
       })

@@ -331,13 +331,15 @@ class FeatureVis extends Component {
             barlinesOnPage = { this.props.barlinesOnPage }
             convertCoords = { this.props.convertCoords }
             handleClick = { this.handleClick }
-            displayTempoCurves = { this.state.displayTempoCurves } 
+            instantsOnPage =  { this.state.instantsOnPage }
+            instantsByPerfTime = { this.props.instantsByPerfTime }
             instantsByScoretime = { this.state.instantsByScoretime }
             instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
             noteElementsForInstant = { this.noteElementsForInstant }
             notesOnPage = { this.props.notesOnPage }
             performanceErrors = { this.props.performanceErrors }
-            timemapByNoteId = { this.state.timemapByNoteId }
+            timemapByNoteId = { this.state.timemapByNoteId } 
+            timemap = { this.state.timemap }
             makeRect = { this.makeRect }
             makeLine = { this.makeLine }
             ensureArray = { this.props.ensureArray }
