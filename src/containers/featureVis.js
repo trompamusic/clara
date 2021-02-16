@@ -36,6 +36,7 @@ class FeatureVis extends Component {
     this.noteElementsForInstant = this.noteElementsForInstant.bind(this);
     this.calculateAvgQstampFromNoteIds = this.calculateAvgQstampFromNoteIds.bind(this);
     this.handleClick = this.handleClick.bind(this);
+    this.handleClickSeekToInstant = this.handleClickSeekToInstant.bind(this);
     this.makePoint = this.makePoint.bind(this);
     this.makeRect = this.makeRect.bind(this);
     this.makeLine = this.makeLine.bind(this);
@@ -221,6 +222,13 @@ class FeatureVis extends Component {
     }
   }
 
+  handleClickSeekToInstant(atTime, tl) { 
+    // seek to this instant on the clicked timeline
+    if(tl in this.state.instantsByScoretime) {
+      this.props.seekToInstant(atTime);
+    }
+  }
+
 
   render() {
     return (
@@ -331,6 +339,7 @@ class FeatureVis extends Component {
             barlinesOnPage = { this.props.barlinesOnPage }
             convertCoords = { this.props.convertCoords }
             handleClick = { this.handleClick }
+            handleClickSeekToInstant = { this.handleClickSeekToInstant }
             instantsOnPage =  { this.state.instantsOnPage }
             instantsByPerfTime = { this.props.instantsByPerfTime }
             instantsByScoretime = { this.state.instantsByScoretime }
@@ -372,7 +381,7 @@ class FeatureVis extends Component {
     )
   }
 
-  makeRect(className, qstamp, tl, x, y, width, height, key, titleString) {
+  makeRect(className, qstamp, tl, x, y, width, height, key, titleString, clickHandler = () => this.handleClick(qstamp,tl)) {
     // return SVG for a "point" (e.g. ellipse) on the visualisation
     return <rect
       className={className} 
@@ -381,7 +390,7 @@ class FeatureVis extends Component {
       width = {width} height = {height}
       id={qstamp} 
       key={key}
-      onClick={ () => this.handleClick(qstamp,tl) }>
+      onClick={ clickHandler }>
         <title>{titleString}</title>
       </rect>;
   }

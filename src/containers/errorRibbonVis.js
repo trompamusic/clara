@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom'
 const defaultY = 80; // for edge-case of only-one-note-on-page
 const padding = 0.1; // proportion of ribbon reserved for whitespace
 const errorIndicatorHeight = 20; // currently in pixels -- perhaps make a proportion instead?
-const insertedNoteWidth = 20; // in pixels: width of inserted note indicator
+const insertedNoteWidth = 12; // in pixels: width of inserted note indicator
 
 export default class ErrorRibbonVis extends Component {
   constructor(props) {
@@ -115,9 +115,8 @@ export default class ErrorRibbonVis extends Component {
           return inserted;
         })
       }
-      console.log("SETTING CONTEXTUALISED INSERTED: ", contextualisedInsertedNotes, this.props.timemapByNoteId);
-      insertedNotesByScoretime[tl] = Object.keys(contextualisedInsertedNotes).map((n) => {
-        return { [contextualisedInsertedNotes[n].approxScoretime]: contextualisedInsertedNotes[n].instant }
+      insertedNotesByScoretime[tl] = Object.keys(contextualisedInsertedNotes[tl]).map((n) => {
+        return { [contextualisedInsertedNotes[tl][n].approxScoretime]: contextualisedInsertedNotes[tl][n].instant }
       })
     });
     this.setState({insertedNotesByScoretime});
@@ -148,7 +147,7 @@ export default class ErrorRibbonVis extends Component {
       this.props.timelinesToVis.slice(0).sort().forEach( (tl, ix) => { 
         let className = tl === this.props.currentTimeline ? "currentTl" : "";
         // draw lines to represent each performance timeline
-        const timelineY = (errorLineSpacing * ix+1) + (this.state.height * padding);
+        const timelineY = (errorLineSpacing * ix+1) + 2*(this.state.height * padding);
         console.log("timeline Y: ", timelineY);
         svgElements.push(
           this.props.makeLine(
@@ -181,7 +180,7 @@ export default class ErrorRibbonVis extends Component {
                     this.props.timemapByNoteId[noteElement.getAttribute("id")].qstamp,
                     tl, // timeline
                     // delete indicators sit underneath the line (ref. y- and height-calculation below)
-                    noteCoords.x, timelineY - errorIndicatorHeight, noteCoords.x2 - noteCoords.x, errorIndicatorHeight,  // x, y, width, height
+                    noteCoords.x, timelineY - errorIndicatorHeight*.8, noteCoords.x2 - noteCoords.x, errorIndicatorHeight*.8,  // x, y, width, height
                     "deleted-"+tl+noteElement["@id"], // react key
                     "deleted point in timeline " + tl
                   )
@@ -190,7 +189,7 @@ export default class ErrorRibbonVis extends Component {
               ]
             })
           }
-          if("inserted" in this.props.performanceErrors[tl]) { 
+          if("inserted" in this.props.performanceErrors[tl] && tl in this.state.insertedNotesByScoretime) { 
             // figure out whether there are inserted notes on this page
             // heuristic: figure out scoretime (qstamp) of "first" (top-left) and "last" (bottom-right) 
             // note element on page.  Render any inserted notes with approximate scoretimes in this range
@@ -198,36 +197,57 @@ export default class ErrorRibbonVis extends Component {
               a.getBoundingClientRect().x - b.getBoundingClientRect().x || 
               a.getBoundingClientRect().y - b.getBoundingClientRect().y
             );
-            const minPageScoretime = this.props.timemapByNoteId[positionSortedNoteElements[0].getAttribute("id")];
-            const maxPageScoretime = this.props.timemapByNoteId[positionSortedNoteElements[positionSortedNoteElements.length - 1].getAttribute("id")];
-            const scoretimesOfInsertedOnPage = Object.keys(this.state.insertedNotesByScoretime).filter( (t) => t >= minPageScoretime && t <= maxPageScoretime )
+            const minPageScoretime = this.props.timemapByNoteId[positionSortedNoteElements[0].getAttribute("id")].qstamp;
+            const maxPageScoretime = this.props.timemapByNoteId[positionSortedNoteElements[positionSortedNoteElements.length - 1].getAttribute("id")].qstamp;
+            const scoretimesOfInsertedOnPage = this.state.insertedNotesByScoretime[tl].filter( (t) => Object.keys(t)[0] >= minPageScoretime && Object.keys(t)[0] <= maxPageScoretime )
             // for the inserted notes on page, find the closest predecessor and successor scoretimes and calculate their corresponding note elements' avg X positions
-            const orderedScoretimesOnPage = Object.keys(this.props.timemap).filter( (t) => t.qstamp >= minPageScoretime && t.qstamp <= maxPageScoretime ).sort()
+            const orderedScoretimesOnPage = this.props.timemap.filter( (t) => t.qstamp >= minPageScoretime && t.qstamp <= maxPageScoretime ).sort()
+            console.log("~ TIMEMAP: ", this.props.timemap);
             console.log("~ MIN SCORETIME ON PAGE: ", minPageScoretime);
             console.log("~ MAX SCORETIME ON PAGE: ", maxPageScoretime);
             console.log("~ SCORETIMES OF INSERTED ON PAGE: ", scoretimesOfInsertedOnPage);
+            console.log("~ INSERTED NOTES BY SCORETIME: ", this.state.insertedNotesByScoretime);
+            console.log("~ INSTANTS BY SCORETIME: ", this.props.instantsByScoretime);
             console.log("~ POSITION SORTED NOTE ELEMENTS: ", positionSortedNoteElements);
+            console.log("~ ORDERED SCORETIMES ON PAGE: ", orderedScoretimesOnPage);
             insertedNoteIndicators = [ ...insertedNoteIndicators, ...scoretimesOfInsertedOnPage.map( (t) => { 
-              const inserted = this.props.insertedNotesByScoretime[t];
-              const predecessors = orderedScoretimesOnPage.slice(0, t).reverse();
-              const closestPredecessorScoretime = predecessors.find((p) => p <= t);
-              const successors = orderedScoretimesOnPage.slice(t);
-              const closestSuccessorScoretime = successors.find((p) => p >= t);
-              const predecessorNoteElementXPositions = this.props.instantsByScoretime[closestPredecessorScoretime]
-                .map( (instant) => this.props.noteElementsForInstant(instant) )
-                .map( (noteElement) => this.props.convertCoords(noteElement).x )
-              const successorNoteElementXPositions = this.props.instantsByScoretime[closestSuccessorScoretime]
-                .map( (instant) => this.props.noteElementsForInstant(instant) )
-                .map( (noteElement) => this.props.convertCoords(noteElement).x )
+              if(Object.keys(t).length > 1) { 
+                console.warn("Found scoretime of inserted on page with more than one key: ", t)
+              }
+              const scoretimeOfInsertedOnPage = Object.keys(t)[0];
+              let predecessorNoteElementXPositions = [];
+              let successorNoteElementXPositions = [];
+              const inserted = this.state.insertedNotesByScoretime[tl].find( (note) => Object.keys(note)[0] === scoretimeOfInsertedOnPage);
+              console.log("# INSERTED: ", inserted)
+              const predecessors = orderedScoretimesOnPage.slice(0, scoretimeOfInsertedOnPage).reverse();
+              const closestPredecessorScoretime = predecessors.find((p) => p.qstamp <= scoretimeOfInsertedOnPage);
+              const successors = orderedScoretimesOnPage.slice(scoretimeOfInsertedOnPage);
+              const closestSuccessorScoretime = successors.find((p) => p.qstamp >= scoretimeOfInsertedOnPage);
+              console.log("~ PREDECESSORS: ", predecessors); 
+              console.log("~ SUCCESSORS: ", successors); 
+              console.log("~ CLOSEST PREDECESSOR: ", closestPredecessorScoretime);
+              console.log("~ CLOSEST SUCCESSOR: ", closestSuccessorScoretime);
+              if(closestPredecessorScoretime) { 
+                console.log("~ INSIDE: ", closestPredecessorScoretime, this.props.instantsByScoretime);
+                predecessorNoteElementXPositions = this.props.instantsByScoretime[tl][closestPredecessorScoretime.qstamp]
+                  .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
+                  .map( (noteElement) => this.props.convertCoords(noteElement).x )
+              }
+              if(closestSuccessorScoretime) { 
+                successorNoteElementXPositions = this.props.instantsByScoretime[tl][closestSuccessorScoretime.qstamp]
+                  .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
+                  .map( (noteElement) => this.props.convertCoords(noteElement).x )
+              }
               const contextNoteElementXPositions = [...predecessorNoteElementXPositions, ...successorNoteElementXPositions]
               const xPos = contextNoteElementXPositions.reduce( (sum, x) => sum + x ) / contextNoteElementXPositions.length;
               return this.props.makeRect(
                 className + " inserted",
-                closestPredecessorScoretime, 
+                closestPredecessorScoretime.qstamp, 
                 tl, 
-                xPos, timelineY, insertedNoteWidth, errorIndicatorHeight,
-                "inserted-" + inserted.instant["@id"],
-                "inserted point in timeline " + tl
+                xPos, timelineY, insertedNoteWidth, errorIndicatorHeight*.8,
+                "inserted-" + inserted[scoretimeOfInsertedOnPage]["@id"],
+                "inserted point in timeline " + tl,
+                () => this.props.handleClickSeekToInstant(inserted[scoretimeOfInsertedOnPage]["http://purl.org/NET/c4dm/timeline.owl#at"])
               )
             })]
           }

@@ -17,6 +17,10 @@ body {
   stroke: #00aaff;
 }
 
+.deletedIndicator {
+  background: linear-gradient(90deg, rgba(0,170,256, 1) 0%, rgba(0, 170, 256, 0) 100%);
+}
+
 .inserted { 
   fill: #ff6666;
   stroke: #ff6666;
