@@ -19,6 +19,7 @@ export default function SolidWrapper(props) {
     })
     const performanceCollection = useLDflexValue("user.trompa_hasPerformanceCollection");
     const userPOD = useLDflexValue('user.storage');
+    const userProfile = useLDflexValue('user');
     const publicPerformanceCollection = 'https://clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld';
     const [showPublicDemo, setShowPublicDemo] = useState(false);
 
@@ -34,7 +35,10 @@ export default function SolidWrapper(props) {
           }
         </LoggedOut>
         <LoggedIn>
-          <p><LogoutButton>Log out</LogoutButton> You are logged in as <Value src="user.name"/> (<Value src="user"/>)</p>
+          <p><LogoutButton>Log out</LogoutButton> You are logged in as <Value src="user.name"/>
+          <a href={`${userProfile}`}>
+            <img src="/solid-logo.svg" alt="Solid logo" title={`${userProfile}`} width="20" height="20" style={ {verticalAlign:"text-bottom", paddingLeft:"5px", paddingBottom:"1px"} } />
+          </a></p>
           { typeof userPOD !== "undefined" && typeof performanceCollection !== "undefined"
            ? <Companion userPOD = { `${userPOD}` } uri = { `${performanceCollection}` } />
            : <div>Loading... </div>

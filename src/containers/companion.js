@@ -71,7 +71,8 @@ class Companion extends Component {
       scoreComponentLoadingStarted: false,
       scoreComponentLoaded: false, // know when to initially start the DOM observer
       performedElements: {},
-      performanceErrors: {}
+      performanceErrors: {},
+      latestScoreUpdateTimestamp: 0
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -125,7 +126,8 @@ class Companion extends Component {
         "observingScore": false, 
         "scoreComponentLoaded": true, 
         "notesOnPage": ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note"),
-        "barlinesOnPage": ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".barLineAttr")
+        "barlinesOnPage": ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".barLineAttr"),
+        "latestScoreUpdateTimestamp": Date.now()
       }, () => { 
         if(this.state.selectedPerformance) { 
           this.createInstantBoundingRects();
@@ -458,6 +460,7 @@ class Companion extends Component {
             seekToInstant = { this.seekToInstant } 
             scoreComponent = { this.scoreComponent }
             convertCoords = { this.convertCoords } 
+            latestScoreUpdateTimestamp = { this.state.latestScoreUpdateTimestamp }
             mode = { this.state.mode }
             ref = { this.featureVis }
             ensureArray = { this.ensureArray }

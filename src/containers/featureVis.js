@@ -93,8 +93,8 @@ class FeatureVis extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if(prevProps.notesOnPage[0] !== this.props.notesOnPage[0]
-    ) {
+    //if(prevProps.notesOnPage[0] !== this.props.notesOnPage[0]
+    if(prevProps.latestScoreUpdateTimestamp < this.props.latestScoreUpdateTimestamp) {
       // page changed, set handles for note elements on new page
       this.setNoteElementsByNoteId();
     }
@@ -349,6 +349,8 @@ class FeatureVis extends Component {
             performanceErrors = { this.props.performanceErrors }
             timemapByNoteId = { this.state.timemapByNoteId } 
             timemap = { this.state.timemap }
+            latestScoreUpdateTimestamp = { this.props.latestScoreUpdateTimestamp }
+            scoreComponent = { this.props.scoreComponent }
             makeRect = { this.makeRect }
             makeLine = { this.makeLine }
             ensureArray = { this.props.ensureArray }

@@ -26,7 +26,11 @@ export default class ErrorRibbonVis extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) { 
-    if(Object.keys(prevProps.timemapByNoteId) < Object.keys(this.props.timemapByNoteId)) { 
+   // if(//Object.keys(prevProps.timemapByNoteId) < Object.keys(this.props.timemapByNoteId) ||
+      //"instantsByScoretimeLastModified" in prevProps &&
+     // prevProps.instantsByScoretimeLastModified !== this.props.instantsByScoretimeLastModified) { 
+      // initial load, or page has flipped. (Re-)calculate inserted note contexts.
+    if(prevProps.latestScoreUpdateTimestamp < this.props.latestScoreUpdateTimestamp) {
       this.contextualiseInsertedNotes();
     }
   }
@@ -151,7 +155,7 @@ export default class ErrorRibbonVis extends Component {
         console.log("timeline Y: ", timelineY);
         svgElements.push(
           this.props.makeLine(
-            "timelineMarker", // className
+            className + " timelineMarker", // className
             null, // qstamp - timelineMarker doesn't need one!
             tl["@id"], // timeline 
             "0", timelineY, this.state.width, timelineY, // x1, y1, x2, y2
@@ -227,7 +231,7 @@ export default class ErrorRibbonVis extends Component {
               console.log("~ SUCCESSORS: ", successors); 
               console.log("~ CLOSEST PREDECESSOR: ", closestPredecessorScoretime);
               console.log("~ CLOSEST SUCCESSOR: ", closestSuccessorScoretime);
-              if(closestPredecessorScoretime) { 
+              if(closestPredecessorScoretime && closestPredecessorScoretime.qstamp in this.props.instantsByScoretime[tl]) { 
                 console.log("~ INSIDE: ", closestPredecessorScoretime, this.props.instantsByScoretime);
                 predecessorNoteElementXPositions = this.props.instantsByScoretime[tl][closestPredecessorScoretime.qstamp]
                   .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
@@ -239,7 +243,7 @@ export default class ErrorRibbonVis extends Component {
                   .map( (noteElement) => this.props.convertCoords(noteElement).x )
               }
               const contextNoteElementXPositions = [...predecessorNoteElementXPositions, ...successorNoteElementXPositions]
-              const xPos = contextNoteElementXPositions.reduce( (sum, x) => sum + x ) / contextNoteElementXPositions.length;
+              const xPos = contextNoteElementXPositions.reduce( (sum, x) => sum + x, 0 ) / contextNoteElementXPositions.length;
               return this.props.makeRect(
                 className + " inserted",
                 closestPredecessorScoretime.qstamp, 
