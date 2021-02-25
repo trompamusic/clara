@@ -2,6 +2,19 @@ body {
   font-family: sans-serif;
 }
 
+#zoomBox { 
+  position: fixed;
+  z-index: 1;
+  background: white;
+  border: 1px solid darkorange;
+  border-radius:20px;
+}
+
+.zoomBoxLine { 
+  fill:darkorange !important;
+  stroke:darkorange !important;
+}
+
 .videoWrapper { 
   max-width:945px;
   margin-left:20px;

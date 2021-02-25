@@ -4,6 +4,7 @@ import { bindActionCreators } from 'redux';
 import TempoCurveVis from './tempoCurveVis';
 import ErrorRibbonVis from './errorRibbonVis';
 import DynamicsVis from './dynamicsVis';
+import ZoomBox from './zoomBox';
 
 
 class FeatureVis extends Component {
@@ -23,12 +24,19 @@ class FeatureVis extends Component {
       currentTimeline: this.props.currentTimeline,
       currentQstamp: "",
       errors: {},
+      noteAttributes: {}, // lookup table of pname and oct by note id
       displayTempoCurves: true, 
       displayErrorRibbon: true, 
       displayDynamicsSummary: true, 
       displayDynamicsPerStaff: new Set(), // display detailed dynamics for these staff numbers
-      displayDynamicsPerStaffLayer: new Set() // display detailed dynamics for these staff-layer numbers
+      displayDynamicsPerStaffLayer: new Set(), // display detailed dynamics for these staff-layer numbers
+      zoomBoxLeft: "0px",
+      zoomBoxTop: "0px",
+      zoomBoxVisibility: "hidden",
+      zoomBoxScoretime: null,
+      zoomBoxTimeline: null
     }
+    this.zoomBoxDisplayTimer = null
     this.setInstantsOnPage = this.setInstantsOnPage.bind(this);
     this.setInstantsByScoretime = this.setInstantsByScoretime.bind(this);
     this.setNoteElementsByNoteId = this.setNoteElementsByNoteId.bind(this);
@@ -41,6 +49,8 @@ class FeatureVis extends Component {
     this.makeRect = this.makeRect.bind(this);
     this.makeLine = this.makeLine.bind(this);
     this.makePolygon = this.makePolygon.bind(this);
+    this.handleMouseEnter = this.handleMouseEnter.bind(this);
+    this.handleMouseLeave = this.handleMouseLeave.bind(this);
   }
 
   componentDidMount() {
@@ -88,7 +98,16 @@ class FeatureVis extends Component {
         }
         newTuples.add(staffN + ":" + layerN);
       });
-      this.setState({ timemapByNoteId, staffmap, stafflayermap, stafflayertuples: newTuples });
+      // look up note attributes (pname, octave...)
+      const noteElements = Array.from(meiDoc.getElementsByTagName("note"));
+      const noteAttributes = {};
+      noteElements.forEach((n) => {
+        noteAttributes[n.getAttribute("xml:id")] = {
+          pname: n.getAttribute("pname"),
+          oct: n.getAttribute("oct")
+        }
+      })
+      this.setState({ timemapByNoteId, staffmap, stafflayermap, noteAttributes, stafflayertuples: newTuples });
     })
   }
 
@@ -202,6 +221,25 @@ class FeatureVis extends Component {
     }
   }
 
+  handleMouseEnter(e, qstamp, tl) { 
+    console.log("Mouse enter: ", e, qstamp, tl)
+    const clientRect = e.getBoundingClientRect()
+    this.setState({
+      zoomBoxLeft: Math.round(clientRect.x),
+      zoomBoxTop: Math.round(clientRect.y),
+      zoomBoxVisibility: "visible",
+      zoomBoxScoretime: qstamp,
+      zoomBoxTimeline: tl
+    });
+  }
+
+  handleMouseLeave() { 
+    console.log("handle mouse leave!")
+    this.setState({
+      zoomBoxVisibility: "hidden"
+    });
+  }
+
   calculateQStampForInstant(inst) {
     // qstamp == time in quarter notes (as per verovio timemap
     // as multiple notes (with potentially different qstamps) could share a performed
@@ -233,6 +271,20 @@ class FeatureVis extends Component {
   render() {
     return (
       <div id="featureVisContainer" className={ this.props.mode === "featureVis" ? "" : "removedFromDisplay" }>
+        <ZoomBox 
+          left = { this.state.zoomBoxLeft } 
+          top = { this.state.zoomBoxTop } 
+          visibility = { this.state.zoomBoxVisibility }
+          scoretime = { this.state.zoomBoxScoretime }
+          timeline = {this.state.zoomBoxTimeline }
+          instantsByScoretime = { this.state.instantsByScoretime }
+          performedElements = { this.props.performedElements } 
+          performanceErrors =  { this.state.performanceErrors }
+          noteAttributes = { this.state.noteAttributes }
+          ensureArray = { this.props.ensureArray }
+          makePoint = { this.makePoint }
+          makeLine = { this.makeLine }
+        />
         <div id="featureVisControls">
           Features to visualise: 
           <input 
@@ -402,13 +454,25 @@ class FeatureVis extends Component {
     return <ellipse 
       className={className} 
       data-qstamp={qstamp} 
+      data-timeline={tl}
       cx={cx} cy={cy} 
       rx={rx} ry={ry} 
-      id={qstamp} 
+      id={tl + "-" + qstamp} 
       key={key}
-      onClick={ () => this.handleClick(qstamp,tl) }>
-        <title>{titleString}</title>
+      onClick={ () => this.handleClick(qstamp,tl) }
+      onMouseEnter = { (e) => { 
+        clearTimeout(this.zoomBoxDisplayTimer);
+        this.handleMouseEnter(e.currentTarget, qstamp, tl)
+      } }
+      onMouseLeave = { () => {
+        this.zoomBoxDisplayTimer = setTimeout( 
+          () => this.handleMouseLeave(),
+        500)
+        } }
+      >
+      {/*<title>{titleString}</title>*/}
       </ellipse>;
+      
   }
 
   makeLine(className, qstamp, tl, x1, y1, x2, y2, key, titleString) { 
