@@ -222,7 +222,6 @@ class FeatureVis extends Component {
   }
 
   handleMouseEnter(e, qstamp, tl) { 
-    console.log("Mouse enter: ", e, qstamp, tl)
     const clientRect = e.getBoundingClientRect()
     this.setState({
       zoomBoxLeft: Math.round(clientRect.x),
@@ -234,7 +233,6 @@ class FeatureVis extends Component {
   }
 
   handleMouseLeave() { 
-    console.log("handle mouse leave!")
     this.setState({
       zoomBoxVisibility: "hidden"
     });
@@ -451,8 +449,9 @@ class FeatureVis extends Component {
       </rect>;
   }
   
-  makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString) {
+  makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString, colour = "") {
     // return SVG for a "point" (e.g. ellipse) on the visualisation
+    if(className === "zoomBoxPoint") console.log("COLOUR: ", colour);
     return <ellipse 
       className={className} 
       data-qstamp={qstamp} 
@@ -461,6 +460,8 @@ class FeatureVis extends Component {
       rx={rx} ry={ry} 
       id={tl + "-" + qstamp} 
       key={key}
+      fill={colour}
+      stroke={colour}
       onClick={ () => this.handleClick(qstamp,tl) }
       onMouseEnter = { (e) => { 
         clearTimeout(this.zoomBoxDisplayTimer);
@@ -470,11 +471,11 @@ class FeatureVis extends Component {
         this.zoomBoxDisplayTimer = setTimeout( 
           () => this.handleMouseLeave(),
         500)
-        } }
+        } 
+      }
       >
       {/*<title>{titleString}</title>*/}
-      </ellipse>;
-      
+    </ellipse>;
   }
 
   makeLine(className, qstamp, tl, x1, y1, x2, y2, key, titleString) { 

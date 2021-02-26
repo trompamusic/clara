@@ -5,12 +5,17 @@ const padding = 0.1; // proportion of width/height reserved as whitespace
 const maxPointRadius = 40 // radius of point encoding a velocity of 127 (max midi velocity)
 const pixelsPerSecond = 1000 // number of pixels per second on x-axis, i.e. time resolution
 
+
 export default class ZoomBox extends Component {
   constructor(props) {
     super(props);
     this.state = {
       width: this.props.width || "200",
-      height: this.props.height || "200"
+      height: this.props.height || "200",
+      minMappedVelocity: 0, // minimum opacity (when note played at smallest expected velocity
+      maxMappedVelocity: 255, // max opacity (when note played at largest expected velocity)
+      minExpectedVel: 0, // guesstimate as to a note played at pianissimo (unit: midi velocity)
+      maxExpectedVel: 110 // guesstimate as to a note played at fortissimo (unit: midi velocity)
     }
     this.determineSvgElements = this.determineSvgElements.bind(this);
   }
@@ -61,7 +66,11 @@ export default class ZoomBox extends Component {
         ).map((n, ix) => { 
           const zoomBoxElementX = (this.state.width / 2) + (pixelsPerSecond * (n.at - avgTime));
           const zoomBoxElementY = (verticalSpacing * ix+1) + (2 * this.state.height * padding);
-          console.log("zoom x: ", zoomBoxElementX, n.at, avgTime);
+          let mappedVelocity = (n.velocity - this.state.minExpectedVel) * (this.state.maxMappedVelocity - this.state.minMappedVelocity) / (this.state.maxExpectedVel - this.state.minExpectedVel) + this.state.minMappedVelocity;
+          mappedVelocity = Math.max(0, mappedVelocity); // can't have < 0
+          mappedVelocity = Math.max(mappedVelocity, 1); // can't have > 1
+          mappedVelocity = Math.floor(mappedVelocity);
+          let hex = "#ff" + (this.state.maxMappedVelocity - mappedVelocity).toString(16) + "00ff" // higher vel == less green, so redder colour
           return(
             [
               this.props.makeLine(
@@ -83,7 +92,7 @@ export default class ZoomBox extends Component {
                 key = {"zoomBox-velocityLabel" + timeline + "-" + scoretime + "-" + ix}
                 className = "zoomBoxLabel"
                 transform={ "scale(1, -1)" }
-                x={this.state.width - (this.state.width*padding)} y={-1 * zoomBoxElementY}
+                x={this.state.width - (this.state.width*padding) + 10} y={-1 * zoomBoxElementY}
               > { n.velocity}
               </text>,
               this.props.makePoint(
@@ -94,7 +103,8 @@ export default class ZoomBox extends Component {
                 n.velocity / 127 * maxPointRadius, // map velocity to point radius
                 n.velocity / 127 * maxPointRadius,
                 "zoomBox-point-" + timeline + "-" + scoretime + "-" + ix, // react key
-                n.pname + n.oct + " - velocity: " + n.velocity // title string
+                n.pname + n.oct + " - velocity: " + n.velocity, // title string
+                hex // colour
               )
             ]
           )
@@ -103,16 +113,13 @@ export default class ZoomBox extends Component {
   }
 
   render() {
-    console.log("zoom box rendered with props: ", this.props);
     // n.b. intentionally "var" so we can access it in zoomBoxXIndicatorLine for loop later
     var svgElements = this.determineSvgElements(this.props.scoretime, this.props.timeline);
     // indicate 50-ms offsets along the X-axis
     const xIndicatorOffset = this.state.width / pixelsPerSecond * 50
-    console.log("At start: ", xIndicatorOffset);
     if(svgElements) { 
       var drawXIndicatorLabel = true;
       for(let i=0; i <= this.state.width; i += xIndicatorOffset) { 
-        console.log("i: ", i);
         svgElements.push(
           <line
             className="zoomBoxXIndicatorLine"

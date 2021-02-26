@@ -37,13 +37,10 @@ export default class ErrorRibbonVis extends Component {
 
   averageScoretime(noteURIs) { 
     // given a list of note elements, calculate their average scoretime
-    console.log("GOT NOTE URIS: ", noteURIs)
     const noteIds = noteURIs.map((n) => n.substr(n.indexOf("#")+1));
-    console.log("finding notes: ", noteIds);
     const knownNotes = noteIds.filter((n) => 
       Object.keys(this.props.timemapByNoteId).includes(n)
     )
-    console.log("Known notes: ", knownNotes, this.props.timemapByNoteId)
     if(knownNotes.length) { 
       // return average scoretime (qstamp)
       return knownNotes.map((n) => this.props.timemapByNoteId[n].qstamp)
@@ -152,7 +149,6 @@ export default class ErrorRibbonVis extends Component {
         let className = tl === this.props.currentTimeline ? "currentTl" : "";
         // draw lines to represent each performance timeline
         const timelineY = (errorLineSpacing * ix+1) + 2*(this.state.height * padding);
-        console.log("timeline Y: ", timelineY);
         svgElements.push(
           this.props.makeLine(
             className + " timelineMarker", // className
@@ -178,7 +174,6 @@ export default class ErrorRibbonVis extends Component {
               deletedNoteIndicators = [
                 ...deletedNotesOnPage.map( (noteElement) => {
                   const noteCoords = this.props.convertCoords(noteElement);
-                  console.log("Note element: ", noteElement, this.props.timemapByNoteId);
                   return this.props.makeRect(
                     className + " deleted",
                     this.props.timemapByNoteId[noteElement.getAttribute("id")].qstamp,
@@ -206,14 +201,6 @@ export default class ErrorRibbonVis extends Component {
             const scoretimesOfInsertedOnPage = this.state.insertedNotesByScoretime[tl].filter( (t) => Object.keys(t)[0] >= minPageScoretime && Object.keys(t)[0] <= maxPageScoretime )
             // for the inserted notes on page, find the closest predecessor and successor scoretimes and calculate their corresponding note elements' avg X positions
             const orderedScoretimesOnPage = this.props.timemap.filter( (t) => t.qstamp >= minPageScoretime && t.qstamp <= maxPageScoretime ).sort()
-            console.log("~ TIMEMAP: ", this.props.timemap);
-            console.log("~ MIN SCORETIME ON PAGE: ", minPageScoretime);
-            console.log("~ MAX SCORETIME ON PAGE: ", maxPageScoretime);
-            console.log("~ SCORETIMES OF INSERTED ON PAGE: ", scoretimesOfInsertedOnPage);
-            console.log("~ INSERTED NOTES BY SCORETIME: ", this.state.insertedNotesByScoretime);
-            console.log("~ INSTANTS BY SCORETIME: ", this.props.instantsByScoretime);
-            console.log("~ POSITION SORTED NOTE ELEMENTS: ", positionSortedNoteElements);
-            console.log("~ ORDERED SCORETIMES ON PAGE: ", orderedScoretimesOnPage);
             insertedNoteIndicators = [ ...insertedNoteIndicators, ...scoretimesOfInsertedOnPage.map( (t) => { 
               if(Object.keys(t).length > 1) { 
                 console.warn("Found scoretime of inserted on page with more than one key: ", t)
@@ -222,17 +209,11 @@ export default class ErrorRibbonVis extends Component {
               let predecessorNoteElementXPositions = [];
               let successorNoteElementXPositions = [];
               const inserted = this.state.insertedNotesByScoretime[tl].find( (note) => Object.keys(note)[0] === scoretimeOfInsertedOnPage);
-              console.log("# INSERTED: ", inserted)
               const predecessors = orderedScoretimesOnPage.slice(0, scoretimeOfInsertedOnPage).reverse();
               const closestPredecessorScoretime = predecessors.find((p) => p.qstamp <= scoretimeOfInsertedOnPage);
               const successors = orderedScoretimesOnPage.slice(scoretimeOfInsertedOnPage);
               const closestSuccessorScoretime = successors.find((p) => p.qstamp >= scoretimeOfInsertedOnPage);
-              console.log("~ PREDECESSORS: ", predecessors); 
-              console.log("~ SUCCESSORS: ", successors); 
-              console.log("~ CLOSEST PREDECESSOR: ", closestPredecessorScoretime);
-              console.log("~ CLOSEST SUCCESSOR: ", closestSuccessorScoretime);
               if(closestPredecessorScoretime && closestPredecessorScoretime.qstamp in this.props.instantsByScoretime[tl]) { 
-                console.log("~ INSIDE: ", closestPredecessorScoretime, this.props.instantsByScoretime);
                 predecessorNoteElementXPositions = this.props.instantsByScoretime[tl][closestPredecessorScoretime.qstamp]
                   .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
                   .map( (noteElement) => this.props.convertCoords(noteElement).x )
