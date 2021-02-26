@@ -373,6 +373,7 @@ class FeatureVis extends Component {
             convertCoords = { this.props.convertCoords }
             handleClick = { this.handleClick }
             displayTempoCurves = { this.state.displayTempoCurves } 
+            currentQstamp = { this.state.currentQstamp }
             instantsByScoretime = { this.state.instantsByScoretime }
             instantsByScoretimeLastModified = { this.state.instantsByScoretimeLastModified }
             timelinesToVis = { this.props.timelinesToVis }
@@ -412,6 +413,7 @@ class FeatureVis extends Component {
           width = { this.state.width }
           height = { this.state.height }
           currentTimeline = { this.props.currentTimeline }
+          currentQstamp = { this.state.currentQstamp }
           barlinesOnPage = { this.props.barlinesOnPage }
           convertCoords = { this.props.convertCoords }
           handleClick = { this.handleClick }

@@ -250,7 +250,7 @@ export default class TempoCurveVis extends Component {
           svgElements = [...svgElements, lines, points];
         })
       return(
-        <svg id="tempoCurve" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.tempoCurveSvg }>
+        <svg id="tempoCurve" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.tempoCurveSvg } >
               { svgElements }
         </svg>
       )
