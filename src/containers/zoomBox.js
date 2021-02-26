@@ -29,7 +29,6 @@ export default class ZoomBox extends Component {
       const notesPerformedAtThisScoretime = [];
       this.props.instantsByScoretime[timeline][scoretime].forEach( (instant) => {
         let t = instant["http://purl.org/NET/c4dm/timeline.owl#at"];
-        console.log("T before : ", t)
         t = parseFloat(t.substr(1, t.length-2));
         if(t > 0) { // skip deleted notes, which are at t = -1
           notesPerformedAtThisScoretime.push(
@@ -64,7 +63,7 @@ export default class ZoomBox extends Component {
           a.pname.localeCompare(b.pname, "en-EN")
         ).map((n, ix) => { 
           const zoomBoxElementX = (this.state.width / 2) + (pixelsPerSecond * (n.at - avgTime));
-          const zoomBoxElementY = (verticalSpacing * ix+1) + 2*(this.state.height * padding);
+          const zoomBoxElementY = (verticalSpacing * ix+1) + (2 * this.state.height * padding);
           console.log("zoom x: ", zoomBoxElementX, n.at, avgTime);
           return(
             [
@@ -100,12 +99,12 @@ export default class ZoomBox extends Component {
       <div id="zoomBox" style={ { 
         left: this.props.left + 20, 
         top: this.props.top + 20, 
-        width: this.props.width + "px",
-        height: this.props.height + "px",
+        width: this.state.width + "px",
+        height: this.state.height + "px",
         visibility: this.props.visibility
       }}>
-        <svg id="zoomBox" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" 
-        transform="scale(1,-1)"> 
+        <svg id="zoomBoxSvg" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" 
+           width={this.state.width} height={this.state.height} transform="scale(1,-1)"> 
           {svgElements}
         </svg>
       </div>

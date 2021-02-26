@@ -284,6 +284,8 @@ class FeatureVis extends Component {
           ensureArray = { this.props.ensureArray }
           makePoint = { this.makePoint }
           makeLine = { this.makeLine }
+          width = "300"
+          height = "300"
         />
         <div id="featureVisControls">
           Features to visualise: 
