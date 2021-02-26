@@ -75,6 +75,20 @@ export default class ZoomBox extends Component {
                 "zoomBox-line-" + timeline + "-" + scoretime + "-" + ix, // react key
                 n.pname + n.oct + " - velocity: " + n.velocity // title string
               ),
+              <text 
+                key = {"zoomBox-noteLabel" + timeline + "-" + scoretime + "-" + ix}
+                className = "zoomBoxLabel"
+                transform={ "scale(1, -1)" }
+                x={(this.state.width*padding) - 20} y={-1 * zoomBoxElementY}
+              > {n.pname + n.oct}
+              </text>,
+              <text 
+                key = {"zoomBox-velocityLabel" + timeline + "-" + scoretime + "-" + ix}
+                className = "zoomBoxLabel"
+                transform={ "scale(1, -1)" }
+                x={this.state.width - (this.state.width*padding)} y={-1 * zoomBoxElementY}
+              > { n.velocity}
+              </text>,
               this.props.makePoint(
                 "zoomBoxPoint",
                 scoretime,
