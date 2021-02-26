@@ -15,10 +15,15 @@ body {
   stroke:darkorange !important;
 }
 
-.zoomBoxLabel { 
+.zoomBoxLabel, .zoomBoxXIndicatorLabel { 
   fill:darkgrey;
   font-size: 8pt;
 }
+
+.zoomBoxXIndicatorLine { 
+  fill:darkgrey;
+}
+
 
 .videoWrapper { 
   max-width:945px;

@@ -21,9 +21,6 @@ export default class ZoomBox extends Component {
 
   
   determineSvgElements(scoretime, timeline) { 
-    const svgElements = [
-          <rect x="0" y="0" width={ this.state.width } height={ this.state.height } fill="white"/>
-    ]
     if(timeline in this.props.instantsByScoretime &&
        scoretime in this.props.instantsByScoretime[timeline]) { 
       const notesPerformedAtThisScoretime = [];
@@ -107,7 +104,37 @@ export default class ZoomBox extends Component {
 
   render() {
     console.log("zoom box rendered with props: ", this.props);
-    const svgElements = this.determineSvgElements(this.props.scoretime, this.props.timeline)
+    // n.b. intentionally "var" so we can access it in zoomBoxXIndicatorLine for loop later
+    var svgElements = this.determineSvgElements(this.props.scoretime, this.props.timeline);
+    // indicate 50-ms offsets along the X-axis
+    const xIndicatorOffset = this.state.width / pixelsPerSecond * 50
+    console.log("At start: ", xIndicatorOffset);
+    if(svgElements) { 
+      var drawXIndicatorLabel = true;
+      for(let i=0; i <= this.state.width; i += xIndicatorOffset) { 
+        console.log("i: ", i);
+        svgElements.push(
+          <line
+            className="zoomBoxXIndicatorLine"
+            key={"zoomBoxXIndicatorLine" + i}
+            x1={i} y1={this.state.height * padding * 0.5}
+            x2={i} y2="0"
+          />)
+        if(drawXIndicatorLabel) { 
+          svgElements.push(
+            <text
+              className="zoomBoxXIndicatorLabel"
+              transform={ "scale(1,-1)" }
+              x={i}
+              y={-1 * this.state.height * padding * .5}
+              textAnchor="middle"
+            > { -1 * (.5*pixelsPerSecond - (i / xIndicatorOffset) * 50) }</text>
+          );
+        }
+        drawXIndicatorLabel = !drawXIndicatorLabel;
+      }
+    }
+    
 
     return(
       <div id="zoomBox" style={ { 
