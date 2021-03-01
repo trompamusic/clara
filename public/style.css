@@ -198,7 +198,14 @@ body {
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(220, 220, 220, .2) 5%, rgba(220, 220, 220, .2) 95%, rgba(255, 255, 255, .2) 100%);
 }
 
-#featureVisContainer line, #featureVisContainer ellipse:not(".zoomBoxPoint") { 
+#featureVisContainer ellipse:not(".zoomBoxPoint") {
+  stroke:lightgrey;
+  fill: lightgrey;
+  cursor: pointer;
+  display:block;
+}
+
+#featureVisContainer line { 
   stroke:lightgrey;
   fill: lightgrey;
   cursor: pointer;
