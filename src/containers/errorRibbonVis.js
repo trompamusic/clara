@@ -218,7 +218,7 @@ export default class ErrorRibbonVis extends Component {
                   .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
                   .map( (noteElement) => this.props.convertCoords(noteElement).x )
               }
-              if(closestSuccessorScoretime) { 
+              if(closestSuccessorScoretime && closestSuccessorScoretime.qstamp in this.props.instantsByScoretime[tl]) { 
                 successorNoteElementXPositions = this.props.instantsByScoretime[tl][closestSuccessorScoretime.qstamp]
                   .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
                   .map( (noteElement) => this.props.convertCoords(noteElement).x )
