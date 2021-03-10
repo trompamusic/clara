@@ -2,9 +2,32 @@ body {
   font-family: sans-serif;
 }
 
+#zoomBox { 
+  position: fixed;
+  z-index: 1;
+  background: white;
+  border: 1px solid darkorange;
+  border-radius:20px;
+}
+
+.zoomBoxLine { 
+  fill:darkorange !important;
+  stroke:darkorange !important;
+}
+
+.zoomBoxLabel, .zoomBoxXIndicatorLabel { 
+  fill:darkgrey;
+  font-size: 8pt;
+}
+
+.zoomBoxXIndicatorLine { 
+  fill:darkgrey;
+}
+
 .selected {
   fill: rgb(35, 144, 194) !important;
 }
+
 
 .videoWrapper { 
   max-width:945px;
@@ -174,7 +197,14 @@ body {
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(220, 220, 220, .2) 5%, rgba(220, 220, 220, .2) 95%, rgba(255, 255, 255, .2) 100%);
 }
 
-#featureVisContainer line, #featureVisContainer ellipse { 
+#featureVisContainer ellipse:not(".zoomBoxPoint") {
+  stroke:lightgrey;
+  fill: lightgrey;
+  cursor: pointer;
+  display:block;
+}
+
+#featureVisContainer line { 
   stroke:lightgrey;
   fill: lightgrey;
   cursor: pointer;
