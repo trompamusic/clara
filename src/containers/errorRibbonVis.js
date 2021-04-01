@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom'
 
-const defaultY = 80; // for edge-case of only-one-note-on-page
 const padding = 0.1; // proportion of ribbon reserved for whitespace
 const errorIndicatorHeight = 20; // currently in pixels -- perhaps make a proportion instead?
 const insertedNoteWidth = 12; // in pixels: width of inserted note indicator

@@ -44,6 +44,11 @@ body {
   stroke: #00aaff;
 }
 
+.inserted { 
+  fill: #ff6666;
+  stroke: #ff6666;
+}
+
 .wasActive{ 
   fill:black;
   stroke:black;

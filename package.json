@@ -25,7 +25,7 @@
     "browserslist": "^4.11.0",
     "fiber": "^1.0.4",
     "fibers": "^4.0.2",
-    "meld-clients-core": "oerc-music/meld-clients-core#with-lib",
+    "meld-clients-core": "oerc-music/meld-clients-core#meld-dev-2.0-TROMPA",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
     "react-player": "^1.11.0",

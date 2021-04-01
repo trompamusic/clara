@@ -4,8 +4,10 @@ import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 import ReactPlayer from 'react-player'
 
-import Score from 'meld-clients-core/lib/containers/score';
 import SelectableScore from 'selectable-score/lib/selectable-score';
+import NextPageButton from 'selectable-score/lib/next-page-button.js';
+import PrevPageButton from 'selectable-score/lib/prev-page-button.js';
+
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/index';
 
@@ -96,7 +98,6 @@ class Companion extends Component {
     this.player = React.createRef();
     this.featureVis = React.createRef();
     this.scoreComponent = React.createRef();
-    this.observer = new MutationObserver(this.handleDOMChangeObserved);
   }
 
   UNSAFE_componentWillMount() { 
@@ -141,16 +142,15 @@ class Companion extends Component {
 
   componentDidUpdate(prevProps, prevState) { 
     if(!this.state.scoreComponentLoadingStarted && this.scoreComponent.current) { 
+      let scorepane = ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(".scorepane")
       //  reflect the mode (pageView vs featureVis) onto the scorepane
-      let scorepane = ReactDOM.findDOMNode(this.scoreComponent.current)
-      let modes = ["pageView", "featureVis"]
-      scorepane.classList.remove(...modes);
-      scorepane.classList.add(this.state.mode);
-      // observe the score element for DOM changes
-      const scoreElement = ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(".score");
-      this.setState({"observingScore": true, scoreComponentLoadingStarted: true}, () => { 
-        this.observer.observe(scoreElement, {"childList": true});
-      })
+      if(!!scorepane) { // if scorepane has rendered... 
+        let modes = ["pageView", "featureVis"]
+        scorepane.classList.remove(...modes);
+        scorepane.classList.add(this.state.mode);
+        // observe the score element for DOM changes
+        this.setState({"observingScore": true, scoreComponentLoadingStarted: true})
+      }
     }
 
     if("traversalPool" in prevProps && Object.keys(this.props.traversalPool.pool).length === 0 &&
@@ -214,13 +214,13 @@ class Companion extends Component {
     if("score" in this.props) { 
       switch(e.which) { 
         case 37: // left arrow
-          if(this.props.score.pageNum > 1) { 
-            this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
+          if(this.props.score.pageState[this.state.currentScore].currentPage > 1) { 
+            this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageState[this.state.currentScore].currentPage, this.props.score.MEI[this.state.currentScore])
           }
           break;
         case 39: // right arrow
-          if(this.props.score.pageNum < this.props.score.pageCount) { 
-            this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
+          if(this.props.score.pageState[this.state.currentScore].currentPage < this.props.score.pageState[this.state.currentScore].pageCount) { 
+            this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageState[this.state.currentScore].currentPage, this.props.score.MEI[this.state.currentScore]); 
           }
           break;
         case 67: // 'c'  => "confidence"
@@ -455,7 +455,7 @@ class Companion extends Component {
         vrvOptions = vrvOptionsFeatureVis;
       }
       let featureVisElement = "";
-      if(this.state.scoreComponentLoaded) { 
+      if(this.state.scoreComponentLoaded && this.state.currentScore in this.props.score.pageState) { 
         featureVisElement = <FeatureVis 
             performedElements = { this.state.performedElements }
             performanceErrors = { this.state.performanceErrors }
@@ -476,17 +476,47 @@ class Companion extends Component {
         />
       };
 
-      let currentScore = <div className="loadingMsg">Loading score, please wait...</div>;
+      let pageControlsWrapper = "";
+      if("pageState" in this.props.score && this.state.currentScore &&
+         this.state.currentScore in this.props.score.pageState) { 
+        pageControlsWrapper = 
+          <div id="pageControlsWrapper" ref="pageControlsWrapper" className={ this.state.mode + " following" }>
+            { !(this.state.scoreFollowing) && this.props.score.pageState[this.state.currentScore].currentPage > 1 
+              ? <PrevPageButton
+                  buttonContent = { <img src="/static/prev.svg" alt="Previous page"/> }
+                  uri = { this.state.currentScore }
+                />
+                : <div/>
+            }
+            
+            { this.props.score.pageState[this.state.currentScore].pageCount > 0
+                ? <span id="pageNum">Page {this.props.score.pageState[this.state.currentScore].currentPage} / {this.props.score.pageState[this.state.currentScore].pageCount}</span> 
+                : <span id="pageNum"/>
+            }
+
+            { !(this.state.scoreFollowing) && this.props.score.pageState[this.state.currentScore].currentPage < this.props.score.pageState[this.state.currentScore].pageCount
+            ? <NextPageButton
+                buttonContent = { <img src="/static/next.svg" alt="Next page"/>}
+                uri = { this.state.currentScore }
+              />
+            : <div/>
+            }
+          </div>;
+      }
+      let currentScore = <div className="loadingMsg">Loading, please wait...</div>;
       if(this.state.currentScore) { 
         // currentScore = <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={ this.scoreComponent }/>
-        currentScore = <SelectableScore 
-          uri={ this.state.currentScore } 
-          key = { this.state.currentScore } 
-          options = { vrvOptions } 
-          ref={ this.scoreComponent } 
-          selectorString = ".note" 
-          onSelectionChange={this.handleSelectionChange}
-        />
+        currentScore = 
+          <div ref = { this.scoreComponent }>
+            <SelectableScore 
+              uri={ this.state.currentScore } 
+              key = { this.state.currentScore } 
+              vrvOptions = { vrvOptions } 
+              selectorString = ".note" 
+              onSelectionChange={ this.handleSelectionChange }
+              onScoreUpdate = { this.handleDOMChangeObserved }
+            />
+          </div>;
       }
       return(
         <div id="wrapper">
@@ -499,31 +529,10 @@ class Companion extends Component {
             
           { featureVisElement }
           <div id="instantBoundingBoxes" />
-          {  currentScore }
-        <div id="pageControlsWrapper" ref="pageControlsWrapper" className={ this.state.mode + " following" }>
-          { this.props.score.pageNum > 1 
-            ? <div id="prev" ref="prev" onClick={() => {
-                if(!this.state.scoreFollowing) { 
-                  this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
-                }
-              }}> <img src="/static/prev.svg" alt="Previous page"/></div>
-            : <div id="prev" />
-          }
-          { this.props.score.pageCount > 0
-              ? <span id="pageNum">Page {this.props.score.pageNum} / {this.props.score.pageCount}</span> 
-              : <span id="pageNum"/>
-          }
-          { this.props.score.pageCount === 0 || this.props.score.pageNum < this.props.score.pageCount
-          ? <div id="next" ref="next" onClick={() => {
-              if(!this.state.scoreFollowing) { 
-                this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
-              }
-            }}> <img src="/static/next.svg" alt="Next page"/></div>
-          : <div id="next" />
-          }
-        </div>
+          { currentScore }
+          { pageControlsWrapper }
           { this.state.performances.length === 0 
-            ? <div className="loadingMsg">Loading selectors, please wait...</div>
+            ? <div className="loadingMsg"></div>
             : <div id="selectWrapper">
                 <select name="segmentSelect" onChange={ this.handleSegmentSelected } ref='segmentSelect'>
                   <option value="none">Select a segment...</option>

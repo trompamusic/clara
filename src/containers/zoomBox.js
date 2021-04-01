@@ -131,6 +131,7 @@ export default class ZoomBox extends Component {
           svgElements.push(
             <text
               className="zoomBoxXIndicatorLabel"
+              key={"zoomBoxXIndicatorLabel" + i}
               transform={ "scale(1,-1)" }
               x={i}
               y={-1 * this.state.height * padding * .5}
