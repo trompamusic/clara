@@ -7,11 +7,13 @@ import ReactPlayer from 'react-player'
 import SelectableScore from 'selectable-score/lib/selectable-score';
 import NextPageButton from 'selectable-score/lib/next-page-button.js';
 import PrevPageButton from 'selectable-score/lib/prev-page-button.js';
+import SubmitButton from 'selectable-score/lib/submit-button.js';
 
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/index';
 
 import FeatureVis from './featureVis';
+
 
 const vrvOptionsPageView = {
 	scale: 45,
@@ -76,7 +78,9 @@ class Companion extends Component {
       scoreComponentLoaded: false, // know when to initially start the DOM observer
       performedElements: {},
       performanceErrors: {},
-      latestScoreUpdateTimestamp: 0
+      latestScoreUpdateTimestamp: 0,
+      toggleAnnotationRetrieval: true, // set to true when annotation update required
+      highlight: [] // circles drawn to respond to highlight annotations
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -94,6 +98,10 @@ class Companion extends Component {
     this.handleDOMChangeObserved = this.handleDOMChangeObserved.bind(this);
     this.convertCoords = this.convertCoords.bind(this);
     this.handleSelectionChange = this.handleSelectionChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleResponse = this.handleResponse.bind(this);
+    this.handleReceiveAnnotationContainerContent = this.handleReceiveAnnotationContainerContent.bind(this);
+    this.makeHighlight = this.makeHighlight.bind(this)
 
     this.player = React.createRef();
     this.featureVis = React.createRef();
@@ -110,7 +118,7 @@ class Companion extends Component {
   }
 
   componentDidMount() { 
-    console.log("Attempting to start traversal with ", this.props.uri);
+    console.log("Attempting to start traversal with ", this.props.uri, " with profile: ", this.props.userProfile);
     const params = {
       numHops:6, 
       objectPrefixWhitelist:[]
@@ -122,6 +130,20 @@ class Companion extends Component {
     this.props.registerTraversal(this.props.uri, params)
     document.addEventListener('keydown', this.monitorKeys);
     this.setState({vrvOptions: this.state.mode === "featureVis" ? vrvOptionsFeatureVis : vrvOptionsPageView});
+  }
+  
+  makeHighlight(id, cx, cy, rx, ry, colour = "black", width="2") {
+    // return SVG for a "point" (e.g. ellipse) on the visualisation
+    return <ellipse 
+      className="annoHighlight"
+      id={id}
+      cx={cx} cy={cy} 
+      rx={rx} ry={ry} 
+      key={id}
+      stroke={colour}
+      onClick={ () => this.handleAnnoHighlightClick(id) }
+      >
+    </ellipse>;
   }
 
   handleDOMChangeObserved() { 
@@ -138,6 +160,47 @@ class Companion extends Component {
         }
       });
     }
+  }
+
+  handleReceiveAnnotationContainerContent(content) { 
+    console.log("Received annotation container content: ", content);
+    const highlights = [];
+    this.ensureArray(content).forEach( (anno) => { 
+      if(this.ensureArray(anno["motivation"]).includes("highlighting")) {
+        this.ensureArray(anno["target"]).forEach( (t) => {
+          if(t.startsWith(this.state.currentScore)) { 
+            const frag = t.substr(t.lastIndexOf("#")+1);
+            const el = document.getElementById(frag);
+            console.log("TARGET: ", t, "FRAG: ", frag, "EL: ", el);
+            if(el !== null) { 
+              // TODO PAINT CIRCLE
+              const boundRect = this.convertCoords(el);
+              highlights.push(this.makeHighlight(
+                anno["@id"] + "-" + frag, // id,
+                boundRect.x, boundRect.y, 2, 2
+              ))
+            }
+          }
+        })
+      }
+    })
+    console.log("Setting highlights: ", highlights);
+    this.setState({ toggleAnnotationRetrieval: false, highlights })
+  }
+
+  handleSubmit(args) { 
+    /* do any app-specific actions and return the object (e.g. a Web Annotation) 
+     * to be submitted to the user POD */
+    return {
+      "@context": "http://www.w3.org/ns/anno.jsonld",
+      "target": this.state.selection.map( (elem) => this.state.currentScore + "#" + elem.getAttribute("id") ),
+      "motivation": "highlighting"
+    }
+  }
+
+  handleResponse(res) { 
+    // POST completed, retrieve the container content
+    this.setState({ toggleAnnotationRetrieval: true })
   }
 
   componentDidUpdate(prevProps, prevState) { 
@@ -157,7 +220,6 @@ class Companion extends Component {
       prevProps.traversalPool.running > 0 && this.props.traversalPool.running === 0) { 
       // finished all traversals
       this.setState({ "loading": false }, () => {
-        console.log("Attempting to process outcomes:", this.props.graph.outcomes);
         this.props.checkTraversalObjectives(this.props.graph.graph, this.props.graph.objectives);
       });
     }
@@ -210,7 +272,6 @@ class Companion extends Component {
   }
 
   monitorKeys(e) { 
-    console.log("got: ", e);
     if("score" in this.props) { 
       switch(e.which) { 
         case 37: // left arrow
@@ -261,7 +322,6 @@ class Companion extends Component {
         return dur === -1; // all deleted notes "occur" at this instant
       })
       if(deletedNotesInstant.length) { // could be 0 in a perfect performance...
-        console.log("deleted notes instant: ", deletedNotesInstant);
         const deletedNotes = deletedNotesInstant[0]["http://purl.org/vocab/frbr/core#embodimentOf"];
         deletedNotes.forEach( (n) => { 
           let noteOnPage = document.getElementById(n["@id"].substr(n["@id"].indexOf("#")+1));
@@ -364,7 +424,6 @@ class Companion extends Component {
         console.log("On bounding box click, attempting to  seek to: ", nDur);
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         this.tick(this.state.selectedVideo, nDur);
-        console.log("attempting to seek to ", Math.floor(nDur));
         this.player.current.seekTo(Math.floor(nDur)); 
         // reset note velocities display for all notes after this one
         const notesOnPage = document.querySelectorAll(".note");
@@ -515,6 +574,9 @@ class Companion extends Component {
               selectionArea = "#scoreSelectionArea"
               onSelectionChange={ this.handleSelectionChange }
               onScoreUpdate = { this.handleDOMChangeObserved }
+              annotationContainerUri = { this.props.annotationContainerUri }
+              onReceiveAnnotationContainerContent = { this.handleReceiveAnnotationContainerContent }
+              toggleAnnotationRetrieval = { this.state.toggleAnnotationRetrieval }
             />
           </div>;
       }
@@ -529,6 +591,7 @@ class Companion extends Component {
             
           { featureVisElement }
           <div id="instantBoundingBoxes" />
+          { this.state.highlights }
           { currentScore }
           { pageControlsWrapper }
           { this.state.performances.length === 0 
@@ -540,7 +603,7 @@ class Companion extends Component {
                     this.state.segments.map( (seg) => { 
                       return (
                         <option key={ seg["@id"] } value={ seg["@id"] }>
-                          { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("#") +1) }
+                          { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substr(seg["@id"].lastIndexOf("#") +1) }
                         </option>
                       )
                     })
@@ -595,6 +658,23 @@ class Companion extends Component {
                       />
                       Feature visualisation
                   </span>
+                  { "demo" in this.props ||
+                    this.state.selection.length === 0
+                    ? <SubmitButton 
+                        buttonContent = { <button className="submit" disabled>Circle</button> }
+                        disabled 
+                      />
+                    : <SubmitButton
+                        buttonContent = { <button className="submit">Circle</button> } 
+                        submitUri = { this.props.annotationContainerUri }
+                        submitHandler = { this.handleSubmit }
+                        onResponse = { this.handleResponse }
+                      />
+                  }
+                  { "demo" in this.props
+                    ? "Score annotation not supported in demo version"
+                    : ""
+                  }
                 </span>
                 <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank" rel="noopener noreferrer">More information</a></span>
               </div>

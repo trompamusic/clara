@@ -18,16 +18,18 @@ export default function SolidWrapper(props) {
       trompa: "http://vocab.trompamusic.eu/vocab#"
     })
     const performanceCollection = useLDflexValue("user.trompa_hasPerformanceCollection");
+    const annotationCollection = useLDflexValue("user.trompa_hasAnnotationCollection");
     const userPOD = useLDflexValue('user.storage');
     const userProfile = useLDflexValue('user');
     const publicPerformanceCollection = 'https://clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld';
+    const publicUserProfile = 'https://clara.trompa-solid.upf.edu/profile/card#me';
     const [showPublicDemo, setShowPublicDemo] = useState(false);
 
     return(
       <div id="authWrapper">
         <LoggedOut>
           { showPublicDemo
-            ? <Companion uri = {  publicPerformanceCollection } userPOD = { `https://clara.trompa-solid.upf.edu/` } />
+            ? <Companion uri = {  publicPerformanceCollection } userPOD = { `https://clara.trompa-solid.upf.edu/` } userProfile = { publicUserProfile } demo />
             : <div>
                 <p><button onClick = { () => setShowPublicDemo(true) }>Launch demo</button></p>
                 <p><LoginButton popup="auth-popup.html">Log in with Solid</LoginButton></p>
@@ -40,7 +42,7 @@ export default function SolidWrapper(props) {
             <img src="/solid-logo.svg" alt="Solid logo" title={`${userProfile}`} width="20" height="20" style={ {verticalAlign:"text-bottom", paddingLeft:"5px", paddingBottom:"1px"} } />
           </a></p>
           { typeof userPOD !== "undefined" && typeof performanceCollection !== "undefined"
-           ? <Companion userPOD = { `${userPOD}` } uri = { `${performanceCollection}` } />
+           ? <Companion userPOD = { `${userPOD}` } uri = { `${performanceCollection}` } annotationContainerUri = { `${annotationCollection}` } userProfile = { `${userProfile}` } />
            : <div>Loading... </div>
           }
         </LoggedIn>
