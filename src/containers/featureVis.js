@@ -253,7 +253,8 @@ class FeatureVis extends Component {
 
   handleClick(qstamp,tl) {
     // seek to earliest instant on the clicked timeline at the clicked scoretime
-    if(tl in this.state.instantsByScoretime) {
+    if(tl in this.state.instantsByScoretime && 
+       qstamp in this.state.instantsByScoretime[tl]) {
       this.props.seekToInstant(this.state.instantsByScoretime[tl][qstamp][0]);
     }
   }
