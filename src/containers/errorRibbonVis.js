@@ -161,7 +161,7 @@ export default class ErrorRibbonVis extends Component {
         if(tl in this.props.performanceErrors) { 
           if("deleted" in this.props.performanceErrors[tl]) {
             // this timeline has deleted notes
-            this.props.performanceErrors[tl].deleted.filter((d) => {
+            this.props.performanceErrors[tl].deleted.forEach((d) => {
               const deletedNoteIds = this.props.ensureArray(d).map((e) => 
                 e["@id"].substr(e["@id"].indexOf("#")+1)
               )
@@ -178,7 +178,7 @@ export default class ErrorRibbonVis extends Component {
                     tl, // timeline
                     // delete indicators sit underneath the line (ref. y- and height-calculation below)
                     noteCoords.x, timelineY - errorIndicatorHeight*.8, noteCoords.x2 - noteCoords.x, errorIndicatorHeight*.8,  // x, y, width, height
-                    "deleted-"+tl+noteElement["@id"], // react key
+                    "deleted-"+tl+noteElement.getAttribute("id"), // react key
                     "deleted point in timeline " + tl
                   )
                 }), 
@@ -199,7 +199,7 @@ export default class ErrorRibbonVis extends Component {
             const scoretimesOfInsertedOnPage = this.state.insertedNotesByScoretime[tl].filter( (t) => Object.keys(t)[0] >= minPageScoretime && Object.keys(t)[0] <= maxPageScoretime )
             // for the inserted notes on page, find the closest predecessor and successor scoretimes and calculate their corresponding note elements' avg X positions
             const orderedScoretimesOnPage = this.props.timemap.filter( (t) => t.qstamp >= minPageScoretime && t.qstamp <= maxPageScoretime ).sort()
-            insertedNoteIndicators = [ ...insertedNoteIndicators, ...scoretimesOfInsertedOnPage.map( (t) => { 
+            insertedNoteIndicators = [ ...insertedNoteIndicators, ...scoretimesOfInsertedOnPage.map( (t, ix) => { 
               if(Object.keys(t).length > 1) { 
                 console.warn("Found scoretime of inserted on page with more than one key: ", t)
               }
@@ -222,16 +222,21 @@ export default class ErrorRibbonVis extends Component {
                   .map( (noteElement) => this.props.convertCoords(noteElement).x )
               }
               const contextNoteElementXPositions = [...predecessorNoteElementXPositions, ...successorNoteElementXPositions]
-              const xPos = contextNoteElementXPositions.reduce( (sum, x) => sum + x, 0 ) / contextNoteElementXPositions.length;
-              return this.props.makeRect(
-                className + " inserted",
-                closestPredecessorScoretime.qstamp, 
-                tl, 
-                xPos, timelineY, insertedNoteWidth, errorIndicatorHeight*.8,
-                "inserted-" + inserted[scoretimeOfInsertedOnPage]["@id"],
-                "inserted point in timeline " + tl,
-                () => this.props.handleClickSeekToInstant(inserted[scoretimeOfInsertedOnPage]["http://purl.org/NET/c4dm/timeline.owl#at"])
-              )
+              if(!contextNoteElementXPositions.length) { 
+                console.log("Error Ribbon: Found inserted note with no valid note context: ", inserted);
+                return; 
+              } else { 
+                const xPos = contextNoteElementXPositions.reduce( (sum, x) => sum + x, 0 ) / contextNoteElementXPositions.length;
+                return this.props.makeRect(
+                  className + " inserted",
+                  closestPredecessorScoretime.qstamp, 
+                  tl, 
+                  xPos, timelineY, insertedNoteWidth, errorIndicatorHeight*.8,
+                  "inserted-" + inserted[scoretimeOfInsertedOnPage]["@id"] + "-" + ix,
+                  "inserted point in timeline " + tl,
+                  () => this.props.handleClickSeekToInstant(inserted[scoretimeOfInsertedOnPage]["http://purl.org/NET/c4dm/timeline.owl#at"])
+                )
+              }
             })]
           }
         }
