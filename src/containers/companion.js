@@ -505,14 +505,14 @@ class Companion extends Component {
       }
       let currentScore = <div className="loadingMsg">Loading, please wait...</div>;
       if(this.state.currentScore) { 
-        // currentScore = <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={ this.scoreComponent }/>
         currentScore = 
-          <div ref = { this.scoreComponent }>
+          <div ref = { this.scoreComponent } id="scoreSelectionArea">
             <SelectableScore 
               uri={ this.state.currentScore } 
               key = { this.state.currentScore } 
               vrvOptions = { vrvOptions } 
               selectorString = ".note" 
+              selectionArea = "#scoreSelectionArea"
               onSelectionChange={ this.handleSelectionChange }
               onScoreUpdate = { this.handleDOMChangeObserved }
             />
