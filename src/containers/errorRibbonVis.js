@@ -224,7 +224,7 @@ export default class ErrorRibbonVis extends Component {
               const contextNoteElementXPositions = [...predecessorNoteElementXPositions, ...successorNoteElementXPositions]
               if(!contextNoteElementXPositions.length) { 
                 console.log("Error Ribbon: Found inserted note with no valid note context: ", inserted);
-                return; 
+                return ""; 
               } else { 
                 const xPos = contextNoteElementXPositions.reduce( (sum, x) => sum + x, 0 ) / contextNoteElementXPositions.length;
                 return this.props.makeRect(
