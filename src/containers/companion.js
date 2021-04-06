@@ -80,7 +80,8 @@ class Companion extends Component {
       performanceErrors: {},
       latestScoreUpdateTimestamp: 0,
       toggleAnnotationRetrieval: true, // set to true when annotation update required
-      highlight: [] // circles drawn to respond to highlight annotations
+      highlights: [], // circles drawn to respond to highlight annotations 
+      highlightsOnPage: [] // ... those with at least one target on current page
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -101,7 +102,7 @@ class Companion extends Component {
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleResponse = this.handleResponse.bind(this);
     this.handleReceiveAnnotationContainerContent = this.handleReceiveAnnotationContainerContent.bind(this);
-    this.makeHighlight = this.makeHighlight.bind(this)
+    this.determineHighlightsOnPage = this.determineHighlightsOnPage.bind(this)
 
     this.player = React.createRef();
     this.featureVis = React.createRef();
@@ -124,7 +125,6 @@ class Companion extends Component {
       objectPrefixWhitelist:[]
     }
     if(this.props.userPOD) {
-      console.log("Adding ", this.props.userPOD);
       params["objectPrefixWhitelist"] = [this.props.userPOD, ...params["objectPrefixWhitelist"]];
     }
     this.props.registerTraversal(this.props.uri, params)
@@ -132,18 +132,18 @@ class Companion extends Component {
     this.setState({vrvOptions: this.state.mode === "featureVis" ? vrvOptionsFeatureVis : vrvOptionsPageView});
   }
   
-  makeHighlight(id, cx, cy, rx, ry, colour = "black", width="2") {
-    // return SVG for a "point" (e.g. ellipse) on the visualisation
-    return <ellipse 
-      className="annoHighlight"
-      id={id}
-      cx={cx} cy={cy} 
-      rx={rx} ry={ry} 
-      key={id}
-      stroke={colour}
-      onClick={ () => this.handleAnnoHighlightClick(id) }
-      >
-    </ellipse>;
+
+  determineHighlightsOnPage() { 
+    if(this.scoreComponent.current) { 
+      const highlightsOnPage = this.state.highlights.filter((hl) => { 
+        const targetsOnPage = this.ensureArray(hl.target).filter((t) => { 
+          const frag = t.substr(t.lastIndexOf("#"));
+          return ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(frag) !== null
+        })
+        return targetsOnPage.length > 0
+      })
+      this.setState({ highlightsOnPage });
+    }
   }
 
   handleDOMChangeObserved() { 
@@ -155,6 +155,7 @@ class Companion extends Component {
         "barlinesOnPage": ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".barLineAttr"),
         "latestScoreUpdateTimestamp": Date.now()
       }, () => { 
+        this.determineHighlightsOnPage();
         if(this.state.selectedPerformance) { 
           this.createInstantBoundingRects();
         }
@@ -165,27 +166,21 @@ class Companion extends Component {
   handleReceiveAnnotationContainerContent(content) { 
     console.log("Received annotation container content: ", content);
     const highlights = [];
-    this.ensureArray(content).forEach( (anno) => { 
+    const myHighlights = this.ensureArray(content).filter( (anno) => { 
+      // filter out any annotations that don't concern the current score
+      let forMe = [];
       if(this.ensureArray(anno["motivation"]).includes("highlighting")) {
-        this.ensureArray(anno["target"]).forEach( (t) => {
-          if(t.startsWith(this.state.currentScore)) { 
-            const frag = t.substr(t.lastIndexOf("#")+1);
-            const el = document.getElementById(frag);
-            console.log("TARGET: ", t, "FRAG: ", frag, "EL: ", el);
-            if(el !== null) { 
-              // TODO PAINT CIRCLE
-              const boundRect = this.convertCoords(el);
-              highlights.push(this.makeHighlight(
-                anno["@id"] + "-" + frag, // id,
-                boundRect.x, boundRect.y, 2, 2
-              ))
-            }
-          }
+        forMe = this.ensureArray(anno["target"]).filter( (t) => {
+          console.log("Comparing", t, this.state.currentScore);
+          return t.startsWith(this.state.currentScore)
         })
       }
+      return forMe.length>0;
     })
-    console.log("Setting highlights: ", highlights);
-    this.setState({ toggleAnnotationRetrieval: false, highlights })
+    console.log("Setting highlights: ", myHighlights);
+    this.setState({ toggleAnnotationRetrieval: false, highlights: myHighlights}, () => {
+      this.determineHighlightsOnPage()
+    })
   }
 
   handleSubmit(args) { 
@@ -215,6 +210,40 @@ class Companion extends Component {
         this.setState({"observingScore": true, scoreComponentLoadingStarted: true})
       }
     }
+
+    if(this.scoreComponent.current &&
+      JSON.stringify(prevState.highlightsOnPage) !== JSON.stringify(this.state.highlightsOnPage)) { 
+      let scorepane = ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(".scorepane")
+      let annopane = ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(".annotations");
+      // create a new, empty anno pane
+      if(this.state.highlightsOnPage.length) { 
+        const annoSvg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+        annoSvg.setAttribute("id", "highlightAnnotationsSvg");
+        annoSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        annoSvg.setAttribute("xmlnsXlink", "http://www.w3.org/1999/xlink");
+        annoSvg.setAttribute("transform", "scale(1,-1) translate(0, 50)");
+        this.state.highlightsOnPage.forEach((hl) => {
+          const bboxes = this.ensureArray(hl.target).map( (t) => {
+            const el = scorepane.querySelector(t.substr(t.lastIndexOf("#")));
+            return this.convertCoords(el);
+          })
+          // determine enveloping bbox
+          const minX = Math.min(...bboxes.map((b) => b.x));
+          const minY = Math.min(...bboxes.map((b) => b.y));
+          const maxX2 = Math.max(...bboxes.map((b) => b.x2));
+          const maxY2 = Math.max(...bboxes.map((b) => b.y2));
+          const ellipse = document.createElementNS("http://www.w3.org/2000/svg","ellipse")
+          ellipse.setAttribute("cx", (minX + maxX2)/2)
+          ellipse.setAttribute("cy", (minY + maxY2)/2)
+          ellipse.setAttribute("rx", (maxX2 - minX)/2)
+          ellipse.setAttribute("ry", (maxY2 - minY)/2)
+          ellipse.classList.add("highlightEllipse");
+          annoSvg.appendChild(ellipse);
+          annopane.appendChild(annoSvg);
+        })
+      }
+    }
+
 
     if("traversalPool" in prevProps && Object.keys(this.props.traversalPool.pool).length === 0 &&
       prevProps.traversalPool.running > 0 && this.props.traversalPool.running === 0) { 
@@ -580,6 +609,7 @@ class Companion extends Component {
             />
           </div>;
       }
+
       return(
         <div id="wrapper">
           <div id="logoWrapper" className = { this.state.mode }>
@@ -591,7 +621,6 @@ class Companion extends Component {
             
           { featureVisElement }
           <div id="instantBoundingBoxes" />
-          { this.state.highlights }
           { currentScore }
           { pageControlsWrapper }
           { this.state.performances.length === 0 
@@ -1012,8 +1041,6 @@ class Companion extends Component {
           embodiment["@id"].startsWith("https://terms.trompamusic.eu/maps#inserted")
         );
         if(inserted.length) { 
-          console.log("FOUND INSERTED: ", inserted);
-          console.log("Outcome is: ", outcome, performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]]);
           // this timeline has one or more inserted notes!
           if(outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] in performanceErrors) { 
             if("inserted" in performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]]) { 

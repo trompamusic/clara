@@ -365,10 +365,19 @@ line.dynamicsConnector.active{
   font-size: xx-small;
 }
 
-
 .selectDynamicsAggregate { 
   margin-left:1em;
   border-bottom: 2px solid lightgrey;
   display: inline-block;
   line-height: 0.85;
+}
+
+.scorepane .annotations {
+  position:absolute;
+}
+
+.scorepane .annotations .highlightEllipse { 
+  fill:none;
+  stroke:red;
+  stroke-width: 2;
 }
