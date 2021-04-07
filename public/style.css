@@ -380,4 +380,5 @@ line.dynamicsConnector.active{
   fill:none;
   stroke:red;
   stroke-width: 2;
+  stroke-opacity: .7;
 }

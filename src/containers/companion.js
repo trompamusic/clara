@@ -214,16 +214,23 @@ class Companion extends Component {
     if(this.scoreComponent.current &&
       JSON.stringify(prevState.highlightsOnPage) !== JSON.stringify(this.state.highlightsOnPage)) { 
       let scorepane = ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(".scorepane")
-      let annopane = ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(".annotations");
+      let annopane = scorepane.querySelector(".annotations");
+      let scoreSvg = scorepane.querySelector(".score svg");
+      annopane.innerHTML = ''; // clear previously rendered highlights 
       // create a new, empty anno pane
       if(this.state.highlightsOnPage.length) { 
         const annoSvg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+        annoSvg.setAttribute("width", scoreSvg.getAttribute("width"))
+        annoSvg.setAttribute("height", scoreSvg.getAttribute("height"))
         annoSvg.setAttribute("id", "highlightAnnotationsSvg");
         annoSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
         annoSvg.setAttribute("xmlnsXlink", "http://www.w3.org/1999/xlink");
-        annoSvg.setAttribute("transform", "scale(1,-1) translate(0, 50)");
         this.state.highlightsOnPage.forEach((hl) => {
-          const bboxes = this.ensureArray(hl.target).map( (t) => {
+          const bboxes = this.ensureArray(hl.target).filter( (t) => {
+            const el = scorepane.querySelector(t.substr(t.lastIndexOf("#")));
+            // filter out any targets not currently on page
+            return el !== null
+          }).map( (t) => { 
             const el = scorepane.querySelector(t.substr(t.lastIndexOf("#")));
             return this.convertCoords(el);
           })
@@ -235,8 +242,13 @@ class Companion extends Component {
           const ellipse = document.createElementNS("http://www.w3.org/2000/svg","ellipse")
           ellipse.setAttribute("cx", (minX + maxX2)/2)
           ellipse.setAttribute("cy", (minY + maxY2)/2)
-          ellipse.setAttribute("rx", (maxX2 - minX)/2)
-          ellipse.setAttribute("ry", (maxY2 - minY)/2)
+         
+          // Add padding so we don't circle too tightly -- but not too much!
+          const paddedRx = Math.min((maxX2-minX)/1.6, maxX2-minX + 10)
+          const paddedRy = Math.min((maxY2-minY)/1.6, maxX2-minX + 10)
+
+          ellipse.setAttribute("rx", paddedRx)
+          ellipse.setAttribute("ry", paddedRy)
           ellipse.classList.add("highlightEllipse");
           annoSvg.appendChild(ellipse);
           annopane.appendChild(annoSvg);
@@ -599,7 +611,7 @@ class Companion extends Component {
               uri={ this.state.currentScore } 
               key = { this.state.currentScore } 
               vrvOptions = { vrvOptions } 
-              selectorString = ".note" 
+              selectorString = ".note, .dir, .dynam" 
               selectionArea = "#scoreSelectionArea"
               onSelectionChange={ this.handleSelectionChange }
               onScoreUpdate = { this.handleDOMChangeObserved }
