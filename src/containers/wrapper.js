@@ -86,15 +86,10 @@ export default function Wrapper(props) {
       <div id="authWrapper">
           { midiSupported
             ? <div id="midi">
-                <span>Please choose your MIDI device: 
-                  <select name="midiDevices" id="midiDevices">
-                    { midiIn.map(device => <option key={`${device.name}`} value={`${device.name}`}>{`${device.name}`}</option>) }
-                  </select>
-                </span>
                 <span id="recordingIndicator">
                   { midiEvents.length 
                   ? <span className="isRecording">Recording</span>
-                  : <span className="isNotRecording">Not Recording</span>
+                  : <span className="isNotRecording">Play MIDI notes to start recording</span>
                   }
                 </span>
                 <div id="midiEvents">
