@@ -2,6 +2,33 @@ body {
   font-family: sans-serif;
 }
 
+#zoomBox { 
+  position: fixed;
+  z-index: 1;
+  background: white;
+  border: 1px solid darkorange;
+  border-radius:20px;
+}
+
+.zoomBoxLine { 
+  fill:darkorange !important;
+  stroke:darkorange !important;
+}
+
+.zoomBoxLabel, .zoomBoxXIndicatorLabel { 
+  fill:darkgrey;
+  font-size: 8pt;
+}
+
+.zoomBoxXIndicatorLine { 
+  fill:darkgrey;
+}
+
+.selected {
+  fill: rgb(35, 144, 194) !important;
+}
+
+
 .videoWrapper { 
   max-width:945px;
   margin-left:20px;
@@ -15,6 +42,11 @@ body {
 .deleted {
   fill: #00aaff;
   stroke: #00aaff;
+}
+
+.inserted { 
+  fill: #ff6666;
+  stroke: #ff6666;
 }
 
 .wasActive{ 
@@ -39,11 +71,18 @@ body {
 .scorepane { 
   min-height: 460px;
   max-height: 460px;
+  display:block;
+  position: relative;
+  z-index: -1;
 }
 
 .scorepane.featureVis { 
   min-height: 230px;
   max-height: 230px;
+}
+
+#instantBoundingBoxes { 
+  position: absolute;
 }
 
 .errorDetected { 
@@ -77,6 +116,7 @@ body {
   padding-left: .3em;
   padding-right: .3em;
   font-weight: bold;
+  max-width: 1253px;
   color: rgba(255, 102, 0);
 }
 
@@ -137,55 +177,83 @@ body {
   visibility:hidden;
 }
 
-#featureVis, #featureVisLoading {
+.removedFromDisplay { 
+  display: none;
+}
+
+#featureVisContainer, #featureVisContainerLoading {
   margin-top: 80px;
   margin-bottom:-80px;
   overflow:visible;
-  height:120px;
+  height:auto;
   width:1280px;
 }
 
-#featureVis { 
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(180, 180, 180, .2) 5%, rgba(180, 180, 180, .2) 95%, rgba(255, 255, 255, .2) 100%)
+#tempoCurve, #dynamicsVis svg { 
+  display:block;
+  margin-block: .5em;
 }
 
-#featureVis line, #featureVis ellipse { 
-  stroke:black;
-  fill: #ffffff00;
+#dynamicsVis svg { 
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(220, 220, 220, .2) 5%, rgba(220, 220, 220, .2) 95%, rgba(255, 255, 255, .2) 100%);
+}
+
+#tempoCurve { 
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(220, 220, 220, .2) 5%, rgba(220, 220, 220, .2) 95%, rgba(255, 255, 255, .2) 100%);
+}
+
+#featureVisContainer ellipse:not(".zoomBoxPoint") {
+  stroke:lightgrey;
+  fill: lightgrey;
   cursor: pointer;
+  display:block;
 }
 
-#featureVis line.currentTl, #featureVis ellipse.currentTl{
-  stroke:red;
-  fill:red;
+#featureVisContainer line { 
+  stroke:lightgrey;
+  fill: lightgrey;
+  cursor: pointer;
+  display:block;
+}
+
+#featureVisContainer line.currentTl, #featureVisContainer ellipse.currentTl, #featureVisContainer polygon.currentTl{
+  stroke:rgb(255, 102, 0);
+  fill:rgb(255, 102, 0);
   stroke-width:2px;
 }
 
-#featureVis line.active, #featureVis ellipse.active{
+#featureVisContainer line.active, #featureVisContainer ellipse.active{
   stroke:orange !important;
   fill:orange !important;
 }
 
-#featureVis line.barLineAttr { 
+#featureVisContainer line.barLineAttr { 
   stroke:lightgrey;
 }
 
-#featureVis line.bpmMarker { 
+#featureVisContainer line.bpmMarker { 
   stroke-dasharray:1;
   stroke:lightgrey;
 }
 
-#featureVis line.estimated { 
+#featureVisContainer line.estimated { 
   stroke-dasharray: 1.5;
 }
 
-#featureVis text.bpmLabel {
+#featureVisContainer text.bpmLabel {
   font-size: 6px;
   fill: lightgrey;
 }
 
 .clickableBoundedInstant { 
   cursor:pointer;
+}
+
+#dynamicsVis ellipse, #dynamicsVis .dynamicsConnector,
+#tempoCurve ellipse, #tempoCurve .tempoConnector{ 
+  stroke:black;
+  fill:black;
+  stroke-width:1px;
 }
 
 #midiEvents { 
@@ -208,4 +276,130 @@ body {
 
 #recordingIndicator .isNotRecording { 
   background: red;
+}
+line.dynamicsConnector.active{
+  stroke:red;
+  fill:red;
+}
+
+.visLabel { 
+  position:relative;
+  top: -40px;
+  font-size: xx-small;
+}
+
+#dynamicsLegend { 
+  position:relative;
+  top: -60px;
+  font-size: xx-small;
+}
+
+#dynamicsLegend span { 
+  width: 1em;
+  height: 1em;
+  margin-left:4em;
+  margin-right:1em;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) polygon:not(.currentTl) { 
+  stroke:#00000099;
+  fill:#00000099;
+}
+
+/*
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer1 {
+  stroke:#a6cee399;
+  fill:#a6cee399;
+  background:#a6cee399;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer2 {
+  stroke:#1f78b499;
+  fill:#1f78b499;
+  background:#1f78b499;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer3 {
+  stroke:#b2df8a99;
+  fill:#b2df8a99;
+  background:#b2df8a99;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer4 {
+  stroke:#33a92c99;
+  fill:#33a92c99;
+  background:#33a92c99;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer5 {
+  stroke:#fb9a9999;
+  fill:#fb9a9999;
+  background:#fb9a9999;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer6 {
+  stroke:#e31a1c99;
+  fill:#e31a1c99;
+  background:#e31a1c99;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer7 {
+  stroke:#fdbf6f99;
+  fill:#fdbf6f99;
+  background:#fdbf6f99;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer8 {
+  stroke:#ff7f0099;
+  fill:#ff7f0099;
+  background:#ff7f0099;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer9 {
+  stroke:#cab2d699;;
+  fill:#cab2d699;;
+  background:#cab2d699;;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer10 {
+  stroke:#6a3d9a99;
+  fill:#6a3d9a99;
+  background:#6a3d9a99;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer11 {
+  stroke:#ffff9999;
+  fill:#ffff9999;
+  background:#ffff9999;
+}
+
+#dynamicsVis :not(#dynamicsVisSummary) .currentTl.layer12 {
+  stroke:#b1592899;
+  fill:#b1592899;
+  background:#b1592899;
+}
+*/
+
+#featureVisControls {
+  position:relative;
+  top: -40px;
+  font-size: xx-small;
+}
+
+.selectDynamicsAggregate { 
+  margin-left:1em;
+  border-bottom: 2px solid lightgrey;
+  display: inline-block;
+  line-height: 0.85;
+}
+
+.scorepane .annotations {
+  position:absolute;
+}
+
+.scorepane .annotations .highlightEllipse { 
+  fill:none;
+  stroke:red;
+  stroke-width: 2;
+  stroke-opacity: .7;
 }

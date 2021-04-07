@@ -4,7 +4,11 @@ import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 import ReactPlayer from 'react-player'
 
-import Score from 'meld-clients-core/lib/containers/score';
+import SelectableScore from 'selectable-score/lib/selectable-score';
+import NextPageButton from 'selectable-score/lib/next-page-button.js';
+import PrevPageButton from 'selectable-score/lib/prev-page-button.js';
+import SubmitButton from 'selectable-score/lib/submit-button.js';
+
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/index';
 
@@ -12,27 +16,30 @@ import FeatureVis from './featureVis';
 
 const vrvOptionsPageView = {
 	scale: 45,
-  adjustPageHeight: 1,
-	pageHeight: 900,
+  	adjustPageHeight: 1,
+	pageHeight:1200,
 	pageWidth: 2200,
-	noFooter: 1,
-	unit: 6
+	footer: "none",
+	unit: 6,
+	breaks: "line"
 };
 
 const vrvOptionsFeatureVis = {
 	scale: 45,
-  adjustPageHeight: 1,
+	adjustPageHeight: 1,
 	pageHeight: 400,
 	pageWidth:  2800,
-	noFooter: 1,
-	noHeader: 1,
-	unit: 6
+	footer: "none",
+	header: "none",
+	unit: 6,
+	breaks: "line"
 };
 
 class Companion extends Component {
   constructor(props) {
     super(props);
     this.state = { 
+      selection: [],
       performances: [], 
       segments: [], 
       instants: [],
@@ -67,7 +74,13 @@ class Companion extends Component {
       latestObservedPageNum: 0,
       observingScore: false, // control behaviour of DOM change observer (to catch Verovio SVG render completions)
       scoreComponentLoadingStarted: false,
-      scoreComponentLoaded: false // know when to initially start the DOM observer
+      scoreComponentLoaded: false, // know when to initially start the DOM observer
+      performedElements: {},
+      performanceErrors: {},
+      latestScoreUpdateTimestamp: 0,
+      toggleAnnotationRetrieval: true, // set to true when annotation update required
+      highlights: [], // circles drawn to respond to highlight annotations 
+      highlightsOnPage: [] // ... those with at least one target on current page
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -83,35 +96,53 @@ class Companion extends Component {
     this.ensureArray = this.ensureArray.bind(this);
     this.seekToInstant = this.seekToInstant.bind(this);
     this.handleDOMChangeObserved = this.handleDOMChangeObserved.bind(this);
+    this.convertCoords = this.convertCoords.bind(this);
+    this.handleSelectionChange = this.handleSelectionChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleResponse = this.handleResponse.bind(this);
+    this.handleReceiveAnnotationContainerContent = this.handleReceiveAnnotationContainerContent.bind(this);
+    this.determineHighlightsOnPage = this.determineHighlightsOnPage.bind(this)
 
     this.player = React.createRef();
     this.featureVis = React.createRef();
     this.scoreComponent = React.createRef();
-    this.observer = new MutationObserver(this.handleDOMChangeObserved);
   }
 
   UNSAFE_componentWillMount() { 
     this.props.setTraversalObjectives([
       { "@type": "http://purl.org/ontology/mo/Performance" },
       { "@type": "http://www.linkedmusic.org/ontologies/segment/Segment" },
-      { "@type": "http://purl.org/NET/c4dm/timeline.owl#Instant" }
+      { "@type": "http://purl.org/NET/c4dm/timeline.owl#Instant" },
+      { "@type": "http://www.w3.org/ns/oa#Annotation" }
     ]);
   }
 
   componentDidMount() { 
-    console.log("Attempting to start traversal with ", this.props.uri);
+    console.log("Attempting to start traversal with ", this.props.uri, " with profile: ", this.props.userProfile);
     const params = {
       numHops:6, 
-      objectPrefixWhitelist:["https://trompa.solidcommunity.net", "https://trompa.mdw.ac.at", "https://raw.githubusercontent.com/trompamusic-encodings"],
-      objectPrefixBlacklist:["https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei", "https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei#", "https://trompa.mdw.ac.at/videos/"]
+      objectPrefixWhitelist:[]
     }
     if(this.props.userPOD) {
-      console.log("Adding ", this.props.userPOD);
       params["objectPrefixWhitelist"] = [this.props.userPOD, ...params["objectPrefixWhitelist"]];
     }
     this.props.registerTraversal(this.props.uri, params)
     document.addEventListener('keydown', this.monitorKeys);
     this.setState({vrvOptions: this.state.mode === "featureVis" ? vrvOptionsFeatureVis : vrvOptionsPageView});
+  }
+  
+
+  determineHighlightsOnPage() { 
+    if(this.scoreComponent.current) { 
+      const highlightsOnPage = this.state.highlights.filter((hl) => { 
+        const targetsOnPage = this.ensureArray(hl.target).filter((t) => { 
+          const frag = t.substr(t.lastIndexOf("#"));
+          return ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(frag) !== null
+        })
+        return targetsOnPage.length > 0
+      })
+      this.setState({ highlightsOnPage });
+    }
   }
 
   handleDOMChangeObserved() { 
@@ -120,8 +151,10 @@ class Companion extends Component {
         "observingScore": false, 
         "scoreComponentLoaded": true, 
         "notesOnPage": ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note"),
-        "barlinesOnPage": ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".barLineAttr")
+        "barlinesOnPage": ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".barLineAttr"),
+        "latestScoreUpdateTimestamp": Date.now()
       }, () => { 
+        this.determineHighlightsOnPage();
         if(this.state.selectedPerformance) { 
           this.createInstantBoundingRects();
         }
@@ -129,25 +162,104 @@ class Companion extends Component {
     }
   }
 
+  handleReceiveAnnotationContainerContent(content) { 
+    console.log("Received annotation container content: ", content);
+    const highlights = [];
+    const myHighlights = this.ensureArray(content).filter( (anno) => { 
+      // filter out any annotations that don't concern the current score
+      let forMe = [];
+      if(this.ensureArray(anno["motivation"]).includes("highlighting")) {
+        forMe = this.ensureArray(anno["target"]).filter( (t) => {
+          console.log("Comparing", t, this.state.currentScore);
+          return t.startsWith(this.state.currentScore)
+        })
+      }
+      return forMe.length>0;
+    })
+    console.log("Setting highlights: ", myHighlights);
+    this.setState({ toggleAnnotationRetrieval: false, highlights: myHighlights}, () => {
+      this.determineHighlightsOnPage()
+    })
+  }
+
+  handleSubmit(args) { 
+    /* do any app-specific actions and return the object (e.g. a Web Annotation) 
+     * to be submitted to the user POD */
+    return {
+      "@context": "http://www.w3.org/ns/anno.jsonld",
+      "target": this.state.selection.map( (elem) => this.state.currentScore + "#" + elem.getAttribute("id") ),
+      "motivation": "highlighting"
+    }
+  }
+
+  handleResponse(res) { 
+    // POST completed, retrieve the container content
+    this.setState({ toggleAnnotationRetrieval: true })
+  }
+
   componentDidUpdate(prevProps, prevState) { 
     if(!this.state.scoreComponentLoadingStarted && this.scoreComponent.current) { 
+      let scorepane = ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(".scorepane")
       //  reflect the mode (pageView vs featureVis) onto the scorepane
-      let scorepane = ReactDOM.findDOMNode(this.scoreComponent.current)
-      let modes = ["pageView", "featureVis"]
-      scorepane.classList.remove(...modes);
-      scorepane.classList.add(this.state.mode);
-      // observe the score element for DOM changes
-      const scoreElement = ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(".score");
-      this.setState({"observingScore": true, scoreComponentLoadingStarted: true}, () => { 
-        this.observer.observe(scoreElement, {"childList": true});
-      })
+      if(!!scorepane) { // if scorepane has rendered... 
+        let modes = ["pageView", "featureVis"]
+        scorepane.classList.remove(...modes);
+        scorepane.classList.add(this.state.mode);
+        // observe the score element for DOM changes
+        this.setState({"observingScore": true, scoreComponentLoadingStarted: true})
+      }
     }
+
+    if(this.scoreComponent.current &&
+      JSON.stringify(prevState.highlightsOnPage) !== JSON.stringify(this.state.highlightsOnPage)) { 
+      let scorepane = ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(".scorepane")
+      let annopane = scorepane.querySelector(".annotations");
+      let scoreSvg = scorepane.querySelector(".score svg");
+      annopane.innerHTML = ''; // clear previously rendered highlights 
+      // create a new, empty anno pane
+      if(this.state.highlightsOnPage.length) { 
+        const annoSvg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+        annoSvg.setAttribute("width", scoreSvg.getAttribute("width"))
+        annoSvg.setAttribute("height", scoreSvg.getAttribute("height"))
+        annoSvg.setAttribute("id", "highlightAnnotationsSvg");
+        annoSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        annoSvg.setAttribute("xmlnsXlink", "http://www.w3.org/1999/xlink");
+        this.state.highlightsOnPage.forEach((hl) => {
+          const bboxes = this.ensureArray(hl.target).filter( (t) => {
+            const el = scorepane.querySelector(t.substr(t.lastIndexOf("#")));
+            // filter out any targets not currently on page
+            return el !== null
+          }).map( (t) => { 
+            const el = scorepane.querySelector(t.substr(t.lastIndexOf("#")));
+            return this.convertCoords(el);
+          })
+          // determine enveloping bbox
+          const minX = Math.min(...bboxes.map((b) => b.x));
+          const minY = Math.min(...bboxes.map((b) => b.y));
+          const maxX2 = Math.max(...bboxes.map((b) => b.x2));
+          const maxY2 = Math.max(...bboxes.map((b) => b.y2));
+          const ellipse = document.createElementNS("http://www.w3.org/2000/svg","ellipse")
+          ellipse.setAttribute("cx", (minX + maxX2)/2)
+          ellipse.setAttribute("cy", (minY + maxY2)/2)
+         
+          // Add padding so we don't circle too tightly -- but not too much!
+          const paddedRx = Math.min((maxX2-minX)/1.6, maxX2-minX + 10)
+          const paddedRy = Math.min((maxY2-minY)/1.6, maxX2-minX + 10)
+
+          ellipse.setAttribute("rx", paddedRx)
+          ellipse.setAttribute("ry", paddedRy)
+          ellipse.classList.add("highlightEllipse");
+          annoSvg.appendChild(ellipse);
+          annopane.appendChild(annoSvg);
+        })
+      }
+    }
+
 
     if("traversalPool" in prevProps && Object.keys(this.props.traversalPool.pool).length === 0 &&
       prevProps.traversalPool.running > 0 && this.props.traversalPool.running === 0) { 
       // finished all traversals
       this.setState({ "loading": false }, () => {
-        console.log("Attempting to process outcomes:", this.props.graph.outcomes);
         this.props.checkTraversalObjectives(this.props.graph.graph, this.props.graph.objectives);
       });
     }
@@ -165,7 +277,6 @@ class Companion extends Component {
       // then start another traversal
       const nextTraversalUri = Object.keys(this.props.traversalPool.pool)[0];
       const nextTraversalParams = this.props.traversalPool.pool[nextTraversalUri];
-      console.log("Spawning traversal with pool length: ", Object.keys(this.props.traversalPool.pool).length)
       this.props.traverse(nextTraversalUri, nextTraversalParams);
     }
 
@@ -175,6 +286,7 @@ class Companion extends Component {
       this.createInstantBoundingRects();
       this.highlightDeletedNotes();
     }
+
     if("score" in prevProps && this.state.selectedPerformance &&
       prevState.selectedPerformance !== this.state.selectedPerformance) { 
       // performance has been changed; reassign click handlers
@@ -200,17 +312,17 @@ class Companion extends Component {
   }
 
   monitorKeys(e) { 
-    console.log("got: ", e);
+    console.log("key pressed: ", e);
     if("score" in this.props) { 
       switch(e.which) { 
         case 37: // left arrow
-          if(this.props.score.pageNum > 1) { 
-            this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
+          if(this.props.score.pageState[this.state.currentScore].currentPage > 1) { 
+            this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageState[this.state.currentScore].currentPage, this.props.score.MEI[this.state.currentScore])
           }
           break;
         case 39: // right arrow
-          if(this.props.score.pageNum < this.props.score.pageCount) { 
-            this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
+          if(this.props.score.pageState[this.state.currentScore].currentPage < this.props.score.pageState[this.state.currentScore].pageCount) { 
+            this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageState[this.state.currentScore].currentPage, this.props.score.MEI[this.state.currentScore]); 
           }
           break;
         case 67: // 'c'  => "confidence"
@@ -246,12 +358,11 @@ class Companion extends Component {
       const thisTime = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
       const thisTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
       const deletedNotesInstant = this.state.instantsByPerfTime[thisTimeline].filter( (i) => { 
-        let dur = i["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        let dur = i["http://purl.org/NET/c4dm/timeline.owl#at"];
         dur = parseInt(dur.substr(1, dur.length-2));
         return dur === -1; // all deleted notes "occur" at this instant
       })
       if(deletedNotesInstant.length) { // could be 0 in a perfect performance...
-        console.log("deleted notes instant: ", deletedNotesInstant);
         const deletedNotes = deletedNotesInstant[0]["http://purl.org/vocab/frbr/core#embodimentOf"];
         deletedNotes.forEach( (n) => { 
           let noteOnPage = document.getElementById(n["@id"].substr(n["@id"].indexOf("#")+1));
@@ -278,7 +389,7 @@ class Companion extends Component {
     Array.prototype.map.call(notes, (n) => { 
       // associate notes on this page with their instant duration
       if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
-        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#at"];
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
         if(nDur in notesOnPagePerInstant) { 
           notesOnPagePerInstant[nDur].push(n);
@@ -304,11 +415,11 @@ class Companion extends Component {
       notesOnPagePerInstant[i].forEach( (n) => { 
         // to contain all notes, we want to minimise left and top, 
         // and maximise right and bottom
-        const boundRect = n.getBoundingClientRect();
-        boxLeft = boundRect.left + window.scrollX < boxLeft ? boundRect.left + window.scrollX : boxLeft; 
-        boxTop  = boundRect.top + window.scrollY < boxTop ? boundRect.top + window.scrollY: boxTop; 
-        boxRight= boundRect.right > boxRight? boundRect.right : boxRight; 
-        boxBottom= boundRect.bottom > boxBottom ? boundRect.bottom: boxBottom; 
+        const boundRect = this.convertCoords(n);
+        boxLeft = boundRect.x < boxLeft ? boundRect.x : boxLeft; 
+        boxTop  = boundRect.y < boxTop ? boundRect.y : boxTop; 
+        boxRight= boundRect.x2 > boxRight ? boundRect.x2 : boxRight; 
+        boxBottom= boundRect.y2 > boxBottom ? boundRect.y2 : boxBottom; 
         // remember a note ID for indexing into instantsByNoteId (to retrieve confidence) further below
         noteId = n.getAttribute("id"); 
       });
@@ -328,8 +439,8 @@ class Companion extends Component {
          "top:"   + Math.floor(boxTop) + "px;" + 
          "width:" + Math.ceil(boxRight - boxLeft) + "px;" + 
          "height:"+ Math.ceil(boxBottom - boxTop) + "px;" + 
-         "background: rgba(255,0,0," + parseFloat(1 - this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"] * .01) + ");" + 
-         "z-index: -1;"
+         "background: rgba(0,0,0," + parseFloat(1 - this.state.instantsByNoteId[selectedTimeline][noteId]["https://terms.trompamusic.eu/maps#confidence"] * .01) + ");" + 
+         "z-index: -2;"
       );
       clickableBoundDiv.setAttribute("id", "conf-" + i);
       clickableBoundDiv.classList.add("clickableBoundedInstant");
@@ -346,7 +457,7 @@ class Companion extends Component {
          "z-index: 1;"
       );
       clickableBoundDiv.onclick = (e) => { 
-        let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+        let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#at"]
         if(parseInt(nDur.substr(1,nDur.length-2)) === -1) {
           // this is a deleted (i.e. unperformed) note; thus we can't seek to it!
           return
@@ -366,9 +477,10 @@ class Companion extends Component {
           n.style.stroke="";
         })
       }
-      let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+      let nDur = this.state.instantsByNoteId[selectedTimeline][noteId]["http://purl.org/NET/c4dm/timeline.owl#at"]
       nDur = nDur.substr(1, nDur.length-2);
-      if(parseInt(nDur) === -1) { 
+      if(parseInt(nDur) === -1) {
+        console.log("Deleted note detected: ", noteId);
         clickableBoundDiv.setAttribute("title", "This note was not sounded during the selected performance");
       } else { 
         clickableBoundDiv.setAttribute("title", "time: " + nDur.substr(1, nDur.length-2) + 
@@ -382,6 +494,27 @@ class Companion extends Component {
       boundingBoxesWrapper.appendChild(clickableBoundDiv);
     })
   }
+    // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group
+  convertCoords(elem) {
+    if(document.getElementById(elem.getAttribute("id"))
+      && elem.style.display !== "none" && (elem.getBBox().x !== 0 || elem.getBBox().y !== 0)) {
+      const x = elem.getBBox().x;
+      const width = elem.getBBox().width;
+      const y = elem.getBBox().y;
+      const height = elem.getBBox().height;
+      const offset = elem.closest("svg").parentElement.getBoundingClientRect();
+      const matrix = elem.getScreenCTM();
+      return {
+          x: (matrix.a * x) + (matrix.c * y) + matrix.e - offset.left,
+          y: (matrix.b * x) + (matrix.d * y) + matrix.f - offset.top,
+          x2: (matrix.a * (x + width)) + (matrix.c * y) + matrix.e - offset.left,
+          y2: (matrix.b * x) + (matrix.d * (y + height)) + matrix.f - offset.top
+      };
+    } else {
+      console.warn("Element unavailable on page: ", elem.getAttribute("id"));
+      return { x:0, y:0, x2:0, y2:0 }
+    }
+  }
 
   assignClickHandlersToNotes() {
     // check if our score page has updated
@@ -389,7 +522,7 @@ class Companion extends Component {
     const notes = ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note");
     Array.prototype.map.call(notes, (n) => { 
       if(n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]) {
-        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+        let nDur = this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")]["http://purl.org/NET/c4dm/timeline.owl#at"]
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         n.onclick = (e) => { 
           console.log("On note click, attempting to  seek to: ", nDur);
@@ -398,6 +531,11 @@ class Companion extends Component {
         }
       }
     });
+  }
+  
+  handleSelectionChange(selection) {
+    console.log("selected: ", selection)
+    this.setState({ selection });
   }
 
 
@@ -417,24 +555,73 @@ class Companion extends Component {
         vrvOptions = vrvOptionsFeatureVis;
       }
       let featureVisElement = "";
-      if(this.state.mode === "featureVis" &&
-         this.state.scoreComponentLoaded
-         ) { 
+      if(this.state.scoreComponentLoaded && this.state.currentScore in this.props.score.pageState) { 
         featureVisElement = <FeatureVis 
-            notesOnPage={ this.state.notesOnPage } 
-            barlinesOnPage={ this.state.barlinesOnPage } 
-            instantsByNoteId={ this.state.instantsByNoteId } 
+            performedElements = { this.state.performedElements }
+            performanceErrors = { this.state.performanceErrors }
+            notesOnPage = { this.state.notesOnPage } 
+            barlinesOnPage = { this.state.barlinesOnPage } 
+            instantsByNoteId = { this.state.instantsByNoteId } 
+            instantsByPerfTime = { this.state.instantsByPerfTime } 
             timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
             currentTimeline = { currentTimeline } 
             currentlyActiveNoteIds = { this.state.currentlyActiveNoteIds }
             seekToInstant = { this.seekToInstant } 
-            ref = { this.featureVis } />
+            scoreComponent = { this.scoreComponent }
+            convertCoords = { this.convertCoords } 
+            latestScoreUpdateTimestamp = { this.state.latestScoreUpdateTimestamp }
+            mode = { this.state.mode }
+            ref = { this.featureVis }
+            ensureArray = { this.ensureArray }
+        />
       };
 
-      let currentScore = <div className="loadingMsg">Loading score, please wait...</div>;
-      if(this.state.currentScore) { 
-         currentScore = <Score uri={ this.state.currentScore } key = { this.state.currentScore } options = { vrvOptions } ref={ this.scoreComponent }/>
+      let pageControlsWrapper = "";
+      if("pageState" in this.props.score && this.state.currentScore &&
+         this.state.currentScore in this.props.score.pageState) { 
+        pageControlsWrapper = 
+          <div id="pageControlsWrapper" ref="pageControlsWrapper" className={ this.state.mode + " following" }>
+            { !(this.state.scoreFollowing) && this.props.score.pageState[this.state.currentScore].currentPage > 1 
+              ? <PrevPageButton
+                  buttonContent = { <img src="/static/prev.svg" alt="Previous page"/> }
+                  uri = { this.state.currentScore }
+                />
+                : <div/>
+            }
+            
+            { this.props.score.pageState[this.state.currentScore].pageCount > 0
+                ? <span id="pageNum">Page {this.props.score.pageState[this.state.currentScore].currentPage} / {this.props.score.pageState[this.state.currentScore].pageCount}</span> 
+                : <span id="pageNum"/>
+            }
+
+            { !(this.state.scoreFollowing) && this.props.score.pageState[this.state.currentScore].currentPage < this.props.score.pageState[this.state.currentScore].pageCount
+            ? <NextPageButton
+                buttonContent = { <img src="/static/next.svg" alt="Next page"/>}
+                uri = { this.state.currentScore }
+              />
+            : <div/>
+            }
+          </div>;
       }
+      let currentScore = <div className="loadingMsg">Loading, please wait...</div>;
+      if(this.state.currentScore) { 
+        currentScore = 
+          <div ref = { this.scoreComponent } id="scoreSelectionArea">
+            <SelectableScore 
+              uri={ this.state.currentScore } 
+              key = { this.state.currentScore } 
+              vrvOptions = { vrvOptions } 
+              selectorString = ".note, .dir, .dynam" 
+              selectionArea = "#scoreSelectionArea"
+              onSelectionChange={ this.handleSelectionChange }
+              onScoreUpdate = { this.handleDOMChangeObserved }
+              annotationContainerUri = { this.props.annotationContainerUri }
+              onReceiveAnnotationContainerContent = { this.handleReceiveAnnotationContainerContent }
+              toggleAnnotationRetrieval = { this.state.toggleAnnotationRetrieval }
+            />
+          </div>;
+      }
+
       return(
         <div id="wrapper">
           <div id="logoWrapper" className = { this.state.mode }>
@@ -444,33 +631,12 @@ class Companion extends Component {
               onClick={() => window.open("http://www.mdw.ac.at/", "_blank", "noopener,noreferrer")} />
           </div>
             
-          <div id="instantBoundingBoxes" />
           { featureVisElement }
-          {  currentScore }
-        <div id="pageControlsWrapper" ref="pageControlsWrapper" className={ this.state.mode + " following" }>
-          { this.props.score.pageNum > 1 
-            ? <div id="prev" ref="prev" onClick={() => {
-                if(!this.state.scoreFollowing) { 
-                  this.props.scorePrevPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore])
-                }
-              }}> <img src="/static/prev.svg" alt="Previous page"/></div>
-            : <div id="prev" />
-          }
-          { this.props.score.pageCount > 0
-              ? <span id="pageNum">Page {this.props.score.pageNum} / {this.props.score.pageCount}</span> 
-              : <span id="pageNum"/>
-          }
-          { this.props.score.pageCount === 0 || this.props.score.pageNum < this.props.score.pageCount
-          ? <div id="next" ref="next" onClick={() => {
-              if(!this.state.scoreFollowing) { 
-                this.props.scoreNextPageStatic(this.state.currentScore, this.props.score.pageNum, this.props.score.MEI[this.state.currentScore]); 
-              }
-            }}> <img src="/static/next.svg" alt="Next page"/></div>
-          : <div id="next" />
-          }
-        </div>
+          <div id="instantBoundingBoxes" />
+          { currentScore }
+          { pageControlsWrapper }
           { this.state.performances.length === 0 
-            ? <div className="loadingMsg">Loading selectors, please wait...</div>
+            ? <div className="loadingMsg"></div>
             : <div id="selectWrapper">
                 <select name="segmentSelect" onChange={ this.handleSegmentSelected } ref='segmentSelect'>
                   <option value="none">Select a segment...</option>
@@ -478,7 +644,7 @@ class Companion extends Component {
                     this.state.segments.map( (seg) => { 
                       return (
                         <option key={ seg["@id"] } value={ seg["@id"] }>
-                          { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substring(seg["@id"].lastIndexOf("#") +1) }
+                          { seg["http://www.w3.org/2000/01/rdf-schema#label"] || seg["@id"].substr(seg["@id"].lastIndexOf("#") +1) }
                         </option>
                       )
                     })
@@ -506,44 +672,7 @@ class Companion extends Component {
                         this.setState({ scoreFollowing: !this.state.scoreFollowing }) 
                       }}
                     />
-                    Score-following
-                  </span>
-                  <span id="confidenceToggle">
-                      <input 
-                        type="checkbox" 
-                        ref="showConfidenceToggle"
-                        defaultChecked={ this.state.showConfidence }
-                        onChange={ () => { 
-                          this.setState({ showConfidence: !this.state.showConfidence});
-                        }}
-                      />
-                      Alignment confidence
-                  </span>
-                  <span id="velocitiesToggle">
-                      <input 
-                        type="checkbox" 
-                        ref="showVelocitiesToggle"
-                        defaultChecked={ this.state.showVelocities }
-                        onChange={ () => { 
-                          this.setState({ showVelocities: !this.state.showVelocities});
-                        }}
-                      />
-                      Note velocities
-                  </span>
-                  <span id="insertedDeletedToggle">
-                      <input 
-                        type="checkbox" 
-                        ref="showInsertedDeletedToggle"
-                        defaultChecked={ this.state.showInsertedDeleted}
-                        onChange={ () => { 
-                          if(this.state.showInsertedDeleted) { 
-                            // if we're unselecting, reset any deleted notes
-                            Array.prototype.map.call(document.querySelectorAll(".note.deleted"), (d) => { d.classList.remove("deleted") });
-                          } 
-                          this.setState({ showInsertedDeleted: !this.state.showInsertedDeleted}, () => { this.highlightDeletedNotes() });
-                        }}
-                      />
-                      Inserted / deleted notes
+                    Automatic page turning
                   </span>
                   <span id="modeToggle">
                       <input 
@@ -568,8 +697,25 @@ class Companion extends Component {
                           }
                         }}
                       />
-                      Visualise tempo curves 
+                      Feature visualisation
                   </span>
+                  { "demo" in this.props ||
+                    this.state.selection.length === 0
+                    ? <SubmitButton 
+                        buttonContent = { <button className="submit" disabled>Circle</button> }
+                        disabled 
+                      />
+                    : <SubmitButton
+                        buttonContent = { <button className="submit">Circle</button> } 
+                        submitUri = { this.props.annotationContainerUri }
+                        submitHandler = { this.handleSubmit }
+                        onResponse = { this.handleResponse }
+                      />
+                  }
+                  { "demo" in this.props
+                    ? "Score annotation not supported in demo version"
+                    : ""
+                  }
                 </span>
                 <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank" rel="noopener noreferrer">More information</a></span>
               </div>
@@ -624,7 +770,7 @@ class Companion extends Component {
       const timelineSegment = this.findInstantToSeekTo(selected[0]);
       console.log("timelineSegment: ", timelineSegment)
       if(timelineSegment.length) { 
-        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#at"];
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         // HACK: Offsets should be incorporated into data model through timeline maps
         startTime += parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
@@ -644,7 +790,7 @@ class Companion extends Component {
     } else { 
       const selectedPerformance = performances[0];
       const selectedVideo = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
-      let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+      let dur = instant["http://purl.org/NET/c4dm/timeline.owl#at"];
       dur = parseFloat(dur.substr(1, dur.length-2));
       let seekTo = dur + parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
       document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
@@ -667,7 +813,7 @@ class Companion extends Component {
       // set up a jump to the currently selected segment in this performance
       const timelineSegment = this.findInstantToSeekTo(this.state.currentSegment, selectedPerformance);
       if(timelineSegment.length) {
-        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        const dur = timelineSegment[0]["http://purl.org/NET/c4dm/timeline.owl#at"];
         let startTime = parseFloat(dur.substr(1, dur.length-2));
         startTime += parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);  
         newState["seekTo"] = startTime;
@@ -702,13 +848,13 @@ class Companion extends Component {
     })
     // returned them in chronological order
     const sorted = timelineSegment.sort( (a, b) => { 
-      let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
-      let bDur = b["http://purl.org/NET/c4dm/timeline.owl#atDuration"]
+      let aDur = a["http://purl.org/NET/c4dm/timeline.owl#at"]
+      let bDur = b["http://purl.org/NET/c4dm/timeline.owl#at"]
       return parseFloat(aDur.substr(1, aDur.length-2)) - parseFloat(bDur.substr(1, bDur.length-2))
     })
     // remove any occurring at -1 (indicating deleted notes)
     const filtered = sorted.filter( (n) => {
-      let dur = n["http://purl.org/NET/c4dm/timeline.owl#atDuration"]; 
+      let dur = n["http://purl.org/NET/c4dm/timeline.owl#at"]; 
       dur = parseInt(dur.substr(1, dur.length-2));
       return(dur !== -1)
     })
@@ -736,7 +882,7 @@ class Companion extends Component {
       const thisTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
       const thisOffset = this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"];
       let closestInstantIndices = this.state.instantsByPerfTime[thisTimeline].reduce( (indices, instant, thisIndex) => { 
-        let dur = instant["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+        let dur = instant["http://purl.org/NET/c4dm/timeline.owl#at"];
         dur = dur.substr(1, dur.length-2);
         const offsetDur = parseFloat(dur) + parseFloat(thisOffset);
         if(offsetDur > (t - this.state.activeWindow) && offsetDur <= t) { 
@@ -847,10 +993,13 @@ class Companion extends Component {
     let instants = [];
     let instantsByPerfTime = {};
     let instantsByNoteId = {};
-    if(outcomes.length === 3 && 
+    let performedElements = {};
+    let performanceErrors = {};
+    if(outcomes.length === 4 && 
       typeof outcomes[0] !== 'undefined' && 
       typeof outcomes[1] !== 'undefined' &&
-      typeof outcomes[2] !== 'undefined') { 
+      typeof outcomes[2] !== 'undefined' &&
+      typeof outcomes[3] !== 'undefined') { 
       outcomes[0]["@graph"].forEach( (outcome) => {
         performances.push(outcome)
       });
@@ -881,12 +1030,72 @@ class Companion extends Component {
             instantsByNoteId[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]] = { [eId]: outcome };
           }
         })
+        // performance errors: 
+        // * deleted (omitted) notes exist in the MEI but were not performed;
+        // they have a score time (MEI embodiment) but not a performed time
+        // instead, the alignment process gives them a fake performed time of -1. 
+        if(this.ensureArray(outcome["http://purl.org/NET/c4dm/timeline.owl#at"])[0] === "P-1S") {
+          // this timeline has one or more deleted / omitted notes!
+          if(outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] in performanceErrors) { 
+            performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]].deleted = 
+              outcome["http://purl.org/vocab/frbr/core#embodimentOf"]
+          } else { 
+            performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]] = { 
+              deleted: outcome["http://purl.org/vocab/frbr/core#embodimentOf"]
+            }
+          }
+        }
+        // * inserted notes do not exist in the MEI, but *were* performed;
+        // they have a performed time but not a score time (MEI embodiment)
+        // instead, the alignment process gives them an embodiment representing the note played, like:
+        // "https://terms.trompamusic.eu/maps#inserted_G4"
+        let inserted = this.ensureArray(outcome["http://purl.org/vocab/frbr/core#embodimentOf"]).filter( (embodiment) => 
+          embodiment["@id"].startsWith("https://terms.trompamusic.eu/maps#inserted")
+        );
+        if(inserted.length) { 
+          // this timeline has one or more inserted notes!
+          if(outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] in performanceErrors) { 
+            if("inserted" in performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]]) { 
+              performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]].inserted.push(outcome);
+            } else { 
+              performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]].inserted = [outcome];
+            }
+          } else { 
+            performanceErrors[outcome["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]] = { 
+              inserted: [outcome]
+            }
+          }
+        }
       });
+      // filter annotations to only those which are oa#describing (i.e., describing dynamics)
+      // TODO: consider a custom TROMPA motivation to be more restrictive here
+      outcomes[3]["@graph"].filter((outcome) => {
+        if("http://www.w3.org/ns/oa#motivatedBy" in outcome &&
+          outcome["http://www.w3.org/ns/oa#motivatedBy"]["@id"] === "http://www.w3.org/ns/oa#describing") { 
+          return true
+        } else return false
+      }).forEach( (outcome) => { 
+        // the annotation target's source is the MEI element
+        // and its scope is the performance timeline.
+        // Build a look-up table of:
+        // { mei-element: { timeline: velocityVal } }
+        let target = outcome["http://www.w3.org/ns/oa#hasTarget"];
+        let targetMEI = target["http://www.w3.org/ns/oa#hasSource"]["@id"].split("#")[1];
+        let targetScope = target["http://www.w3.org/ns/oa#hasScope"]["@id"];
+        // FIXME The velocity value should hang off the annotation, not off the target
+        let velocity = target["http://www.w3.org/ns/oa#bodyValue"];
+        if(targetMEI in performedElements) { 
+          performedElements[targetMEI][targetScope] = velocity;
+        } else { 
+          performedElements[targetMEI] = { [targetScope]: velocity }
+        }
+      })
+
       Object.keys(instantsByPerfTime).forEach( (tl) => { 
         // order the instances along each timeline
         instantsByPerfTime[tl] = instantsByPerfTime[tl].sort( (a, b) => { 
-          let aDur = a["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
-          let bDur = b["http://purl.org/NET/c4dm/timeline.owl#atDuration"];
+          let aDur = a["http://purl.org/NET/c4dm/timeline.owl#at"];
+          let bDur = b["http://purl.org/NET/c4dm/timeline.owl#at"];
           return parseFloat(aDur.substr(1, aDur.length-2)) - parseFloat(bDur.substr(1, bDur.length-2))
         })
       })
@@ -899,7 +1108,7 @@ class Companion extends Component {
         console.log("Current performance: ", currentPerformance)
         const currentScore = currentPerformance["http://purl.org/ontology/mo/published_as"]["@id"];
         this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
-        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore });
+        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore, performedElements, performanceErrors });
       }
     }
   }

@@ -25,7 +25,7 @@
     "browserslist": "^4.11.0",
     "fiber": "^1.0.4",
     "fibers": "^4.0.2",
-    "meld-clients-core": "oerc-music/meld-clients-core#updateBabelDependency-solidAuth",
+    "meld-clients-core": "oerc-music/meld-clients-core#meld-dev-2.0-TROMPA",
     "midimessage": "^1.0.5",
     "react": "^16.13.0",
     "react-dom": "^16.13.0",
@@ -36,6 +36,7 @@
     "redux": "^4.0.5",
     "redux-promise": "^0.6.0",
     "redux-thunk": "^2.3.0",
+    "selectable-score": "trompamusic/selectable-score",
     "typescript": "^3.8.3"
   },
   "browserslist": {

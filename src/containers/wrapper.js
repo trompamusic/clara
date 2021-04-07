@@ -22,8 +22,11 @@ export default function Wrapper(props) {
       trompa: "http://vocab.trompamusic.eu/vocab#"
     })
     const performanceCollection = useLDflexValue("user.trompa_hasPerformanceCollection");
+    const annotationCollection = useLDflexValue("user.trompa_hasAnnotationCollection");
     const userPOD = useLDflexValue('user.storage');
-    const publicPerformanceCollection = 'https://trompa.solidcommunity.net/public/clara.trompamusic.folder/performanceCollection/SchumannRenditions.ttl';
+    const userProfile = useLDflexValue('user');
+    const publicPerformanceCollection = 'https://clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld';
+    const publicUserProfile = 'https://clara.trompa-solid.upf.edu/profile/card#me';
     const [showPublicDemo, setShowPublicDemo] = useState(false);
     const [midiSupported, setMidiSupported] = useState(false);
     const [midiIn, setMidiIn] = useState([]);
@@ -102,7 +105,7 @@ export default function Wrapper(props) {
           }
         <LoggedOut>
           { showPublicDemo
-            ? <Companion uri = { publicPerformanceCollection } />
+            ? <Companion uri = {  publicPerformanceCollection } userPOD = { `https://clara.trompa-solid.upf.edu/` } userProfile = { publicUserProfile } demo />
             : <div>
                 <p><button onClick = { () => setShowPublicDemo(true) }>Launch demo</button></p>
                 <p><LoginButton popup="auth-popup.html">Log in with Solid</LoginButton></p>
@@ -110,9 +113,12 @@ export default function Wrapper(props) {
           }
         </LoggedOut>
         <LoggedIn>
-          <p><LogoutButton>Log out</LogoutButton> You are logged in as <Value src="user.name"/></p>
-          { typeof userPOD !== "undefined"
-           ? <Companion userPOD = { `${userPOD}` } uri = { `${performanceCollection}` } />
+          <p><LogoutButton>Log out</LogoutButton> You are logged in as <Value src="user.name"/>
+          <a href={`${userProfile}`}>
+            <img src="/solid-logo.svg" alt="Solid logo" title={`${userProfile}`} width="20" height="20" style={ {verticalAlign:"text-bottom", paddingLeft:"5px", paddingBottom:"1px"} } />
+          </a></p>
+          { typeof userPOD !== "undefined" && typeof performanceCollection !== "undefined"
+           ? <Companion userPOD = { `${userPOD}` } uri = { `${performanceCollection}` } annotationContainerUri = { `${annotationCollection}` } userProfile = { `${userProfile}` } />
            : <div>Loading... </div>
           }
         </LoggedIn>
