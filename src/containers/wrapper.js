@@ -35,7 +35,7 @@ export default function Wrapper(props) {
     // Initialise Web-MIDI
     useEffect(() => {
       if("requestMIDIAccess" in navigator) { 
-        navigator.requestMIDIAccess()
+        navigator.requestMIDIAccess({sysex: false})
         .then(
           (midi) => { 
               setMidiSupported(true);
@@ -62,8 +62,21 @@ export default function Wrapper(props) {
     }
     timer = setTimeout(() => {
       if(midiEvents.length) {
-        let midiEventsJson = midiEvents.map(m => { return {data: MIDIMessage(m), timestamp: m.timeStamp} });
+        let midiEventsJson = midiEvents
+          .map(m => { return {data: MIDIMessage(m), timestamp: m.timeStamp} })
+          //.map(m => { m["data"]["channel"] = 0; return m; })
+          .sort((a,b) => a.timestamp - b.timestamp);
+        let firstTimestamp = midiEventsJson[0].timestamp;
+        console.log("midiEventsJson: ", midiEventsJson);
+        midiEventsJson.forEach((e) => {
+          console.log(e.timestamp - firstTimestamp, e.data, e.data["_messageCode"], e.data["_data"], e.data["messageType"])
+        })
         console.log("I declare a rehearsal to be complete: ", midiEventsJson);
+
+        // write the midi events JSON to the clipboard:
+        navigator.clipboard.writeText(JSON.stringify(midiEventsJson))
+          .catch((error) => { alert(`Couldn't copy MIDI notes to clipboard! ${error}`) }) 
+
         fetch(MIDI_BATCH_ENDPOINT, { 
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
@@ -78,7 +91,11 @@ export default function Wrapper(props) {
   }, [midiEvents]);
     
     function handleMidiMessage(mes) { 
-      console.log("RAW MIDI MESSAGE: ", mes);
+      if(mes.data.length === 1 && mes.data[0] === 254) { 
+        // ignore keep-alive (active sense) message
+        return 
+      }
+      console.log("RAW MIDI MESSAGE: ", mes.data);
       setMidiEvents(midiEvents => [...midiEvents, mes]);
     }
 
@@ -93,7 +110,7 @@ export default function Wrapper(props) {
                   }
                 </span>
                 <div id="midiEvents">
-                    {midiEvents.map(ev => <div key={ev.timeStamp}>{ev.data.reverse().join()}</div>)}
+                    {midiEvents.map( (ev, ix) => <div key={ev.ix}>{ev.data.join()}</div>)}
                 </div>
               </div>
             : <div>MIDI not supported</div>

@@ -17,11 +17,11 @@ import FeatureVis from './featureVis';
 const vrvOptionsPageView = {
 	scale: 45,
   	adjustPageHeight: 1,
-	pageHeight:1200,
+	pageHeight:2400,
 	pageWidth: 2200,
 	footer: "none",
 	unit: 6,
-	breaks: "line"
+	breaks: "encoded"
 };
 
 const vrvOptionsFeatureVis = {
@@ -120,11 +120,16 @@ class Companion extends Component {
   componentDidMount() { 
     console.log("Attempting to start traversal with ", this.props.uri, " with profile: ", this.props.userProfile);
     const params = {
-      numHops:6, 
+      numHops:7, 
       objectPrefixWhitelist:[]
     }
     if(this.props.userPOD) {
-      params["objectPrefixWhitelist"] = [this.props.userPOD, ...params["objectPrefixWhitelist"]];
+      // TODO
+      // If we are to load any resources from the external web,
+      // e.g. MEI files or segmentations,
+      // we must add them all to the whitelist!
+      params["objectPrefixWhitelist"] = [this.props.userPOD, ...params["objectPrefixWhitelist"], "https://clara.trompa-solid.upf.edu/"];
+      params["objectPrefixBlacklist"] = [`${this.props.userPOD}/private/audio`, `${this.props.userPOD}private/audio`]
     }
     this.props.registerTraversal(this.props.uri, params)
     document.addEventListener('keydown', this.monitorKeys);
@@ -243,8 +248,8 @@ class Companion extends Component {
           ellipse.setAttribute("cy", (minY + maxY2)/2)
          
           // Add padding so we don't circle too tightly -- but not too much!
-          const paddedRx = Math.min((maxX2-minX)/1.6, maxX2-minX + 10)
-          const paddedRy = Math.min((maxY2-minY)/1.6, maxX2-minX + 10)
+          const paddedRx = Math.min((maxX2-minX)/1.6, maxX2-minX + 20)
+          const paddedRy = Math.min((maxY2-minY)/1.3, maxY2-minY + 20)
 
           ellipse.setAttribute("rx", paddedRx)
           ellipse.setAttribute("ry", paddedRy)
@@ -385,6 +390,7 @@ class Companion extends Component {
     const selectedSignal = this.ensureArray(this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]);
     const selectedInstant = this.ensureArray(selectedSignal[0]["http://purl.org/ontology/mo/time"]);
     const selectedTimeline = this.ensureArray(selectedInstant[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"])[0]["@id"];
+    console.log("Selected timeline: ", selectedTimeline);
     const notes = ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note");
     Array.prototype.map.call(notes, (n) => { 
       // associate notes on this page with their instant duration
@@ -1106,9 +1112,11 @@ class Companion extends Component {
         console.log("Performances:", performances)
         const currentPerformance = this.ensureArray(performances[0]["http://purl.org/ontology/mo/performance_of"])[0]
         console.log("Current performance: ", currentPerformance)
-        const currentScore = currentPerformance["http://purl.org/ontology/mo/published_as"]["@id"];
-        this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
-        this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore, performedElements, performanceErrors });
+        if("http://purl.org/ontology/mo/published_as" in currentPerformance) { 
+          const currentScore = currentPerformance["http://purl.org/ontology/mo/published_as"]["@id"];
+          this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
+          this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore, performedElements, performanceErrors });
+        }
       }
     }
   }
