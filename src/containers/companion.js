@@ -120,7 +120,7 @@ class Companion extends Component {
   componentDidMount() { 
     console.log("Attempting to start traversal with ", this.props.uri, " with profile: ", this.props.userProfile);
     const params = {
-      numHops:7, 
+      numHops:6, 
       objectPrefixWhitelist:[]
     }
     if(this.props.userPOD) {
@@ -270,7 +270,7 @@ class Companion extends Component {
     }
     if("graph" in prevProps) { 
       // check our traversal objectives if the graph has updated
-      if(prevProps.graph.outcomesHash !== this.props.graph.outcomesHash) { 
+      if(!prevProps.graph.allObjectivesApplied && this.props.graph.allObjectivesApplied) {
         // outcomes have changed, need to update our projections!
         this.processTraversalOutcomes(this.props.graph.outcomes);
       }
@@ -1089,7 +1089,7 @@ class Companion extends Component {
         let targetMEI = target["http://www.w3.org/ns/oa#hasSource"]["@id"].split("#")[1];
         let targetScope = target["http://www.w3.org/ns/oa#hasScope"]["@id"];
         // FIXME The velocity value should hang off the annotation, not off the target
-        let velocity = target["http://www.w3.org/ns/oa#bodyValue"];
+        let velocity = outcome["http://www.w3.org/ns/oa#bodyValue"];
         if(targetMEI in performedElements) { 
           performedElements[targetMEI][targetScope] = velocity;
         } else { 
