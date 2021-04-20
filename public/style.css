@@ -34,6 +34,10 @@ body {
   margin-left:20px;
 }
 
+.videoWrapper audio {
+  height: 25px !important;
+}
+
 .active { 
   fill:darkorange;
   stroke:darkorange;
