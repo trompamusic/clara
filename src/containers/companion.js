@@ -11,7 +11,7 @@ import PrevPageButton from 'selectable-score/lib/prev-page-button.js';
 import SubmitButton from 'selectable-score/lib/submit-button.js';
 
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
-import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/index';
+import { registerClock, tickTimedResource, postAnnotation } from 'meld-clients-core/lib/actions/index';
 
 import FeatureVis from './featureVis';
 
@@ -81,7 +81,11 @@ class Companion extends Component {
       latestScoreUpdateTimestamp: 0,
       toggleAnnotationRetrieval: true, // set to true when annotation update required
       highlights: [], // circles drawn to respond to highlight annotations 
-      highlightsOnPage: [] // ... those with at least one target on current page
+      highlightsOnPage: [], // ... those with at least one target on current page
+      selectorString: "", // forwarded to SelectableScore
+      circleButtonActive: false,
+      deleteAnnoButtonActive: false,
+      onSelect: () => console.error("onSelect with no selection handler")
     }
 	// Following bindings required to make 'this' work in the callbacks
     this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
@@ -99,11 +103,12 @@ class Companion extends Component {
     this.handleDOMChangeObserved = this.handleDOMChangeObserved.bind(this);
     this.convertCoords = this.convertCoords.bind(this);
     this.handleSelectionChange = this.handleSelectionChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
     this.handleResponse = this.handleResponse.bind(this);
     this.handleReceiveAnnotationContainerContent = this.handleReceiveAnnotationContainerContent.bind(this);
     this.determineHighlightsOnPage = this.determineHighlightsOnPage.bind(this)
     this.deleteSelectedPerformance = this.deleteSelectedPerformance.bind(this)
+    this.submitCircleAnnotation = this.submitCircleAnnotation.bind(this)
+    this.deleteAnnotations = this.deleteAnnotations.bind(this)
 
     this.player = React.createRef();
     this.featureVis = React.createRef();
@@ -138,6 +143,30 @@ class Companion extends Component {
     this.setState({vrvOptions: this.state.mode === "featureVis" ? vrvOptionsFeatureVis : vrvOptionsPageView});
   }
   
+  submitCircleAnnotation() { 
+    const anno = {
+      "@context": "http://www.w3.org/ns/anno.jsonld",
+      "target": this.state.selection.map( (elem) => this.state.currentScore + "#" + elem.getAttribute("id") ),
+      "motivation": "highlighting"
+    }
+    let submitHandlerArgs = "submitHandlerArgs" in this.props ? this.props.submitHandlerArgs : {};
+    this.props.postAnnotation(
+      this.props.annotationContainerUri, 
+      "", 
+      anno,
+      "", 
+      this.handleResponse
+    );
+    this.setState({circleButtonActive: false});
+  }
+
+  deleteAnnotations() {
+    if(window.confirm("Do you really wish to PERMANENTLY DELETE " + this.state.selection.length + " annotations?")) {
+      this.state.selection.map((s) => console.log("I would have deleted: ", s))
+    }
+    this.setState({deleteAnnoButtonActive: false});
+  }
+
 
   deleteSelectedPerformance() {
     if(window.confirm("Do you really wish to PERMANENTLY DELETE this performance? " + this.state.selectedPerformance["http://www.w3.org/2000/01/rdf-schema#label"])) {
@@ -207,16 +236,6 @@ class Companion extends Component {
     })
   }
 
-  handleSubmit(args) { 
-    /* do any app-specific actions and return the object (e.g. a Web Annotation) 
-     * to be submitted to the user POD */
-    return {
-      "@context": "http://www.w3.org/ns/anno.jsonld",
-      "target": this.state.selection.map( (elem) => this.state.currentScore + "#" + elem.getAttribute("id") ),
-      "motivation": "highlighting"
-    }
-  }
-
   handleResponse(res) { 
     // POST completed, retrieve the container content
     this.setState({ toggleAnnotationRetrieval: true })
@@ -276,6 +295,7 @@ class Companion extends Component {
           ellipse.setAttribute("rx", paddedRx)
           ellipse.setAttribute("ry", paddedRy)
           ellipse.classList.add("highlightEllipse");
+          ellipse.classList.add("scoreAnnotation");
           annoSvg.appendChild(ellipse);
           annopane.appendChild(annoSvg);
         })
@@ -562,8 +582,8 @@ class Companion extends Component {
   }
   
   handleSelectionChange(selection) {
-    console.log("selected: ", selection)
     this.setState({ selection });
+    this.state.onSelect();
   }
 
 
@@ -639,7 +659,7 @@ class Companion extends Component {
               uri={ this.state.currentScore } 
               key = { this.state.currentScore } 
               vrvOptions = { vrvOptions } 
-              selectorString = ".note, .dir, .dynam" 
+              selectorString = { this.state.selectorString }
               selectionArea = "#scoreSelectionArea"
               onSelectionChange={ this.handleSelectionChange }
               onScoreUpdate = { this.handleDOMChangeObserved }
@@ -727,18 +747,38 @@ class Companion extends Component {
                       />
                       Feature visualisation
                   </span>
-                  { "demo" in this.props ||
-                    this.state.selection.length === 0
-                    ? <SubmitButton 
-                        buttonContent = { <button className="submit" disabled>Circle</button> }
-                        disabled 
-                      />
-                    : <SubmitButton
-                        buttonContent = { <button className="submit">Circle</button> } 
-                        submitUri = { this.props.annotationContainerUri }
-                        submitHandler = { this.handleSubmit }
-                        onResponse = { this.handleResponse }
-                      />
+                  { "demo" in this.props 
+                    ? <div className="annoButtons"><button id="circleButton" disabled>Circle</button></div>
+                    : <div className="annoButtons">
+                        <button id="circleButton"
+                          className = {this.state.circleButtonActive ? "active" : ""}
+                          onClick={ () => {
+                            console.log("CLICK!", this.state.circleButtonActive)
+                            this.setState({
+                              selectorString: 
+                                !this.state.circleButtonActive ? ".note, .dir, .dynam" : "",
+                              onSelect: 
+                                !this.state.circleButtonActive ? 
+                                this.submitCircleAnnotation : () => console.error("onSelect with no selection handler"),
+                              circleButtonActive: !this.state.circleButtonActive,
+                              deleteAnnoButtonActive: false
+                            }) }}
+                        > Circle </button>
+                        <button id="deleteAnnoButton"
+                          className = {this.state.deleteAnnoButtonActive ? "active" : ""}
+                          onClick={ () => {
+                            console.log("CLICK!", this.state.deleteAnnoButtonActive)
+                            this.setState({
+                              selectorString: 
+                                !this.state.deleteAnnoButtonActive ? ".scoreAnnotations" : "",
+                              onSelect: 
+                                !this.state.deleteAnnoButtonActive ? 
+                                this.deleteAnnotations : () => console.error("onSelect with no selection handler"),
+                              deleteAnnoButtonActive: !this.state.deleteAnnoButtonActive,
+                              circleButtonActive: false
+                            }) }}
+                        > Delete annotations </button>
+                      </div>
                   }
                   { "demo" in this.props
                     ? "Score annotation not supported in demo version"
@@ -1167,7 +1207,8 @@ function mapDispatchToProps(dispatch) {
     scorePrevPageStatic, 
     scorePageToComponentTarget, 
     registerClock,
-    tickTimedResource
+    tickTimedResource,
+    postAnnotation
     }, dispatch);
 }
 

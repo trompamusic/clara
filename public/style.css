@@ -38,6 +38,10 @@ body {
   height: 25px !important;
 }
 
+button.active { 
+  background-color:darkorange;
+}
+
 .active { 
   fill:darkorange;
   stroke:darkorange;
