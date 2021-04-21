@@ -74,7 +74,6 @@ body {
 
 .scorepane { 
   min-height: 460px;
-  max-height: 460px;
   display:block;
   position: relative;
   z-index: -1;
@@ -87,6 +86,15 @@ body {
 
 #instantBoundingBoxes { 
   position: absolute;
+}
+
+.currentPerformanceLabel button{
+  display: block;
+}
+
+.selectable-score-postButton { 
+  display:inline;
+  margin-left: 10px;
 }
 
 .errorDetected { 

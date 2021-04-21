@@ -2,7 +2,8 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
-import ReactPlayer from 'react-player'
+import ReactPlayer from 'react-player';
+import auth from 'solid-auth-client';
 
 import SelectableScore from 'selectable-score/lib/selectable-score';
 import NextPageButton from 'selectable-score/lib/next-page-button.js';
@@ -102,6 +103,7 @@ class Companion extends Component {
     this.handleResponse = this.handleResponse.bind(this);
     this.handleReceiveAnnotationContainerContent = this.handleReceiveAnnotationContainerContent.bind(this);
     this.determineHighlightsOnPage = this.determineHighlightsOnPage.bind(this)
+    this.deleteSelectedPerformance = this.deleteSelectedPerformance.bind(this)
 
     this.player = React.createRef();
     this.featureVis = React.createRef();
@@ -136,6 +138,24 @@ class Companion extends Component {
     this.setState({vrvOptions: this.state.mode === "featureVis" ? vrvOptionsFeatureVis : vrvOptionsPageView});
   }
   
+
+  deleteSelectedPerformance() {
+    if(window.confirm("Do you really wish to PERMANENTLY DELETE this performance? " + this.state.selectedPerformance["http://www.w3.org/2000/01/rdf-schema#label"])) {
+      auth.fetch(this.state.selectedPerformance["@id"], { method: "DELETE" })
+        .then(() =>  {
+          /*
+          timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
+          this.setState({
+            performances: this.state.performances.filter((p) => p["@id"] !== this.state.selectedPerformance["@id"]),
+            selectedPerformance:"",
+            currentTimeline: ""
+          })
+        })
+        */
+        window.location.reload() })
+        .catch((e) => console.error("Couldn't delete selected performance: ", this.state.selectedPerformance["@id"],  e))
+    }
+  }
 
   determineHighlightsOnPage() { 
     if(this.scoreComponent.current) { 
@@ -250,6 +270,8 @@ class Companion extends Component {
           // Add padding so we don't circle too tightly -- but not too much!
           const paddedRx = Math.min((maxX2-minX)/1.6, maxX2-minX + 20)
           const paddedRy = Math.min((maxY2-minY)/1.3, maxY2-minY + 20)
+
+          ellipse.addEventListener("click", (t) => console.log("I was clicked: ", t), true) 
 
           ellipse.setAttribute("rx", paddedRx)
           ellipse.setAttribute("ry", paddedRy)
@@ -723,7 +745,13 @@ class Companion extends Component {
                     : ""
                   }
                 </span>
-                <span style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank" rel="noopener noreferrer">More information</a></span>
+                { this.state.selectedPerformance 
+                  ? <div id="currentPerformanceLabel">
+                      Current performance: <strong>{ this.state.selectedPerformance["http://www.w3.org/2000/01/rdf-schema#label"] }</strong>
+                    <button className="delete" onClick={ () => this.deleteSelectedPerformance() }>Delete performance</button>
+                    </div>
+                  : <div/>
+                }
               </div>
           }
           <div className="videoWrapper">
@@ -747,6 +775,7 @@ class Companion extends Component {
               }}
             />
           </div>
+          <div style={ {"marginLeft":"20px"} }><a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank" rel="noopener noreferrer">More information</a></div>
           <div className="fundingStatement">
             <table style={ {marginLeft: "20px"} }>
               <tbody>
