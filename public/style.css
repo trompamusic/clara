@@ -28,6 +28,11 @@ body {
   fill: rgb(35, 144, 194) !important;
 }
 
+.scoreAnnotation.selected { 
+  fill: rgba(35,144,194, .5)!important;
+  stroke: rgb(35, 144, 194) !important;
+}
+
 
 .videoWrapper { 
   max-width:945px;

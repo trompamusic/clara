@@ -161,8 +161,13 @@ class Companion extends Component {
   }
 
   deleteAnnotations() {
-    if(window.confirm("Do you really wish to PERMANENTLY DELETE " + this.state.selection.length + " annotations?")) {
-      this.state.selection.map((s) => console.log("I would have deleted: ", s))
+    if(window.confirm("Do you really wish to permanently erase " + this.state.selection.length + " annotations?")) {
+      this.state.selection.map((s) => {
+        console.log("TRYING TO DELETE: ", s);
+        auth.fetch(s.dataset.uri, { method: "DELETE" })
+          .then(() => s.parentNode.removeChild(s))
+          .catch((e) => console.error("Couldn't delete annotation: ", s, e))
+      })
     }
     this.setState({deleteAnnoButtonActive: false});
   }
@@ -294,6 +299,7 @@ class Companion extends Component {
 
           ellipse.setAttribute("rx", paddedRx)
           ellipse.setAttribute("ry", paddedRy)
+          ellipse.dataset.uri = hl["@id"]
           ellipse.classList.add("highlightEllipse");
           ellipse.classList.add("scoreAnnotation");
           annoSvg.appendChild(ellipse);
@@ -770,7 +776,7 @@ class Companion extends Component {
                             console.log("CLICK!", this.state.deleteAnnoButtonActive)
                             this.setState({
                               selectorString: 
-                                !this.state.deleteAnnoButtonActive ? ".scoreAnnotations" : "",
+                                !this.state.deleteAnnoButtonActive ? ".scoreAnnotation" : "",
                               onSelect: 
                                 !this.state.deleteAnnoButtonActive ? 
                                 this.deleteAnnotations : () => console.error("onSelect with no selection handler"),
