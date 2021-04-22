@@ -609,7 +609,7 @@ class Companion extends Component {
         vrvOptions = vrvOptionsFeatureVis;
       }
       let featureVisElement = "";
-      if(this.state.scoreComponentLoaded && this.state.currentScore in this.props.score.pageState) { 
+      if(this.state.scoreComponentLoaded) { //&& this.state.currentScore in this.props.score.pageState) { 
         featureVisElement = <FeatureVis 
             performedElements = { this.state.performedElements }
             performanceErrors = { this.state.performanceErrors }
