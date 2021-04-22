@@ -113,7 +113,7 @@ export default function Wrapper(props) {
                     {midiEvents.map( (ev, ix) => <div key={ev.ix}>{ev.data.join()}</div>)}
                 </div>
               </div>
-            : <div>MIDI not supported</div>
+            : <div/>
           }
         <LoggedOut>
           { showPublicDemo

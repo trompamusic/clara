@@ -120,7 +120,8 @@ class Companion extends Component {
       { "@type": "http://purl.org/ontology/mo/Performance" },
       { "@type": "http://www.linkedmusic.org/ontologies/segment/Segment" },
       { "@type": "http://purl.org/NET/c4dm/timeline.owl#Instant" },
-      { "@type": "http://www.w3.org/ns/oa#Annotation" }
+      { "@type": "http://www.w3.org/ns/oa#Annotation" },
+      { "@type": "http://purl.org/ontology/mo/Score" }
     ]);
   }
 
@@ -157,19 +158,18 @@ class Companion extends Component {
       "", 
       this.handleResponse
     );
-    this.setState({circleButtonActive: false});
+    this.setState({circleButtonActive: false, selection:[]});
   }
 
   deleteAnnotations() {
     if(window.confirm("Do you really wish to permanently erase " + this.state.selection.length + " annotations?")) {
       this.state.selection.map((s) => {
-        console.log("TRYING TO DELETE: ", s);
         auth.fetch(s.dataset.uri, { method: "DELETE" })
           .then(() => s.parentNode.removeChild(s))
           .catch((e) => console.error("Couldn't delete annotation: ", s, e))
       })
     }
-    this.setState({deleteAnnoButtonActive: false});
+    this.setState({deleteAnnoButtonActive: false, selection:[]});
   }
 
 
@@ -352,7 +352,7 @@ class Companion extends Component {
       this.createInstantBoundingRects(); // showConfidence preference changed; redraw boxes
       this.refs.showConfidenceToggle.checked = this.state.showConfidence;
     }
-    if(prevState.scoreFollowing !== this.state.scoreFollowing) { 
+    if(this.state.performances.length && prevState.scoreFollowing !== this.state.scoreFollowing) { 
       this.refs.pageControlsWrapper.classList.toggle("following");
       this.refs.scoreFollowingToggle.checked = this.state.scoreFollowing;
     }
@@ -689,9 +689,7 @@ class Companion extends Component {
           <div id="instantBoundingBoxes" />
           { currentScore }
           { pageControlsWrapper }
-          { this.state.performances.length === 0 
-            ? <div className="loadingMsg"></div>
-            : <div id="selectWrapper">
+            <div id="selectWrapper">
                 <select name="segmentSelect" onChange={ this.handleSegmentSelected } ref='segmentSelect'>
                   <option value="none">Select a segment...</option>
                   { 
@@ -717,42 +715,47 @@ class Companion extends Component {
                   }
                 </select>
               	<span> 
-                  <span id="scoreFollowToggle">
-                    <input 
-                      type="checkbox" 
-                      ref="scoreFollowingToggle"
-                      defaultChecked={ this.state.scoreFollowing }
-                      onChange={ () => { 
-                        this.setState({ scoreFollowing: !this.state.scoreFollowing }) 
-                      }}
-                    />
-                    Automatic page turning
-                  </span>
-                  <span id="modeToggle">
-                      <input 
-                        type="checkbox" 
-                        ref="modeToggle"
-                        defaultChecked={ this.state.mode === "featureVis" }
-                        onChange={ () => { 
-                          if(this.state.mode === "featureVis") { 
-                            this.setState({ 
-                              mode: "pageView", 
-                              vrvOptions: vrvOptionsPageView, 
-                              "scoreComponentLoadingStarted": false,
-                              "scoreComponentLoaded": false
-                            });
-                          } else { 
-                            this.setState({ 
-                              mode: "featureVis", 
-                              vrvOptions: vrvOptionsFeatureVis, 
-                              "scoreComponentLoadingStarted": false,
-                              "scoreComponentLoaded": false
-                            });
-                          }
-                        }}
-                      />
-                      Feature visualisation
-                  </span>
+                  { this.state.performances.length 
+                    ? <span>
+                        <span id="scoreFollowToggle">
+                          <input 
+                            type="checkbox" 
+                            ref="scoreFollowingToggle"
+                            defaultChecked={ this.state.scoreFollowing }
+                            onChange={ () => { 
+                              this.setState({ scoreFollowing: !this.state.scoreFollowing }) 
+                            }}
+                        />
+                        Automatic page turning
+                      </span>
+                      <span id="modeToggle">
+                            <input 
+                              type="checkbox" 
+                              ref="modeToggle"
+                              defaultChecked={ this.state.mode === "featureVis" }
+                              onChange={ () => { 
+                                if(this.state.mode === "featureVis") { 
+                                  this.setState({ 
+                                    mode: "pageView", 
+                                    vrvOptions: vrvOptionsPageView, 
+                                    "scoreComponentLoadingStarted": false,
+                                    "scoreComponentLoaded": false
+                                  });
+                                } else { 
+                                  this.setState({ 
+                                    mode: "featureVis", 
+                                    vrvOptions: vrvOptionsFeatureVis, 
+                                    "scoreComponentLoadingStarted": false,
+                                    "scoreComponentLoaded": false
+                                  });
+                                }
+                              }}
+                            />
+                            Feature visualisation
+                        </span>
+                      </span>
+                      : <span/>
+                  }
                   { "demo" in this.props 
                     ? <div className="annoButtons"><button id="circleButton" disabled>Circle</button></div>
                     : <div className="annoButtons">
@@ -798,8 +801,7 @@ class Companion extends Component {
                     </div>
                   : <div/>
                 }
-              </div>
-          }
+            </div>
           <div className="videoWrapper">
             <ReactPlayer 
               playing
@@ -1076,14 +1078,16 @@ class Companion extends Component {
     let instantsByNoteId = {};
     let performedElements = {};
     let performanceErrors = {};
-    if(outcomes.length === 4 && 
-      typeof outcomes[0] !== 'undefined' && 
+    if(outcomes.length === 5 && 
+      //typeof outcomes[0] !== 'undefined' && 
       typeof outcomes[1] !== 'undefined' &&
       typeof outcomes[2] !== 'undefined' &&
       typeof outcomes[3] !== 'undefined') { 
-      outcomes[0]["@graph"].forEach( (outcome) => {
-        performances.push(outcome)
-      });
+      if(typeof outcomes[0] !== 'undefined') { 
+        outcomes[0]["@graph"].forEach( (outcome) => {
+          performances.push(outcome)
+        });
+      }
       outcomes[1]["@graph"].forEach( (outcome) => {
         segments.push(outcome)
       });
@@ -1192,6 +1196,11 @@ class Companion extends Component {
           this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
           this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore, performedElements, performanceErrors });
         }
+      } else if(outcomes[4]["@graph"].length) { 
+        const currentScore = outcomes[4]["@graph"][0]["http://purl.org/ontology/mo/published_as"]["@id"];
+        this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
+        // there are no performances -- force pageView mode and disable scorefollowing
+        this.setState({ segments, currentScore, mode: "pageView", scoreFollowing: false });
       }
     }
   }
