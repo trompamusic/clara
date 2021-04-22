@@ -705,7 +705,9 @@ class Companion extends Component {
                 <select name="perfSelect" defaultValue="none" value={this.state.selectedPerformance["@id"]} onChange={ (e) => this.handlePerformanceSelected(e.target.value) }>
                   <option value="none">Select a rendition...</option>
                   {
-                    this.state.performances.map( (perf) => { 
+                    this.state.performances
+                      .sort((a,b) => a["http://www.w3.org/2000/01/rdf-schema#label"].localeCompare(b["http://www.w3.org/2000/01/rdf-schema#label"]))
+                      .map( (perf) => { 
                       return( 
                         <option key={ perf["@id"] } value={ perf["@id"] }>
                           { perf["http://www.w3.org/2000/01/rdf-schema#label"] }
