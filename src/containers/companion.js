@@ -19,7 +19,7 @@ const vrvOptionsPageView = {
 	scale: 45,
   	adjustPageHeight: 1,
 	pageHeight:2400,
-	pageWidth: 2200,
+	pageWidth: 2800,
 	footer: "none",
 	unit: 6,
 	breaks: "encoded"
@@ -29,11 +29,11 @@ const vrvOptionsFeatureVis = {
 	scale: 45,
 	adjustPageHeight: 1,
 	pageHeight: 400,
-	pageWidth:  2800,
+	pageWidth:  3000,
 	footer: "none",
 	header: "none",
-	unit: 6,
-	breaks: "line"
+	unit: 6//,
+	//breaks: "line"
 };
 
 class Companion extends Component {
@@ -137,7 +137,7 @@ class Companion extends Component {
       // e.g. MEI files or segmentations,
       // we must add them all to the whitelist!
       params["objectPrefixWhitelist"] = [this.props.userPOD, ...params["objectPrefixWhitelist"], "https://clara.trompa-solid.upf.edu/"];
-      params["objectPrefixBlacklist"] = [`${this.props.userPOD}/private/audio`, `${this.props.userPOD}private/audio`]
+      params["objectPrefixBlacklist"] = [`${this.props.userPOD}/private/audio`, `${this.props.userPOD}private/audio`, `https://tpl-alignment-test.trompa-solid.upf.edu/public/mei`]
     }
     this.props.registerTraversal(this.props.uri, params)
     document.addEventListener('keydown', this.monitorKeys);
@@ -627,6 +627,7 @@ class Companion extends Component {
             mode = { this.state.mode }
             ref = { this.featureVis }
             ensureArray = { this.ensureArray }
+            width = { 1400 }
         />
       };
 
@@ -1048,8 +1049,14 @@ class Companion extends Component {
         //  console.log("Note: ", currentNoteElement,  "Measure: ", currentMeasure, " Section ID: ", sectionId);
           if(sectionId && (!("@id" in this.state.currentSegment) || sectionId  !== this.state.currentSegment["@id"].substr(this.state.currentSegment["@id"].lastIndexOf("#") + 1))) { 
             // we've entered a new section (segment)
-            // find the corresponding segment in our outcomes
-            const newSeg = this.props.graph.outcomes[1]["@graph"].filter( (s) => {
+            //find the corresponding segment in our outcomes
+            let segments;
+            if("@graph" in this.props.graph.outcomes[1]) { 
+              segments = this.props.graph.outcomes[1]["@graph"];
+            } else { 
+              segments = [this.props.graph.outcomes[1]];
+            }
+            const newSeg = segments.filter( (s) => {
               return s["@id"].substr(s["@id"].lastIndexOf("#")+1) === sectionId
             });
             if(newSeg.length === 0) { console.log("WARNING: Cannot find segment corresponding to section ", sectionId, " of note", currentNoteElement) }
@@ -1073,6 +1080,7 @@ class Companion extends Component {
   }
 
   processTraversalOutcomes(outcomes) { 
+    console.log("PROCESSING OUTCOMES: ", outcomes)
     let segments = [];
     let performances= [];
     let instants = [];
@@ -1085,10 +1093,14 @@ class Companion extends Component {
       typeof outcomes[1] !== 'undefined' &&
       typeof outcomes[2] !== 'undefined' &&
       typeof outcomes[3] !== 'undefined') { 
-      if(typeof outcomes[0] !== 'undefined') { 
-        outcomes[0]["@graph"].forEach( (outcome) => {
-          performances.push(outcome)
-        });
+      if(typeof outcomes[0] !== 'undefined' && Object.keys(outcomes[0]).length) { 
+        if("@graph" in outcomes[0]) { 
+          outcomes[0]["@graph"].forEach( (outcome) => {
+            performances.push(outcome)
+          })
+        } else { 
+          performances.push(outcomes[0])
+        }
       }
       if("@graph" in outcomes[1]) {
         outcomes[1]["@graph"].forEach( (outcome) => {
@@ -1203,8 +1215,13 @@ class Companion extends Component {
           this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
           this.setState({ performances, segments, instants, instantsByPerfTime, instantsByNoteId, currentScore, performedElements, performanceErrors });
         }
-      } else if("@graph" in outcomes[4] && outcomes[4]["@graph"].length) { 
-        const currentScore = outcomes[4]["@graph"][0]["http://purl.org/ontology/mo/published_as"]["@id"];
+      } else if(Object.keys(outcomes[4]).length) { 
+        let currentScore;
+        if("@graph" in outcomes[4]) { 
+          currentScore = outcomes[4]["@graph"][0]["http://purl.org/ontology/mo/published_as"]["@id"];
+        } else { 
+          currentScore = outcomes[4]["http://purl.org/ontology/mo/published_as"]["@id"];
+        }
         this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
         // there are no performances -- force pageView mode and disable scorefollowing
         this.setState({ segments, currentScore, mode: "pageView", scoreFollowing: false });

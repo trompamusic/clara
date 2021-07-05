@@ -65,7 +65,7 @@ export default class ErrorRibbonVis extends Component {
     let contextualisedInsertedNotes = {};
     let insertedNotesByScoretime = {};
     this.props.timelinesToVis.forEach( (tl, ix) => { 
-      if("inserted" in this.props.performanceErrors[tl]) { // we have inserted notes
+      if(tl in this.props.performanceErrors && "inserted" in this.props.performanceErrors[tl]) { // we have inserted notes
         // ensure ALL performed instants (correct and inserted notes) are sorted by time
         const orderedInstants = this.props.instantsByPerfTime[tl].slice(0).sort( (a, b) =>  {
           const instantTimeStringA = a["http://purl.org/NET/c4dm/timeline.owl#at"];
@@ -113,11 +113,11 @@ export default class ErrorRibbonVis extends Component {
           inserted["approxScoretime"] = averageScoretime;
           return inserted;
         })
+        insertedNotesByScoretime[tl] = Object.keys(contextualisedInsertedNotes[tl]).map((n) => {
+          return { [contextualisedInsertedNotes[tl][n].approxScoretime]: contextualisedInsertedNotes[tl][n].instant }
+        })
       }
-      insertedNotesByScoretime[tl] = Object.keys(contextualisedInsertedNotes[tl]).map((n) => {
-        return { [contextualisedInsertedNotes[tl][n].approxScoretime]: contextualisedInsertedNotes[tl][n].instant }
-      })
-    });
+      });
     this.setState({insertedNotesByScoretime});
   }
 
@@ -222,7 +222,7 @@ export default class ErrorRibbonVis extends Component {
                   .map( (noteElement) => this.props.convertCoords(noteElement).x )
               }
               const contextNoteElementXPositions = [...predecessorNoteElementXPositions, ...successorNoteElementXPositions]
-              if(!contextNoteElementXPositions.length) { 
+              if(!contextNoteElementXPositions.length || !closestPredecessorScoretime) { 
                 console.log("Error Ribbon: Found inserted note with no valid note context: ", inserted);
                 return ""; 
               } else { 

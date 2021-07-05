@@ -74,8 +74,9 @@ export default function Wrapper(props) {
         console.log("I declare a rehearsal to be complete: ", midiEventsJson);
 
         // write the midi events JSON to the clipboard:
-        navigator.clipboard.writeText(JSON.stringify(midiEventsJson))
+/*        navigator.clipboard.writeText(JSON.stringify(midiEventsJson))
           .catch((error) => { alert(`Couldn't copy MIDI notes to clipboard! ${error}`) }) 
+*/
 
         fetch(MIDI_BATCH_ENDPOINT, { 
           method: 'POST',
@@ -109,9 +110,11 @@ export default function Wrapper(props) {
                   : <span className="isNotRecording">Play MIDI notes to start recording</span>
                   }
                 </span>
+              {/*
                 <div id="midiEvents">
                     {midiEvents.map( (ev, ix) => <div key={ev.ix}>{ev.data.join()}</div>)}
                 </div>
+              */}
               </div>
             : <div/>
           }
