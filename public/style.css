@@ -1,5 +1,8 @@
 body { 
   font-family: sans-serif;
+}
+
+svg { 
   user-select: none;
 }
 
