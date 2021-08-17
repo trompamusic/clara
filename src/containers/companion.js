@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 import ReactPlayer from 'react-player';
-import auth from 'solid-auth-client';
 
 import SelectableScore from 'selectable-score/lib/selectable-score';
 import NextPageButton from 'selectable-score/lib/next-page-button.js';
@@ -11,15 +10,16 @@ import PrevPageButton from 'selectable-score/lib/prev-page-button.js';
 import SubmitButton from 'selectable-score/lib/submit-button.js';
 
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
-import { registerClock, tickTimedResource, postAnnotation } from 'meld-clients-core/lib/actions/index';
+import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/index';
+import SolidClient from 'trompa-annotation-component/dist/API/SolidAPI';
 
 import FeatureVis from './featureVis';
 
 const vrvOptionsPageView = {
 	scale: 45,
   	adjustPageHeight: 1,
-	pageHeight:2400,
-	pageWidth: 2800,
+	pageHeight:2000,
+	pageWidth: 2400,
 	footer: "none",
 	unit: 6,
 	breaks: "encoded"
@@ -113,6 +113,7 @@ class Companion extends Component {
     this.player = React.createRef();
     this.featureVis = React.createRef();
     this.scoreComponent = React.createRef();
+    this.solidClient = new SolidClient(this.props.session);
   }
 
   UNSAFE_componentWillMount() { 
@@ -151,20 +152,16 @@ class Companion extends Component {
       "motivation": "highlighting"
     }
     let submitHandlerArgs = "submitHandlerArgs" in this.props ? this.props.submitHandlerArgs : {};
-    this.props.postAnnotation(
-      this.props.annotationContainerUri, 
-      "", 
-      anno,
-      "", 
-      this.handleResponse
-    );
+    this.solidClient.saveAnnotation(anno, new URL(this.props.annotationContainerUri).pathname)
+        .then((resp) => this.handleResponse(resp))
+        .catch((err) => "Couldn't save annotation:", err);
     this.setState({circleButtonActive: false, selection:[]});
   }
 
   deleteAnnotations() {
     if(window.confirm("Do you really wish to permanently erase " + this.state.selection.length + " annotations?")) {
       this.state.selection.map((s) => {
-        auth.fetch(s.dataset.uri, { method: "DELETE" })
+        this.solidClient.deleteAnnotation(s.dataset.uri)
           .then(() => s.parentNode.removeChild(s))
           .catch((e) => console.error("Couldn't delete annotation: ", s, e))
       })
@@ -175,7 +172,7 @@ class Companion extends Component {
 
   deleteSelectedPerformance() {
     if(window.confirm("Do you really wish to PERMANENTLY DELETE this performance? " + this.state.selectedPerformance["http://www.w3.org/2000/01/rdf-schema#label"])) {
-      auth.fetch(this.state.selectedPerformance["@id"], { method: "DELETE" })
+      this.props.session.fetch(this.state.selectedPerformance["@id"], { method: "DELETE" })
         .then(() =>  {
           /*
           timelinesToVis = { Object.keys(this.state.instantsByNoteId) } 
@@ -1246,8 +1243,7 @@ function mapDispatchToProps(dispatch) {
     scorePrevPageStatic, 
     scorePageToComponentTarget, 
     registerClock,
-    tickTimedResource,
-    postAnnotation
+    tickTimedResource
     }, dispatch);
 }
 
