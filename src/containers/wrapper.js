@@ -1,30 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import data from '@solid/query-ldflex';
+import { useHistory } from "react-router-dom";
+//import data from '@solid/query-ldflex';
 import MIDIMessage from 'midimessage';
-
-import { 
-  LoginButton,
-  LogoutButton,
-  Value, 
-  LoggedIn, 
-  LoggedOut, 
-  useLDflexValue, 
-} from '@solid/react';
-
+import {SessionProvider} from "@inrupt/solid-ui-react";
+import {
+    useSession,
+    CombinedDataProvider,
+    LoginButton,
+    LogoutButton,
+    Text
+} from "@inrupt/solid-ui-react";
+import { getSolidDataset, getThing, getUrl } from "@inrupt/solid-client";
+import { fetch, handleIncomingRedirect } from "@inrupt/solid-client-authn-browser";
+import { FOAF, VCARD } from "@inrupt/lit-generated-vocab-common";
+import {WS} from "@inrupt/vocab-solid-common";
 import Companion from './companion';
+
+const TROMPA = "http://vocab.trompamusic.eu/vocab#";
 
 const MIDI_TIMEOUT = 5000; // milliseconds until we decide rehearsal rendition has stopped
 const MIDI_BATCH_ENDPOINT = "http://127.0.0.1:5000/midiBatch"
 
 export default function Wrapper(props) {
-    data.context.extend({
-      mo: "http://purl.org/ontology/mo/",
-      trompa: "http://vocab.trompamusic.eu/vocab#"
-    })
-    const performanceCollection = useLDflexValue("user.trompa_hasPerformanceCollection");
-    const annotationCollection = useLDflexValue("user.trompa_hasAnnotationCollection");
-    const userPOD = useLDflexValue('user.storage');
-    const userProfile = useLDflexValue('user');
+    const {session} = useSession();
+    const [idp, setIdp] = useState("https://trompa-solid.upf.edu");
+    const [currentUrl, setCurrentUrl] = useState("https://localhost:8080");
+    const [userPOD, setUserPOD] = useState(undefined);
+    const [performanceCollection, setPerformanceCollection] = useState(undefined);
+    const [annotationCollection, setAnnotationCollection] = useState(undefined);
+    const [userProfile, setUserProfile] = useState(undefined);
+
+    let history = useHistory();
+    const onSessionRestore = (url) => { 
+      if(history) { 
+        const u = new URL(url);
+        history.push(u.pathname + u.search);
+      }
+    }
+
+    useEffect(() => {
+        setCurrentUrl(window.location.href);
+    }, [setCurrentUrl]);
+
     const publicPerformanceCollection = 'https://clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld';
     const publicUserProfile = 'https://clara.trompa-solid.upf.edu/profile/card#me';
     const [showPublicDemo, setShowPublicDemo] = useState(false);
@@ -32,7 +49,7 @@ export default function Wrapper(props) {
     const [midiIn, setMidiIn] = useState([]);
     const [midiEvents, setMidiEvents] = useState([])
 
-    // Initialise Web-MIDI
+    // Initialise Web-MIDI and Solid redirect
     useEffect(() => {
       if("requestMIDIAccess" in navigator) { 
         navigator.requestMIDIAccess({sysex: false})
@@ -51,8 +68,16 @@ export default function Wrapper(props) {
       } else { 
         console.warn("Browser does not support WebMIDI");
       }
+      handleIncomingRedirect({
+        restorePreviousSession: true
+      }).then((info) => {
+        if(info) { 
+          console.log(`Logged in with WebID [${info.webId}]`)
+        } else { 
+          console.log("Could not restore previous session");
+        }
+      })
     }, [])
-
 
   // Track MIDI events and start / end rehearsal rendition recordings based on them
   useEffect(() => {
@@ -90,6 +115,7 @@ export default function Wrapper(props) {
     }, MIDI_TIMEOUT)
     return () => clearTimeout(timer)
   }, [midiEvents]);
+
     
     function handleMidiMessage(mes) { 
       if(mes.data.length === 1 && mes.data[0] === 254) { 
@@ -100,12 +126,42 @@ export default function Wrapper(props) {
       setMidiEvents(midiEvents => [...midiEvents, mes]);
     }
 
+    async function readProfile() {
+        const dataset = await getSolidDataset(session.info.webId.split("#")[0], { fetch: fetch });
+        console.log("Obtained dataset: ", dataset)
+        const profileDoc = getThing(dataset, session.info.webId)
+        setUserPOD(getUrl(profileDoc, WS.storage));
+        setPerformanceCollection(getUrl(profileDoc, TROMPA + "hasPerformanceCollection"));
+        setAnnotationCollection(getUrl(profileDoc, TROMPA + "hasAnnotationCollection"));
+        setUserProfile(session.info.webId);
+    }
+
+    useEffect(() => {
+        if(session.info.isLoggedIn) {
+            readProfile();
+        }
+    }, [session.info.isLoggedIn])
+
+    let publicDemoDisplay;
+    if(showPublicDemo) {
+        publicDemoDisplay = <Companion uri={publicPerformanceCollection} userPOD={`https://clara.trompa-solid.upf.edu/`}
+                                       userProfile={publicUserProfile} demo/>
+    } else {
+        publicDemoDisplay = <div>
+            <button onClick={() => setShowPublicDemo(true)}>Launch demo</button>
+            <LoginButton oidcIssuer={idp} redirectUrl={currentUrl}>
+                <button>Log in</button>
+            </LoginButton>
+        </div>
+    }
+
     return(
-      <div id="authWrapper">
+      <SessionProvider sessionId="trompa-clara" onSessionRestore={onSessionRestore}>
+        <div id="authWrapper">
           { midiSupported
             ? <div id="midi">
                 <span id="recordingIndicator">
-                  { midiEvents.length 
+                  { midiEvents.length
                   ? <span className="isRecording">Recording</span>
                   : <span className="isNotRecording">Play MIDI notes to start recording</span>
                   }
@@ -118,25 +174,21 @@ export default function Wrapper(props) {
               </div>
             : <div/>
           }
-        <LoggedOut>
-          { showPublicDemo
-            ? <Companion uri = {  publicPerformanceCollection } userPOD = { `https://clara.trompa-solid.upf.edu/` } userProfile = { publicUserProfile } demo />
-            : <div>
-                <p><button onClick = { () => setShowPublicDemo(true) }>Launch demo</button></p>
-                <p><LoginButton popup="auth-popup.html">Log in with Solid</LoginButton></p>
-              </div>
-          }
-        </LoggedOut>
-        <LoggedIn>
-          <p><LogoutButton>Log out</LogoutButton> You are logged in as <Value src="user.name"/>
-          <a href={`${userProfile}`}>
-            <img src="/solid-logo.svg" alt="Solid logo" title={`${userProfile}`} width="20" height="20" style={ {verticalAlign:"text-bottom", paddingLeft:"5px", paddingBottom:"1px"} } />
-          </a></p>
-          { typeof userPOD !== "undefined" && typeof performanceCollection !== "undefined"
-           ? <Companion userPOD = { `${userPOD}` } uri = { `${performanceCollection}` } annotationContainerUri = { `${annotationCollection}` } userProfile = { `${userProfile}` } />
-           : <div>Loading... </div>
-          }
-        </LoggedIn>
-      </div>
+            {!(session.info.isLoggedIn)
+                ? publicDemoDisplay
+                :   <CombinedDataProvider datasetUrl={session.info.webId} thingUrl={session.info.webId}>
+                    <div>
+                    <LogoutButton><button>Log out</button></LogoutButton> You are logged in as <Text property={FOAF.name.iri.value}/>
+                    <a href={session.info.webId}>
+                    <img src="/solid-logo.svg" alt="Solid logo" title={session.info.webId} width="20" height="20" style={{verticalAlign:"text-bottom", paddingLeft:"5px", paddingBottom:"1px"}} />
+                    </a></div>
+                        {typeof userPOD !== "undefined" && typeof performanceCollection !== "undefined" && annotationCollection !== "undefined" && userProfile !== "undefined"
+                            ? <Companion userPOD = { userPOD } uri = { performanceCollection } annotationContainerUri = { annotationCollection } userProfile = { userProfile } session = { session } />
+                            : <div>Loading... </div>
+                        }
+                </CombinedDataProvider>
+            }
+        </div>
+      </SessionProvider>
     )
 }
