@@ -4,6 +4,7 @@ body {
 
 svg { 
   user-select: none;
+  overflow:visible;
 }
 
 #zoomBox { 
