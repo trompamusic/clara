@@ -11,16 +11,20 @@ export default class ErrorRibbonVis extends Component {
       width: this.props.width || "1280",
       height: this.props.height || "120",
       pointsPerTimeline: {},
-      insertedNotesByScoretime: {}
+      insertedNotesByScoretime: {},
+      loading: false,
+      worker: new window.Worker("/workers/errorRibbonWorker.js")
     }
     this.errorRibbonSvg = React.createRef();
     this.contextualiseInsertedNotes = this.contextualiseInsertedNotes.bind(this);
+    this.asyncCallContextualiseInsertedNotes= this.asyncCallContextualiseInsertedNotes.bind(this);
     this.averageScoretime = this.averageScoretime.bind(this);
-    this.closestValidNote = this.closestValidNote.bind(this);
   }
 
   componentDidMount() {
     console.log("error ribbon visualisation mounted with props ", this.props);
+    //this.props.setErrorRibbonReady(false);
+    
   }
 
   componentDidUpdate(prevProps, prevState) { 
@@ -28,8 +32,11 @@ export default class ErrorRibbonVis extends Component {
       //"instantsByScoretimeLastModified" in prevProps &&
      // prevProps.instantsByScoretimeLastModified !== this.props.instantsByScoretimeLastModified) { 
       // initial load, or page has flipped. (Re-)calculate inserted note contexts.
-    if(prevProps.latestScoreUpdateTimestamp < this.props.latestScoreUpdateTimestamp) {
-      this.contextualiseInsertedNotes();
+    console.log("CDU: ", prevProps.latestScoreUpdateTimestamp, this.props.latestScoreUpdateTimestamp);
+    if(prevProps.latestScoreUpdateTimestamp !== this.props.latestScoreUpdateTimestamp) {
+      console.log("NOW")
+      this.setState({loading: true}, this.contextualiseInsertedNotes);
+     // this.props.setErrorRibbonReady(false, this.asyncCallContextualiseInsertedNotes);
     }
   }
 
@@ -50,79 +57,32 @@ export default class ErrorRibbonVis extends Component {
     }
   }
 
-  closestValidNote(candidates) { 
-    return candidates.find( (instant) => 
-      this.props.ensureArray(instant["http://purl.org/vocab/frbr/core#embodimentOf"])
-        .filter( (el) => !(el["@id"].startsWith("https://terms.trompamusic.eu/maps#inserted")) )
-        .length > 0
-    )
+
+  asyncCallContextualiseInsertedNotes = async () => {
+    console.log("AWAITING")
+    this.contextualiseInsertedNotes();
+    //this.props.setErrorRibbonReady(true);
   }
 
   contextualiseInsertedNotes() {
     // For inserted notes, we have a performance time but no score time. 
     // In order to place them in our ribbon we need to approximate a score time.
     // To do this, look for neighbouring "correctly performed" notes for hints.
-    let contextualisedInsertedNotes = {};
-    let insertedNotesByScoretime = {};
-    this.props.timelinesToVis.forEach( (tl, ix) => { 
-      if(tl in this.props.performanceErrors && "inserted" in this.props.performanceErrors[tl]) { // we have inserted notes
-        // ensure ALL performed instants (correct and inserted notes) are sorted by time
-        const orderedInstants = this.props.instantsByPerfTime[tl].slice(0).sort( (a, b) =>  {
-          const instantTimeStringA = a["http://purl.org/NET/c4dm/timeline.owl#at"];
-          const instantTimeA = parseFloat(instantTimeStringA.substr(1, instantTimeStringA.length-2));
-          const instantTimeStringB = b["http://purl.org/NET/c4dm/timeline.owl#at"];
-          const instantTimeB = parseFloat(instantTimeStringB.substr(1, instantTimeStringB.length-2));
-          return instantTimeA - instantTimeB;
-        });
-        // locate the inserted notes within their performance context
-        const insertedWithIndices = this.props.performanceErrors[tl].inserted.map( (inserted) => { 
-          return {
-            index: orderedInstants.findIndex( (instant) => instant["http://purl.org/NET/c4dm/timeline.owl#at"] === 
-                                 inserted["http://purl.org/NET/c4dm/timeline.owl#at"]
-                  ),
-            instant: inserted
-          }
-        }) 
-        contextualisedInsertedNotes[tl] = insertedWithIndices.map((inserted) => { 
-          let averageScoretime;
-          const validNotesAtIndex = this.props.ensureArray(inserted.instant["http://purl.org/vocab/frbr/core#embodimentOf"])
-            .filter((el) => !(el["@id"].startsWith("https://terms.trompamusic.eu/maps#inserted")))
-          if(validNotesAtIndex.length) { 
-            // if there is a non-inserted note at that index, use its score time
-            averageScoretime = this.averageScoretime(validNotesAtIndex);
-          } else{
-            // otherwise, approximate a score time based on preceding and succeeding non-inserted notes
-            let closestValidPredecessorNotes = [];
-            let closestValidSuccessorNotes = [];
-            const predecessors = orderedInstants.slice(0, inserted.index-1).reverse();
-            const closestValidPredecessorInstant = this.closestValidNote(predecessors);
-            if(closestValidPredecessorInstant) { 
-              closestValidPredecessorNotes = this.props.ensureArray(closestValidPredecessorInstant["http://purl.org/vocab/frbr/core#embodimentOf"])
-              .map((embodiment) => embodiment["@id"])
-              .filter((id) => !(id.startsWith("https://terms.trompamusic.eu/maps#inserted")));
-            }
-            const successors = orderedInstants.slice(inserted.index+1);
-            const closestValidSuccessorInstant= this.closestValidNote(successors);
-            if(closestValidSuccessorInstant) { 
-              closestValidSuccessorNotes = this.props.ensureArray(closestValidSuccessorInstant["http://purl.org/vocab/frbr/core#embodimentOf"])
-                .map((embodiment) => embodiment["@id"])
-                .filter((id) => !(id.startsWith("https://terms.trompamusic.eu/maps#inserted")));
-            }
-            averageScoretime = this.averageScoretime([...closestValidPredecessorNotes, ...closestValidSuccessorNotes]);
-          }
-          inserted["approxScoretime"] = averageScoretime;
-          return inserted;
-        })
-        insertedNotesByScoretime[tl] = Object.keys(contextualisedInsertedNotes[tl]).map((n) => {
-          return { [contextualisedInsertedNotes[tl][n].approxScoretime]: contextualisedInsertedNotes[tl][n].instant }
-        })
-      }
-      });
-    this.setState({insertedNotesByScoretime});
+    this.state.worker.postMessage({
+      timelinesToVis: this.props.timelinesToVis,
+      performanceErrors: this.props.performanceErrors,
+      instantsByPerfTime: this.props.instantsByPerfTime,
+      timemapByNoteId: this.props.timemapByNoteId
+    });
+    this.state.worker.onerror = (err) => err;
+    this.state.worker.onmessage = (e) => { 
+      console.log("Received from worker: ", e);
+      this.setState({insertedNotesByScoretime: e.data, loading:false});
+    }
   }
 
   render() {
-    if(Object.keys(this.props.timemapByNoteId).length) { 
+    if(!(this.state.loading) && Object.keys(this.props.timemapByNoteId).length) { 
       let svgElements = [];
       let deletedNoteIndicators = [];
       let insertedNoteIndicators = [];
@@ -161,7 +121,7 @@ export default class ErrorRibbonVis extends Component {
         if(tl in this.props.performanceErrors) { 
           if("deleted" in this.props.performanceErrors[tl]) {
             // this timeline has deleted notes
-            this.props.performanceErrors[tl].deleted.forEach((d) => {
+            this.props.ensureArray(this.props.performanceErrors[tl].deleted).forEach((d) => {
               const deletedNoteIds = this.props.ensureArray(d).map((e) => 
                 e["@id"].substr(e["@id"].indexOf("#")+1)
               )
