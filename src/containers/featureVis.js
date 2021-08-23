@@ -383,7 +383,9 @@ class FeatureVis extends Component {
             makeLine = { this.makeLine }
           />
         </div>
-        <div className = { this.state.displayErrorRibbon ? "" : "removedFromDisplay"}>
+        <div 
+          className = { this.state.displayErrorRibbon ? "errorRibbon" : "errorRibbon removedFromDisplay"}
+          style={{height: this.state.height + "px"}}>
           <div className = { this.state.displayErrorRibbon ? "visLabel" : "removedFromDisplay"}> Error visualisation </div>
           <ErrorRibbonVis
             width = { this.state.width }

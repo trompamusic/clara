@@ -208,6 +208,6 @@ export default class ErrorRibbonVis extends Component {
               { svgElements }
         </svg>
       )
-    } else { return ( <div id="errorRibbonLoading" >Rendering error ribbon visualisation...</div> ) }
+    } else { return ( <div id="errorRibbonLoading" /> ) }
   }
 }
