@@ -32,9 +32,7 @@ export default class ErrorRibbonVis extends Component {
       //"instantsByScoretimeLastModified" in prevProps &&
      // prevProps.instantsByScoretimeLastModified !== this.props.instantsByScoretimeLastModified) { 
       // initial load, or page has flipped. (Re-)calculate inserted note contexts.
-    console.log("CDU: ", prevProps.latestScoreUpdateTimestamp, this.props.latestScoreUpdateTimestamp);
     if(prevProps.latestScoreUpdateTimestamp !== this.props.latestScoreUpdateTimestamp) {
-      console.log("NOW")
       this.setState({loading: true}, this.contextualiseInsertedNotes);
      // this.props.setErrorRibbonReady(false, this.asyncCallContextualiseInsertedNotes);
     }
@@ -164,21 +162,23 @@ export default class ErrorRibbonVis extends Component {
                 console.warn("Found scoretime of inserted on page with more than one key: ", t)
               }
               const scoretimeOfInsertedOnPage = Object.keys(t)[0];
+              let predecessorNoteElements = [];
               let predecessorNoteElementXPositions = [];
+              let successorNoteElements = [];
               let successorNoteElementXPositions = [];
               const inserted = this.state.insertedNotesByScoretime[tl].find( (note) => Object.keys(note)[0] === scoretimeOfInsertedOnPage);
-              const predecessors = orderedScoretimesOnPage.slice(0, scoretimeOfInsertedOnPage).reverse();
-              const closestPredecessorScoretime = predecessors.find((p) => p.qstamp <= scoretimeOfInsertedOnPage);
-              const successors = orderedScoretimesOnPage.slice(scoretimeOfInsertedOnPage);
-              const closestSuccessorScoretime = successors.find((p) => p.qstamp >= scoretimeOfInsertedOnPage);
+              const closestPredecessorScoretime = orderedScoretimesOnPage.slice(0).reverse().find((p) => p.qstamp <= scoretimeOfInsertedOnPage);
+              const closestSuccessorScoretime = orderedScoretimesOnPage.find((p) => p.qstamp >= scoretimeOfInsertedOnPage);
               if(closestPredecessorScoretime && closestPredecessorScoretime.qstamp in this.props.instantsByScoretime[tl]) { 
-                predecessorNoteElementXPositions = this.props.instantsByScoretime[tl][closestPredecessorScoretime.qstamp]
+                predecessorNoteElements = this.props.instantsByScoretime[tl][closestPredecessorScoretime.qstamp]
                   .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
+                predecessorNoteElementXPositions = predecessorNoteElements
                   .map( (noteElement) => this.props.convertCoords(noteElement).x )
               }
               if(closestSuccessorScoretime && closestSuccessorScoretime.qstamp in this.props.instantsByScoretime[tl]) { 
-                successorNoteElementXPositions = this.props.instantsByScoretime[tl][closestSuccessorScoretime.qstamp]
+                successorNoteElements = this.props.instantsByScoretime[tl][closestSuccessorScoretime.qstamp]
                   .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
+                successorNoteElementXPositions = successorNoteElements
                   .map( (noteElement) => this.props.convertCoords(noteElement).x )
               }
               const contextNoteElementXPositions = [...predecessorNoteElementXPositions, ...successorNoteElementXPositions]
