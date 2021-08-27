@@ -85,5 +85,5 @@ onmessage = (e) => {
       })
     }
     });
-    postMessage({insertedNotesByScoretime});
+    postMessage(insertedNotesByScoretime);
 }
