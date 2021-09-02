@@ -22,7 +22,8 @@ const vrvOptionsPageView = {
 	pageWidth: 2400,
 	footer: "none",
 	unit: 6,
-	breaks: "encoded"
+	breaks: "encoded",
+	svgAdditionalAttribute: ["note@pname", "note@oct"]
 };
 
 const vrvOptionsFeatureVis = {
@@ -32,8 +33,8 @@ const vrvOptionsFeatureVis = {
 	pageWidth:  3000,
 	footer: "none",
 	header: "none",
-	unit: 6//,
-	//breaks: "line"
+	unit: 6,
+	svgAdditionalAttribute: ["clef@shape", "clef@line"]
 };
 
 class Companion extends Component {
