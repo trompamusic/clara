@@ -19,6 +19,7 @@ export default class ErrorRibbonVis extends Component {
     this.errorRibbonSvg = React.createRef();
     this.contextualiseInsertedNotes = this.contextualiseInsertedNotes.bind(this);
     this.averageScoretime = this.averageScoretime.bind(this);
+    this.determineInsertedNoteYPosition = this.determineInsertedNoteYPosition.bind(this);
   }
 
   componentDidMount() {
@@ -54,6 +55,72 @@ export default class ErrorRibbonVis extends Component {
     }
   }
 
+  pitchToNum(pitchName) {
+    let nameToNum;
+    switch(pitchName) { 
+      case "C": 
+        nameToNum = 0;
+        break;
+      case "Cs":
+      case "Db": 
+        nameToNum = 1;
+        break;
+      case "D":
+        nameToNum = 2;
+        break;
+      case "Ds":
+      case "Eb":
+        nameToNum = 3;
+        break;
+      case "E":
+        nameToNum = 4;
+        break;
+      case "F": 
+        nameToNum = 5;
+        break;
+      case "F#":
+      case "Gb":
+        nameToNum = 6;
+        break;
+      case "G":
+        nameToNum = 7;
+        break;
+      case "Gs":
+      case "Ab":
+        nameToNum = 8;
+        break;
+      case "A":
+        nameToNum = 9;
+        break;
+      case "As":
+      case "Bb":
+        nameToNum = 10;
+        break;
+      case "B": 
+        nameToNum = 11;
+        break;
+      default: 
+        console.error("pitchToNum called with unrecognised pitch name:", pitchName)
+    }
+    return nameToNum;
+  }
+
+  octaveDiff(pitchOct, clef) {
+    let clefOct;
+    switch(clef.dataset.shape) { 
+      case "F": 
+        clefOct = 3;
+        break;
+      case "G": 
+      case "C":
+        clefOct = 4;
+        break;
+      default:
+        console.error("octaveDiff called on clef with unhandled shape: ", clef);
+    }
+    return (pitchOct - clefOct) * 12
+  }
+
   contextualiseInsertedNotes() {
     // For inserted notes, we have a performance time but no score time. 
     // In order to place them in our ribbon we need to approximate a score time.
@@ -69,6 +136,23 @@ export default class ErrorRibbonVis extends Component {
       console.log("Received from worker: ", e);
       this.setState({insertedNotesByScoretime: e.data, loading:false});
     }
+  }
+
+  determineInsertedNoteYPosition(clef, inserted) {
+    const staff = clef.closest(".staff");
+    const lines = document.querySelectorAll("#" + staff.getAttribute("id") + "> path").reverse();
+    const interLineDistance = lines[1] - lines[0];
+    // take the heightOfOrigin to be the Y position of the clef's 'line'
+    const heightOfOrigin = lines[0] + (cleff.dataset.line * interLineDistance);
+    // figure out semitone difference from inserted note to origin
+    const insertedPitch = this.props.ensureArray(inserted["http://purl.org/vocab/frbr/core#embodimentOf"])[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", "");
+    insertedPitchComponents = /([A-G])([sb]?)(\d)/.exec(insertedPitch);
+    const insertedPitchName = insertedPitchComponents[1];
+    const insertedPitchAccid = insertedPitchComponents[2];
+    const insertedPitchOct = insertedPitchComponents[3];
+    const semitoneDiff = pitchToNum(insertedPitchName + insertedPitchAccid) - pitchToNum(clef.dataset.shape) + octaveDiff(insertedPitchOct, clef.dataset.shape);
+    console.log("Got : ", clef.dataset.shape, clef.dataset.line, lines, inserted, insertedPitch);
+
   }
 
   render() {
@@ -184,8 +268,10 @@ export default class ErrorRibbonVis extends Component {
                 if(tl === this.props.currentTimeline) { 
                   // determine closest clef for purposes of inpainting error:
                   const clef = closestClef(contextNoteElements[0].getAttribute("id"));
+                  this.determineInsertedNoteYPosition(clef, inserted);
                   if(!!clef) { 
                     const contextNoteCoords = this.props.convertCoords(contextNoteElements[0]);
+                    
                     inpaintElements = [...inpaintElements, this.props.makePoint(
                       className + " inpainted",
                       closestPredecessorScoretime.qstamp,
