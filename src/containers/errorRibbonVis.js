@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { closestClef} from '../util/util';
 
 const padding = 0.1; // proportion of ribbon reserved for whitespace
 const errorIndicatorHeight = 20; // currently in pixels -- perhaps make a proportion instead?
@@ -17,7 +18,6 @@ export default class ErrorRibbonVis extends Component {
     }
     this.errorRibbonSvg = React.createRef();
     this.contextualiseInsertedNotes = this.contextualiseInsertedNotes.bind(this);
-    this.asyncCallContextualiseInsertedNotes= this.asyncCallContextualiseInsertedNotes.bind(this);
     this.averageScoretime = this.averageScoretime.bind(this);
   }
 
@@ -34,7 +34,6 @@ export default class ErrorRibbonVis extends Component {
       // initial load, or page has flipped. (Re-)calculate inserted note contexts.
     if(prevProps.latestScoreUpdateTimestamp !== this.props.latestScoreUpdateTimestamp) {
       this.setState({loading: true}, this.contextualiseInsertedNotes);
-     // this.props.setErrorRibbonReady(false, this.asyncCallContextualiseInsertedNotes);
     }
   }
 
@@ -55,13 +54,6 @@ export default class ErrorRibbonVis extends Component {
     }
   }
 
-
-  asyncCallContextualiseInsertedNotes = async () => {
-    console.log("AWAITING")
-    this.contextualiseInsertedNotes();
-    //this.props.setErrorRibbonReady(true);
-  }
-
   contextualiseInsertedNotes() {
     // For inserted notes, we have a performance time but no score time. 
     // In order to place them in our ribbon we need to approximate a score time.
@@ -80,8 +72,10 @@ export default class ErrorRibbonVis extends Component {
   }
 
   render() {
+    // FIXME: Move all dom-based calculation OUTSIDE OF RENDER FUNCTION 
     if(!(this.state.loading) && Object.keys(this.props.timemapByNoteId).length) { 
       let svgElements = [];
+      let inpaintElements = [];
       let deletedNoteIndicators = [];
       let insertedNoteIndicators = [];
       // generate barlines
@@ -181,11 +175,31 @@ export default class ErrorRibbonVis extends Component {
                 successorNoteElementXPositions = successorNoteElements
                   .map( (noteElement) => this.props.convertCoords(noteElement).x )
               }
+              const contextNoteElements = [...predecessorNoteElements, ...successorNoteElements]
               const contextNoteElementXPositions = [...predecessorNoteElementXPositions, ...successorNoteElementXPositions]
               if(!contextNoteElementXPositions.length || !closestPredecessorScoretime) { 
                 console.log("Error Ribbon: Found inserted note with no valid note context: ", inserted);
                 return ""; 
               } else { 
+                if(tl === this.props.currentTimeline) { 
+                  // determine closest clef for purposes of inpainting error:
+                  const clef = closestClef(contextNoteElements[0].getAttribute("id"));
+                  if(!!clef) { 
+                    const contextNoteCoords = this.props.convertCoords(contextNoteElements[0]);
+                    inpaintElements = [...inpaintElements, this.props.makePoint(
+                      className + " inpainted",
+                      closestPredecessorScoretime.qstamp,
+                      tl,
+                      contextNoteCoords.x,
+                      contextNoteCoords.y,
+                      20,
+                      20,
+                      "inpainted-" + inserted[scoretimeOfInsertedOnPage]["@id"] + "-" + ix,
+                      "inpainted point in timeline " + tl,
+                      () => this.props.handleClickSeekToInstant(inserted[scoretimeOfInsertedOnPage]["http://purl.org/NET/c4dm/timeline.owl#at"])
+                    )]
+                  }
+                }
                 const xPos = contextNoteElementXPositions.reduce( (sum, x) => sum + x, 0 ) / contextNoteElementXPositions.length;
                 return this.props.makeRect(
                   className + " inserted",
@@ -201,12 +215,25 @@ export default class ErrorRibbonVis extends Component {
           }
         }
       })
-
+      
+      // set up positioning for inpaint SVG
+      const scoreComponentBoundingRect = this.props.scoreComponent.current.getBoundingClientRect(); 
+      const inpaintSvgStyle = {
+        position: "absolute",
+        top: scoreComponentBoundingRect.top + window.scrollY + "px",
+        left: scoreComponentBoundingRect.left + window.scrollX + "px",
+        height: scoreComponentBoundingRect.height
+      }
       svgElements = [...svgElements, ...deletedNoteIndicators, ...insertedNoteIndicators];
       return(
-        <svg id="errorRibbon" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.errorRibbonSvg }>
-              { svgElements }
-        </svg>
+        <div>
+          <svg id="errorRibbon" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.errorRibbonSvg }>
+                { svgElements }
+          </svg>
+          <svg id="errorInpaint" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" style = { inpaintSvgStyle }  ref = { this.errorInpaintSvg }>
+                { inpaintElements }
+          </svg>
+        </div>
       )
     } else { return ( <div id="errorRibbonLoading" /> ) }
   }

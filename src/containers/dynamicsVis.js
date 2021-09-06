@@ -25,9 +25,6 @@ export default class DynamicsVis extends Component {
    *    - Draw points and lines to previous lowest and highest per layer
    */
 
-  componentDidMount() { 
-  }
-
   componentDidUpdate(prevProps, prevState) { 
     if("currentQstamp" in prevProps && 
       prevProps.currentQstamp !== this.props.currentQstamp) { 

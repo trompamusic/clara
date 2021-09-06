@@ -409,6 +409,7 @@ class FeatureVis extends Component {
             scoreComponent = { this.props.scoreComponent }
             makeRect = { this.makeRect }
             makeLine = { this.makeLine }
+            makePoint = { this.makePoint }
             ensureArray = { this.props.ensureArray }
           />
         </div>
@@ -456,7 +457,6 @@ class FeatureVis extends Component {
   
   makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString, colour = "") {
     // return SVG for a "point" (e.g. ellipse) on the visualisation
-    if(className === "zoomBoxPoint") console.log("COLOUR: ", colour);
     return <ellipse 
       className={className} 
       data-qstamp={qstamp} 
