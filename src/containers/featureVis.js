@@ -223,19 +223,23 @@ class FeatureVis extends Component {
 
   handleMouseEnter(e, qstamp, tl) { 
     const clientRect = e.getBoundingClientRect()
-    this.setState({
-      zoomBoxLeft: Math.round(clientRect.x),
-      zoomBoxTop: Math.round(clientRect.y),
-      zoomBoxVisibility: "visible",
-      zoomBoxScoretime: qstamp,
-      zoomBoxTimeline: tl
-    });
+    if(typeof e !== "undefined" && !(e.classList.contains('inpainted'))) {
+      this.setState({
+        zoomBoxLeft: Math.round(clientRect.x),
+        zoomBoxTop: Math.round(clientRect.y),
+        zoomBoxVisibility: "visible",
+        zoomBoxScoretime: qstamp,
+        zoomBoxTimeline: tl
+      });
+    }
   }
 
-  handleMouseLeave() { 
-    this.setState({
-      zoomBoxVisibility: "hidden"
-    });
+  handleMouseLeave(e) { 
+    if(typeof e !== "undefined" && !(e.classList.contains('inpainted'))) {
+      this.setState({
+        zoomBoxVisibility: "hidden"
+      });
+    }
   }
 
   calculateQStampForInstant(inst) {
@@ -472,9 +476,9 @@ class FeatureVis extends Component {
         clearTimeout(this.zoomBoxDisplayTimer);
         this.handleMouseEnter(e.currentTarget, qstamp, tl)
       } }
-      onMouseLeave = { () => {
+      onMouseLeave = { (e) => {
         this.zoomBoxDisplayTimer = setTimeout( 
-          () => this.handleMouseLeave(),
+          this.handleMouseLeave(e.currentTarget),
         500)
         } 
       }

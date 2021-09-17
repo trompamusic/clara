@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { closestClef} from '../util/util';
+import { closestClef, convertCoords } from '../util/util';
 
 const padding = 0.1; // proportion of ribbon reserved for whitespace
 const errorIndicatorHeight = 20; // currently in pixels -- perhaps make a proportion instead?
@@ -14,7 +14,8 @@ export default class ErrorRibbonVis extends Component {
       pointsPerTimeline: {},
       insertedNotesByScoretime: {},
       loading: false,
-      worker: new window.Worker("/workers/errorRibbonWorker.js")
+      worker: new window.Worker("/workers/errorRibbonWorker.js"),
+      svgElementsWrapper: <div id="errorRibbonLoading" />
     }
     this.errorRibbonSvg = React.createRef();
     this.contextualiseInsertedNotes = this.contextualiseInsertedNotes.bind(this);
@@ -55,6 +56,49 @@ export default class ErrorRibbonVis extends Component {
     }
   }
 
+
+  pitchToNum(pitchName) {
+    let nameToNum;
+    switch(pitchName) { 
+      case "C": 
+      case "Cs":
+        nameToNum = 0;
+        break;
+      case "Db": 
+      case "D":
+      case "Ds":
+        nameToNum = 1;
+        break;
+      case "Eb":
+      case "E":
+        nameToNum = 2;
+        break;
+      case "F": 
+      case "Fs":
+        nameToNum = 3;
+        break;
+      case "Gb":
+      case "G":
+      case "Gs":
+        nameToNum = 4;
+        break;
+      case "Ab":
+      case "A":
+      case "As":
+        nameToNum = 5;
+        break;
+      case "Bb":
+      case "B": 
+        nameToNum = 6;
+        break;
+      default: 
+        console.error("pitchToNum called with unrecognised pitch name:", pitchName)
+    }
+    return nameToNum;
+  }
+
+
+/* // from Werner's notes
   pitchToNum(pitchName) {
     let nameToNum;
     switch(pitchName) { 
@@ -104,10 +148,16 @@ export default class ErrorRibbonVis extends Component {
     }
     return nameToNum;
   }
+  */
 
-  octaveDiff(pitchOct, clef) {
+  determineInsertedNoteYPosition(inserted, clef) {
+    if(!"shape" in clef.dataset) { 
+      console.error("Clef metadata not available. Does your Verovio support svgAdditionalAttribute?")
+      return null;
+    }
+    const clefPitch = clef.dataset.shape
     let clefOct;
-    switch(clef.dataset.shape) { 
+    switch(clefPitch) { 
       case "F": 
         clefOct = 3;
         break;
@@ -117,10 +167,39 @@ export default class ErrorRibbonVis extends Component {
         break;
       default:
         console.error("octaveDiff called on clef with unhandled shape: ", clef);
+        return null;
     }
-    return (pitchOct - clefOct) * 12
-  }
+    const staff = clef.closest(".staff");
+    const lines = Array.from(document.querySelectorAll("#" + staff.getAttribute("id") + "> path")).reverse();
+    console.log("Lines: ", lines)
+//    const baseline = convertCoords(lines[0]);
+    const interLineDistance = lines[1].getBoundingClientRect().y - lines[0].getBoundingClientRect().y;
+//    const interLineDistance = convertCoords(lines[1]).y - baseline.y
+    // take the heightOfOrigin to be the Y position of the clef's 'line'
+    //const heightOfOrigin = lines[0].getBoundingClientRect().y - (clef.dataset.line * interLineDistance) - window.scrollY;
+    console.log("Calling convertCoords on ", lines[0], "with interline distance ", interLineDistance)
+//    if(baseline) {
+//      console.log("Proceeding with baseline ", baseline)
+      const heightOfOrigin = lines[0].getBoundingClientRect().y + clef.dataset.line * interLineDistance;
+      // figure out semitone difference from inserted note to origin
+      const insertedPitch = this.props.ensureArray(Object.values(inserted)[0]["http://purl.org/vocab/frbr/core#embodimentOf"])[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", "");
+      const insertedPitchComponents = /([A-G])([sb]?)(\d)/.exec(insertedPitch);
+      const insertedPitchName = insertedPitchComponents[1];
+      const insertedPitchAccid = insertedPitchComponents[2];
+      const insertedPitchOct = insertedPitchComponents[3];
 
+      const absolutePosition = insertedPitchOct*7 - this.pitchToNum(insertedPitchName + insertedPitchAccid)
+      const relativeAnchor = (clefOct-1)*7 + this.pitchToNum(clefPitch)
+      const offset = absolutePosition + relativeAnchor;
+      // To determine Y position, start at height of origin, move by offset times half the interline distance
+      // (half since one inter-line distance spans two semitones)
+      return heightOfOrigin + (offset * interLineDistance/2)
+   // }
+ //   else { 
+ //     console.log("Wasn't able to determine coords for line ", lines[0]);
+ //     return null;
+ //   }
+  }
   contextualiseInsertedNotes() {
     // For inserted notes, we have a performance time but no score time. 
     // In order to place them in our ribbon we need to approximate a score time.
@@ -134,37 +213,28 @@ export default class ErrorRibbonVis extends Component {
     this.state.worker.onerror = (err) => err;
     this.state.worker.onmessage = (e) => { 
       console.log("Received from worker: ", e);
-      this.setState({insertedNotesByScoretime: e.data, loading:false});
+      this.setState({insertedNotesByScoretime: e.data, loading:false}, this.renderSvg);
     }
   }
 
-  determineInsertedNoteYPosition(clef, inserted) {
-    const staff = clef.closest(".staff");
-    const lines = document.querySelectorAll("#" + staff.getAttribute("id") + "> path").reverse();
-    const interLineDistance = lines[1] - lines[0];
-    // take the heightOfOrigin to be the Y position of the clef's 'line'
-    const heightOfOrigin = lines[0] + (cleff.dataset.line * interLineDistance);
-    // figure out semitone difference from inserted note to origin
-    const insertedPitch = this.props.ensureArray(inserted["http://purl.org/vocab/frbr/core#embodimentOf"])[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", "");
-    insertedPitchComponents = /([A-G])([sb]?)(\d)/.exec(insertedPitch);
-    const insertedPitchName = insertedPitchComponents[1];
-    const insertedPitchAccid = insertedPitchComponents[2];
-    const insertedPitchOct = insertedPitchComponents[3];
-    const semitoneDiff = pitchToNum(insertedPitchName + insertedPitchAccid) - pitchToNum(clef.dataset.shape) + octaveDiff(insertedPitchOct, clef.dataset.shape);
-    console.log("Got : ", clef.dataset.shape, clef.dataset.line, lines, inserted, insertedPitch);
-
-  }
-
-  render() {
-    // FIXME: Move all dom-based calculation OUTSIDE OF RENDER FUNCTION 
+  renderSvg() {
     if(!(this.state.loading) && Object.keys(this.props.timemapByNoteId).length) { 
       let svgElements = [];
       let inpaintElements = [];
+      let notesOnPageForDebug = [];
       let deletedNoteIndicators = [];
       let insertedNoteIndicators = [];
+      // set up positioning for inpaint SVG
+      const scoreComponentBoundingRect = this.props.scoreComponent.current.getBoundingClientRect(); 
+      const inpaintSvgStyle = {
+        position: "absolute",
+        top: scoreComponentBoundingRect.top + window.scrollY + "px",
+        left: scoreComponentBoundingRect.left + window.scrollX + "px",
+        height: scoreComponentBoundingRect.height
+      }
       // generate barlines
       Array.from(this.props.barlinesOnPage).forEach((bl,ix) => {
-        const absolute = this.props.convertCoords(bl);
+        const absolute = convertCoords(bl);
         svgElements.push(
           this.props.makeLine(
             "barLineAttr", // className,
@@ -207,7 +277,7 @@ export default class ErrorRibbonVis extends Component {
               )
               deletedNoteIndicators = [
                 ...deletedNotesOnPage.map( (noteElement) => {
-                  const noteCoords = this.props.convertCoords(noteElement);
+                  const noteCoords = convertCoords(noteElement);
                   return this.props.makeRect(
                     className + " deleted",
                     this.props.timemapByNoteId[noteElement.getAttribute("id")].qstamp,
@@ -251,13 +321,13 @@ export default class ErrorRibbonVis extends Component {
                 predecessorNoteElements = this.props.instantsByScoretime[tl][closestPredecessorScoretime.qstamp]
                   .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
                 predecessorNoteElementXPositions = predecessorNoteElements
-                  .map( (noteElement) => this.props.convertCoords(noteElement).x )
+                  .map( (noteElement) => convertCoords(noteElement).x )
               }
               if(closestSuccessorScoretime && closestSuccessorScoretime.qstamp in this.props.instantsByScoretime[tl]) { 
                 successorNoteElements = this.props.instantsByScoretime[tl][closestSuccessorScoretime.qstamp]
                   .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
                 successorNoteElementXPositions = successorNoteElements
-                  .map( (noteElement) => this.props.convertCoords(noteElement).x )
+                  .map( (noteElement) => convertCoords(noteElement).x )
               }
               const contextNoteElements = [...predecessorNoteElements, ...successorNoteElements]
               const contextNoteElementXPositions = [...predecessorNoteElementXPositions, ...successorNoteElementXPositions]
@@ -266,24 +336,47 @@ export default class ErrorRibbonVis extends Component {
                 return ""; 
               } else { 
                 if(tl === this.props.currentTimeline) { 
+                  // for debug purposes
+                  Array.from(this.props.notesOnPage).forEach((n, ix) => { 
+                      notesOnPageForDebug = [notesOnPageForDebug, this.props.makePoint(
+                        className + " debug " + n.getAttribute("id"),
+                        "NONE",
+                        tl,
+                        n.querySelector(".notehead").getBoundingClientRect().x,
+                        n.querySelector(".notehead").getBoundingClientRect().y - scoreComponentBoundingRect.top - 50,
+                        10,
+                        10,
+                        "debug-" + ix,
+                        "debug note inpaint " + tl
+                      )]
+                  })
+
+
+
                   // determine closest clef for purposes of inpainting error:
                   const clef = closestClef(contextNoteElements[0].getAttribute("id"));
-                  this.determineInsertedNoteYPosition(clef, inserted);
                   if(!!clef) { 
-                    const contextNoteCoords = this.props.convertCoords(contextNoteElements[0]);
-                    
-                    inpaintElements = [...inpaintElements, this.props.makePoint(
-                      className + " inpainted",
-                      closestPredecessorScoretime.qstamp,
-                      tl,
-                      contextNoteCoords.x,
-                      contextNoteCoords.y,
-                      20,
-                      20,
-                      "inpainted-" + inserted[scoretimeOfInsertedOnPage]["@id"] + "-" + ix,
-                      "inpainted point in timeline " + tl,
-                      () => this.props.handleClickSeekToInstant(inserted[scoretimeOfInsertedOnPage]["http://purl.org/NET/c4dm/timeline.owl#at"])
-                    )]
+                    const insertedNoteY = this.determineInsertedNoteYPosition(inserted, clef);
+                    //const contextNoteCoords = convertCoords(contextNoteElements[0].querySelector(".notehead"));
+                    const contextNoteAverageX = contextNoteElements
+                      .map(ctx => ctx.querySelector(".notehead").getBoundingClientRect().x)
+                      .reduce( (a,b) => (a+b) ) / contextNoteElements.length;
+
+                    if(!!insertedNoteY) {
+                      console.log("ADDING", inserted)
+                      inpaintElements = [...inpaintElements, this.props.makePoint(
+                        className + " inpainted " + 
+                        this.props.ensureArray(Object.values(inserted)[0]["http://purl.org/vocab/frbr/core#embodimentOf"])[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
+                        closestPredecessorScoretime.qstamp,
+                        tl,
+                        contextNoteAverageX,
+                        insertedNoteY - scoreComponentBoundingRect.top,
+                        3,
+                        3,
+                        "inpainted-" + inserted[scoretimeOfInsertedOnPage]["@id"] + "-" + ix,
+                        this.props.ensureArray(Object.values(inserted)[0]["http://purl.org/vocab/frbr/core#embodimentOf"])[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", "")
+                      )]
+                    }
                   }
                 }
                 const xPos = contextNoteElementXPositions.reduce( (sum, x) => sum + x, 0 ) / contextNoteElementXPositions.length;
@@ -302,25 +395,23 @@ export default class ErrorRibbonVis extends Component {
         }
       })
       
-      // set up positioning for inpaint SVG
-      const scoreComponentBoundingRect = this.props.scoreComponent.current.getBoundingClientRect(); 
-      const inpaintSvgStyle = {
-        position: "absolute",
-        top: scoreComponentBoundingRect.top + window.scrollY + "px",
-        left: scoreComponentBoundingRect.left + window.scrollX + "px",
-        height: scoreComponentBoundingRect.height
-      }
       svgElements = [...svgElements, ...deletedNoteIndicators, ...insertedNoteIndicators];
-      return(
+      this.setState({svgElementsWrapper: 
         <div>
           <svg id="errorRibbon" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.errorRibbonSvg }>
                 { svgElements }
           </svg>
-          <svg id="errorInpaint" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" style = { inpaintSvgStyle }  ref = { this.errorInpaintSvg }>
+          <svg id="errorInpaint" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="translate(0, 50)" style = { inpaintSvgStyle }  ref = { this.errorInpaintSvg }>
                 { inpaintElements }
           </svg>
         </div>
-      )
-    } else { return ( <div id="errorRibbonLoading" /> ) }
+      })
+    } else { this.setState({svgElementsWrapper: <div id="errorRibbonLoading" /> }) }
+  }
+
+
+  render() {
+    // FIXME: Move all dom-based calculation OUTSIDE OF RENDER FUNCTION 
+    return this.state.svgElementsWrapper
   }
 }

@@ -548,7 +548,7 @@ class Companion extends Component {
   }
     // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group
   convertCoords(elem) {
-    if(document.getElementById(elem.getAttribute("id"))
+    if(!!elem && document.getElementById(elem.getAttribute("id"))
       && elem.style.display !== "none" && (elem.getBBox().x !== 0 || elem.getBBox().y !== 0)) {
       const x = elem.getBBox().x;
       const width = elem.getBBox().width;
