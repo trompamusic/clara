@@ -2,6 +2,11 @@ body {
   font-family: sans-serif;
 }
 
+svg { 
+  user-select: none;
+  overflow:visible;
+}
+
 #zoomBox { 
   position: fixed;
   z-index: 1;
@@ -24,10 +29,27 @@ body {
   fill:darkgrey;
 }
 
+.selected {
+  fill: rgb(35, 144, 194) !important;
+}
+
+.scoreAnnotation.selected { 
+  fill: rgba(35,144,194, .5)!important;
+  stroke: rgb(35, 144, 194) !important;
+}
+
 
 .videoWrapper { 
   max-width:945px;
   margin-left:20px;
+}
+
+.videoWrapper audio {
+  height: 25px !important;
+}
+
+button.active { 
+  background-color:darkorange;
 }
 
 .active { 
@@ -66,7 +88,6 @@ body {
 
 .scorepane { 
   min-height: 460px;
-  max-height: 460px;
   display:block;
   position: relative;
   z-index: -1;
@@ -79,6 +100,15 @@ body {
 
 #instantBoundingBoxes { 
   position: absolute;
+}
+
+.currentPerformanceLabel button{
+  display: block;
+}
+
+.selectable-score-postButton { 
+  display:inline;
+  margin-left: 10px;
 }
 
 .errorDetected { 
@@ -252,6 +282,27 @@ body {
   stroke-width:1px;
 }
 
+#midiEvents { 
+  max-height:10em;
+  overflow:auto;
+  display:flex;
+  flex-direction: column-reverse;
+}
+
+#recordingIndicator { 
+  font-family: "Lucida Console", Monaco, monospace;
+  margin-left:1em;
+  padding:.2em;
+  color: white;
+}
+
+#recordingIndicator .isRecording { 
+  background: green;
+}
+
+#recordingIndicator .isNotRecording { 
+  background: red;
+}
 line.dynamicsConnector.active{
   stroke:red;
   fill:red;
@@ -361,10 +412,20 @@ line.dynamicsConnector.active{
   font-size: xx-small;
 }
 
-
 .selectDynamicsAggregate { 
   margin-left:1em;
   border-bottom: 2px solid lightgrey;
   display: inline-block;
   line-height: 0.85;
+}
+
+.scorepane .annotations {
+  position:absolute;
+}
+
+.scorepane .annotations .highlightEllipse { 
+  fill:none;
+  stroke:red;
+  stroke-width: 2;
+  stroke-opacity: .7;
 }

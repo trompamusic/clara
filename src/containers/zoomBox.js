@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom'
 
 const padding = 0.1; // proportion of width/height reserved as whitespace
 const maxPointRadius = 40 // radius of point encoding a velocity of 127 (max midi velocity)
@@ -131,6 +130,7 @@ export default class ZoomBox extends Component {
           svgElements.push(
             <text
               className="zoomBoxXIndicatorLabel"
+              key={"zoomBoxXIndicatorLabel" + i}
               transform={ "scale(1,-1)" }
               x={i}
               y={-1 * this.state.height * padding * .5}

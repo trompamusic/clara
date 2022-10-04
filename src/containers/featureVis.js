@@ -223,19 +223,23 @@ class FeatureVis extends Component {
 
   handleMouseEnter(e, qstamp, tl) { 
     const clientRect = e.getBoundingClientRect()
-    this.setState({
-      zoomBoxLeft: Math.round(clientRect.x),
-      zoomBoxTop: Math.round(clientRect.y),
-      zoomBoxVisibility: "visible",
-      zoomBoxScoretime: qstamp,
-      zoomBoxTimeline: tl
-    });
+    if(typeof e !== "undefined" && !(e.classList.contains('inpainted'))) {
+      this.setState({
+        zoomBoxLeft: Math.round(clientRect.x),
+        zoomBoxTop: Math.round(clientRect.y),
+        zoomBoxVisibility: "visible",
+        zoomBoxScoretime: qstamp,
+        zoomBoxTimeline: tl
+      });
+    }
   }
 
-  handleMouseLeave() { 
-    this.setState({
-      zoomBoxVisibility: "hidden"
-    });
+  handleMouseLeave(e) { 
+    if(typeof e !== "undefined" && !(e.classList.contains('inpainted'))) {
+      this.setState({
+        zoomBoxVisibility: "hidden"
+      });
+    }
   }
 
   calculateQStampForInstant(inst) {
@@ -253,7 +257,8 @@ class FeatureVis extends Component {
 
   handleClick(qstamp,tl) {
     // seek to earliest instant on the clicked timeline at the clicked scoretime
-    if(tl in this.state.instantsByScoretime) {
+    if(tl in this.state.instantsByScoretime && 
+       qstamp in this.state.instantsByScoretime[tl]) {
       this.props.seekToInstant(this.state.instantsByScoretime[tl][qstamp][0]);
     }
   }
@@ -382,7 +387,9 @@ class FeatureVis extends Component {
             makeLine = { this.makeLine }
           />
         </div>
-        <div className = { this.state.displayErrorRibbon ? "" : "removedFromDisplay"}>
+        <div 
+          className = { this.state.displayErrorRibbon ? "errorRibbon" : "errorRibbon removedFromDisplay"}
+          style={{height: this.state.height + "px"}}>
           <div className = { this.state.displayErrorRibbon ? "visLabel" : "removedFromDisplay"}> Error visualisation </div>
           <ErrorRibbonVis
             width = { this.state.width }
@@ -406,6 +413,7 @@ class FeatureVis extends Component {
             scoreComponent = { this.props.scoreComponent }
             makeRect = { this.makeRect }
             makeLine = { this.makeLine }
+            makePoint = { this.makePoint }
             ensureArray = { this.props.ensureArray }
           />
         </div>
@@ -453,7 +461,6 @@ class FeatureVis extends Component {
   
   makePoint(className, qstamp, tl, cx, cy, rx, ry, key, titleString, colour = "") {
     // return SVG for a "point" (e.g. ellipse) on the visualisation
-    if(className === "zoomBoxPoint") console.log("COLOUR: ", colour);
     return <ellipse 
       className={className} 
       data-qstamp={qstamp} 
@@ -469,9 +476,9 @@ class FeatureVis extends Component {
         clearTimeout(this.zoomBoxDisplayTimer);
         this.handleMouseEnter(e.currentTarget, qstamp, tl)
       } }
-      onMouseLeave = { () => {
+      onMouseLeave = { (e) => {
         this.zoomBoxDisplayTimer = setTimeout( 
-          () => this.handleMouseLeave(),
+          this.handleMouseLeave(e.currentTarget),
         500)
         } 
       }
