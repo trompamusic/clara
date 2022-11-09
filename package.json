@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "PORT=8080 react-scripts start",
-    "build": "babel src --out-dir lib",
-    "build-dev": "babel src --out-dir lib --source-maps inline"
+    "build": "react-scripts build",
+    "build-dev": "babel src --out-dir lib --source-maps inline",
   },
   "author": "David M. Weigl, IWK, University of Music and Performing Arts Vienna",
   "license": "BSD-3-Clause",
@@ -16,8 +16,7 @@
     "@babel/preset-react": "^7.0.0",
     "chai": "^3.5.0",
     "jsdom": "^8.1.0",
-    "mocha": "^7.1.1",
-    "react-addons-test-utils": "^0.14.7"
+    "mocha": "^7.1.1"
   },
   "dependencies": {
     "@inrupt/lit-generated-vocab-common": "^0.3.11",
@@ -26,6 +25,12 @@
     "@inrupt/solid-ui-react": "^2.3.1",
     "@inrupt/vocab-solid-common": "^0.7.5",
     "@solid/react": "^1.9.0",
+    "@types/jest": "^29.1.2",
+    "@types/node": "^18.8.4",
+    "@types/react": "^18.0.21",
+    "@types/react-dom": "^18.0.6",
+    "@types/react-router-dom": "^5.3.3",
+    "@types/redux-promise": "^0.5.29",
     "axios": "^0.19.0",
     "browserslist": "^4.11.0",
     "fiber": "^1.0.4",
@@ -42,7 +47,8 @@
     "redux-promise": "^0.6.0",
     "redux-thunk": "^2.3.0",
     "selectable-score": "trompamusic/selectable-score#new-solid-auth-tooling",
-    "typescript": "^3.8.3"
+    "trompa-annotation-component": "trompamusic/trompa-annotation-component",
+    "typescript": "^3.9.10"
   },
   "browserslist": {
     "production": [
