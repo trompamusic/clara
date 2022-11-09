@@ -1,0 +1,12 @@
+services:
+  nginx:
+    build: .
+    ports:
+      - "8888:80"
+
+  backend:
+    build:
+      context: backend
+
+  redis:
+    image: redis
