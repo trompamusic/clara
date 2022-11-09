@@ -6,7 +6,7 @@
   "scripts": {
     "start": "PORT=8080 react-scripts start",
     "build": "react-scripts build",
-    "build-dev": "babel src --out-dir lib --source-maps inline",
+    "build-dev": "babel src --out-dir lib --source-maps inline"
   },
   "author": "David M. Weigl, IWK, University of Music and Performing Arts Vienna",
   "license": "BSD-3-Clause",
