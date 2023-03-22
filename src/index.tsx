@@ -6,13 +6,13 @@ import thunk from 'redux-thunk';
 import ReduxPromise from 'redux-promise';
 
 import { reducers } from 'meld-clients-core/lib/reducers';
-import Wrapper from './containers/wrapper';
+import App from "./containers/App";
 
 const createStoreWithMiddleware = applyMiddleware(thunk, ReduxPromise)(createStore);
 
 ReactDOM.render(
 	<Provider store={createStoreWithMiddleware(reducers)}>
-          <Wrapper />
+          <App />
 	</Provider>
 		, document.querySelector('.container')
 );

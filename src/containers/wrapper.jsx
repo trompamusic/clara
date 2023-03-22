@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useHistory } from "react-router-dom";
-//import data from '@solid/query-ldflex';
 import MIDIMessage from 'midimessage';
-import {SessionProvider} from "@inrupt/solid-ui-react";
 import {
     useSession,
     CombinedDataProvider,
-    LoginButton,
-    LogoutButton,
-    Text
 } from "@inrupt/solid-ui-react";
 import { getSolidDataset, getThing, getUrl } from "@inrupt/solid-client";
 import { fetch, handleIncomingRedirect } from "@inrupt/solid-client-authn-browser";
-import { FOAF, VCARD } from "@inrupt/lit-generated-vocab-common";
 import {WS} from "@inrupt/vocab-solid-common";
 import Companion from './companion';
 
@@ -23,38 +16,20 @@ const MIDI_BATCH_ENDPOINT = "http://127.0.0.1:5000/midiBatch"
 
 export default function Wrapper(props) {
     const {session} = useSession();
-    const [idp, setIdp] = useState("https://trompa-solid.upf.edu");
-    const [currentUrl, setCurrentUrl] = useState("https://localhost:8080");
     const [userPOD, setUserPOD] = useState(undefined);
     const [performanceCollection, setPerformanceCollection] = useState(undefined);
     const [annotationCollection, setAnnotationCollection] = useState(undefined);
     const [userProfile, setUserProfile] = useState(undefined);
-
-    let history = useHistory();
-    const onSessionRestore = (url) => { 
-      if(history) { 
-        const u = new URL(url);
-        history.push(u.pathname + u.search);
-      }
-    }
-
-    useEffect(() => {
-        setCurrentUrl(window.location.href);
-    }, [setCurrentUrl]);
-
-    const publicPerformanceCollection = 'https://clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld';
-    const publicUserProfile = 'https://clara.trompa-solid.upf.edu/profile/card#me';
-    const [showPublicDemo, setShowPublicDemo] = useState(false);
     const [midiSupported, setMidiSupported] = useState(false);
     const [midiIn, setMidiIn] = useState([]);
     const [midiEvents, setMidiEvents] = useState([])
 
     // Initialise Web-MIDI and Solid redirect
     useEffect(() => {
-      if("requestMIDIAccess" in navigator) { 
+      if("requestMIDIAccess" in navigator) {
         navigator.requestMIDIAccess({sysex: false})
         .then(
-          (midi) => { 
+          (midi) => {
               setMidiSupported(true);
               let i = []
               const inputs = midi.inputs.values();
@@ -65,15 +40,15 @@ export default function Wrapper(props) {
               setMidiIn(i);
           },
           (err) => console.log('Something went wrong', err));
-      } else { 
+      } else {
         console.warn("Browser does not support WebMIDI");
       }
       handleIncomingRedirect({
         restorePreviousSession: true
       }).then((info) => {
-        if(info) { 
+        if(info) {
           console.log(`Logged in with WebID [${info.webId}]`)
-        } else { 
+        } else {
           console.log("Could not restore previous session");
         }
       })
@@ -82,7 +57,7 @@ export default function Wrapper(props) {
   // Track MIDI events and start / end rehearsal rendition recordings based on them
   useEffect(() => {
     let timer;
-    if(timer) { 
+    if(timer) {
       clearTimeout(timer)
     }
     timer = setTimeout(() => {
@@ -100,10 +75,10 @@ export default function Wrapper(props) {
 
         // write the midi events JSON to the clipboard:
 /*        navigator.clipboard.writeText(JSON.stringify(midiEventsJson))
-          .catch((error) => { alert(`Couldn't copy MIDI notes to clipboard! ${error}`) }) 
+          .catch((error) => { alert(`Couldn't copy MIDI notes to clipboard! ${error}`) })
 */
 
-        fetch(MIDI_BATCH_ENDPOINT, { 
+        fetch(MIDI_BATCH_ENDPOINT, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify(midiEventsJson)
@@ -116,11 +91,11 @@ export default function Wrapper(props) {
     return () => clearTimeout(timer)
   }, [midiEvents]);
 
-    
-    function handleMidiMessage(mes) { 
-      if(mes.data.length === 1 && mes.data[0] === 254) { 
+
+    function handleMidiMessage(mes) {
+      if(mes.data.length === 1 && mes.data[0] === 254) {
         // ignore keep-alive (active sense) message
-        return 
+        return
       }
       console.log("RAW MIDI MESSAGE: ", mes.data);
       setMidiEvents(midiEvents => [...midiEvents, mes]);
@@ -142,21 +117,7 @@ export default function Wrapper(props) {
         }
     }, [session.info.isLoggedIn])
 
-    let publicDemoDisplay;
-    if(showPublicDemo) {
-        publicDemoDisplay = <Companion uri={publicPerformanceCollection} userPOD={`https://clara.trompa-solid.upf.edu/`}
-                                       userProfile={publicUserProfile} demo/>
-    } else {
-        publicDemoDisplay = <div>
-            <button onClick={() => setShowPublicDemo(true)}>Launch demo</button>
-            <LoginButton oidcIssuer={idp} redirectUrl={currentUrl}>
-                <button>Log in</button>
-            </LoginButton>
-        </div>
-    }
-
     return(
-      <SessionProvider sessionId="trompa-clara" onSessionRestore={onSessionRestore}>
         <div id="authWrapper">
           { midiSupported
             ? <div id="midi">
@@ -175,13 +136,8 @@ export default function Wrapper(props) {
             : <div/>
           }
             {!(session.info.isLoggedIn)
-                ? publicDemoDisplay
+                ? <div>Please log in </div>
                 :   <CombinedDataProvider datasetUrl={session.info.webId} thingUrl={session.info.webId}>
-                    <div>
-                    <LogoutButton><button>Log out</button></LogoutButton> You are logged in as <Text property={FOAF.name.iri.value}/>
-                    <a href={session.info.webId}>
-                    <img src="/solid-logo.svg" alt="Solid logo" title={session.info.webId} width="20" height="20" style={{verticalAlign:"text-bottom", paddingLeft:"5px", paddingBottom:"1px"}} />
-                    </a></div>
                         {typeof userPOD !== "undefined" && typeof performanceCollection !== "undefined" && annotationCollection !== "undefined" && userProfile !== "undefined"
                             ? <Companion userPOD = { userPOD } uri = { performanceCollection } annotationContainerUri = { annotationCollection } userProfile = { userProfile } session = { session } />
                             : <div>Loading... </div>
@@ -189,6 +145,5 @@ export default function Wrapper(props) {
                 </CombinedDataProvider>
             }
         </div>
-      </SessionProvider>
     )
 }
