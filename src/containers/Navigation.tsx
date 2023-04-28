@@ -49,7 +49,7 @@ function LoginButton() {
         </>
         }
         <SplitButton id='login-button' title='Login' align="end" onClick={async () => {
-            await loginHandler("https://trompa-solid.upf.edu");
+            await loginHandler(idp);
         }}>
             <Dropdown.Item onClick={async () => {
                 await loginHandler(providers.trompa);
@@ -77,7 +77,7 @@ export default function Navigation() {
                     {session.info.isLoggedIn
                         ? <><Navbar.Text>
                             <CombinedDataProvider datasetUrl={session.info.webId} thingUrl={session.info.webId}>
-                                Logged in: <Text property={FOAF.name.iri.value}/>
+                                Logged in: <Text property={FOAF.name.iri.value}/> ({session.info.webId})
                             </CombinedDataProvider>
                         </Navbar.Text>&emsp;
                             <LogoutButton><Button>Log out</Button></LogoutButton>
