@@ -24,7 +24,8 @@ export default function Startup() {
 
     const webId = session.info.webId ?? "";
     const profileParams = new URLSearchParams({
-        profile: webId
+        profile: webId,
+        redirect: apiRoot
     });
 
     useEffect(() => {
