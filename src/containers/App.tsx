@@ -1,4 +1,3 @@
-import Wrapper from "./wrapper";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import {
@@ -11,6 +10,8 @@ import Layout from "./Layout";
 import Companion from "./companion";
 import Startup from "./Startup";
 import Perform from "./Perform";
+import ScoreSelector from "./ScoreSelector";
+import Add from "./Add";
 
 const publicPerformanceCollection = 'https://clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld';
 const publicUserProfile = 'https://clara.trompa-solid.upf.edu/profile/card#me';
@@ -24,6 +25,14 @@ const router = createBrowserRouter([
             {
                 path: "/",
                 element: <Startup />
+            },
+            {
+                path: "/select",
+                element: <ScoreSelector />
+            },
+            {
+                path: "/add",
+                element: <Add />
             },
             {
                 path: "/perform",

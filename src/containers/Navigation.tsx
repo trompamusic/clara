@@ -7,9 +7,9 @@ import {
 } from "@inrupt/solid-ui-react";
 
 import { FOAF } from "@inrupt/lit-generated-vocab-common";
-import {Link, useLocation} from "react-router-dom";
+import {Link} from "react-router-dom";
 import {Button} from 'react-bootstrap';
-import React, {useContext, useEffect, useState} from "react";
+import React, {useContext, useState} from "react";
 
 const providers = {
     trompa: "https://trompa-solid.upf.edu",
