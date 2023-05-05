@@ -50,7 +50,7 @@ export default function Startup() {
             // TODO: We lookup the user's storage multiple times
             const dataset = await getSolidDataset(webId, { fetch: session.fetch });
             const profileDoc = getThing(dataset, webId);
-            const storageUrl = getUrl(profileDoc, WS.storage);
+            const storageUrl = getUrl(profileDoc!, WS.storage);
             const claraStorageUrl = storageUrl + CLARA_CONTAINER_NAME;
             // TODO: Docs say this raises an error if it already exists, but doesn't seem to be a problem
             await createContainerAt(claraStorageUrl, {fetch: session.fetch});

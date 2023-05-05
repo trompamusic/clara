@@ -7,11 +7,11 @@ import {LDP} from "@inrupt/lit-generated-vocab-common";
 export const getScoresForUser = async (webId: string, fetch: any): Promise<string[]> => {
     const dataset = await getSolidDataset(webId, { fetch });
     const profileDoc = getThing(dataset, webId);
-    const storageUrl = getUrl(profileDoc, WS.storage);
+    const storageUrl = getUrl(profileDoc!, WS.storage);
     const claraScoreContainerUrl = storageUrl + CLARA_CONTAINER_NAME + "scores/";
     const performanceDataset = await getSolidDataset(claraScoreContainerUrl, { fetch });
     const performanceDoc = getThing(performanceDataset, claraScoreContainerUrl);
-    return getUrlAll(performanceDoc, LDP.contains);
+    return getUrlAll(performanceDoc!, LDP.contains);
 }
 
 export const getScoreDocument = async (url: string, fetch: any) => {

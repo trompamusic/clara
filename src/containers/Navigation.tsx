@@ -65,7 +65,7 @@ function LoginButton() {
 
 export default function Navigation() {
     const {session} = useSession();
-
+    const webId = session.info.webId;
     return (
         <Navbar bg="light" expand="lg">
             <Container fluid={true}>
@@ -76,7 +76,7 @@ export default function Navigation() {
                 <Nav>
                     {session.info.isLoggedIn
                         ? <><Navbar.Text>
-                            <CombinedDataProvider datasetUrl={session.info.webId} thingUrl={session.info.webId}>
+                            <CombinedDataProvider datasetUrl={webId!} thingUrl={webId!}>
                                 Logged in: <Text property={FOAF.name.iri.value}/> ({session.info.webId})
                             </CombinedDataProvider>
                         </Navbar.Text>&emsp;

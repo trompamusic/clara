@@ -63,7 +63,7 @@ export default function ScoreSelector() {
 
     const getMetadataForScore = async (url: string): Promise<ScoreOption> => {
         const doc = await getScoreDocument(url, session.fetch);
-        const name = getStringNoLocale(doc, DCTERMS.title) ?? "unknown";
+        const name = getStringNoLocale(doc!, DCTERMS.title) ?? "unknown";
         return {name, url}
     }
 
@@ -71,7 +71,7 @@ export default function ScoreSelector() {
         let ignore = false;
 
         async function fetchExistingScores() {
-            const urls = await getScoresForUser(session.info.webId, session.fetch);
+            const urls = await getScoresForUser(session.info.webId!, session.fetch);
             Promise.all(urls.map( (u) => {
                 return getMetadataForScore(u)
             })).then(results => {
