@@ -11,7 +11,6 @@ import SubmitButton from 'selectable-score/lib/submit-button.js';
 
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/index';
-import SolidClient from 'trompa-annotation-component/dist/API/SolidAPI';
 
 import FeatureVis from './featureVis';
 
@@ -114,7 +113,7 @@ class Companion extends Component {
     this.player = React.createRef();
     this.featureVis = React.createRef();
     this.scoreComponent = React.createRef();
-    this.solidClient = new SolidClient(this.props.session);
+    // this.solidClient = new SolidClient(this.props.session);
   }
 
   UNSAFE_componentWillMount() { 
@@ -153,18 +152,18 @@ class Companion extends Component {
       "motivation": "highlighting"
     }
     let submitHandlerArgs = "submitHandlerArgs" in this.props ? this.props.submitHandlerArgs : {};
-    this.solidClient.saveAnnotation(anno, new URL(this.props.annotationContainerUri).pathname)
-        .then((resp) => this.handleResponse(resp))
-        .catch((err) => "Couldn't save annotation:", err);
+    // this.solidClient.saveAnnotation(anno, new URL(this.props.annotationContainerUri).pathname)
+    //     .then((resp) => this.handleResponse(resp))
+    //     .catch((err) => `Couldn't save annotation: ${err}`);
     this.setState({circleButtonActive: false, selection:[]});
   }
 
   deleteAnnotations() {
     if(window.confirm("Do you really wish to permanently erase " + this.state.selection.length + " annotations?")) {
       this.state.selection.map((s) => {
-        this.solidClient.deleteAnnotation(s.dataset.uri)
-          .then(() => s.parentNode.removeChild(s))
-          .catch((e) => console.error("Couldn't delete annotation: ", s, e))
+        // this.solidClient.deleteAnnotation(s.dataset.uri)
+        //   .then(() => s.parentNode.removeChild(s))
+        //   .catch((e) => console.error("Couldn't delete annotation: ", s, e))
       })
     }
     this.setState({deleteAnnoButtonActive: false, selection:[]});
