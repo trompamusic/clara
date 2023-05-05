@@ -14,31 +14,35 @@
     "@babel/cli": "^7.6.0",
     "@babel/core": "^7.6.0",
     "@babel/preset-react": "^7.0.0",
+    "@babel/preset-typescript": "^7.21.5",
     "chai": "^3.5.0",
     "jsdom": "^8.1.0",
     "mocha": "^7.1.1"
   },
   "dependencies": {
     "@inrupt/lit-generated-vocab-common": "^0.3.11",
+    "@inrupt/oidc-client-ext": "1.12.2",
     "@inrupt/solid-client": "^1.10.0",
-    "@inrupt/solid-client-authn-browser": "^1.9.1",
+    "@inrupt/solid-client-authn-browser": "1.12.2",
+    "@inrupt/solid-client-authn-core": "1.12.2",
     "@inrupt/solid-ui-react": "^2.8.2",
     "@inrupt/vocab-solid-common": "^0.7.5",
-    "@solid/react": "^1.9.0",
     "@types/jest": "^29.1.2",
     "@types/node": "^18.8.4",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",
     "@types/redux-promise": "^0.5.29",
     "axios": "^0.19.0",
+    "bootstrap": "^5.2.3",
     "browserslist": "^4.11.0",
+    "create-react-app": "^4.0.3",
     "fiber": "^1.0.4",
     "fibers": "^4.0.2",
     "meld-clients-core": "oerc-music/meld-clients-core#new-solid-auth-tooling",
     "midimessage": "^1.0.5",
-    "react": "^16.13.0",
-    "react-bootstrap": "^2.6.0",
-    "react-dom": "^16.13.0",
+    "react": "^17.0.2",
+    "react-bootstrap": "^2.7.2",
+    "react-dom": "^17.0.2",
     "react-player": "^1.11.0",
     "react-redux": "^7.2.0",
     "react-router": "^6.4.3",
@@ -48,8 +52,12 @@
     "redux-promise": "^0.6.0",
     "redux-thunk": "^2.3.0",
     "selectable-score": "trompamusic/selectable-score#new-solid-auth-tooling",
-    "trompa-annotation-component": "trompamusic/trompa-annotation-component",
+    "stop-runaway-react-effects": "^2.0.0",
     "typescript": "^3.9.10"
+  },
+  "overrides": {
+    "react-error-overlay": "6.0.9",
+    "@inrupt/solid-client-authn-core": "1.12.2"
   },
   "browserslist": {
     "production": [
@@ -61,6 +69,12 @@
       "last 1 chrome version",
       "last 1 firefox version",
       "last 1 safari version"
+    ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
     ]
   }
 }
