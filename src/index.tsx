@@ -1,6 +1,6 @@
 import 'stop-runaway-react-effects/hijack'
 import React  from 'react';
-import { createRoot } from 'react-dom/client';
+import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
 import thunk from 'redux-thunk';
@@ -10,11 +10,10 @@ import { reducers } from 'meld-clients-core/lib/reducers';
 import App from "./containers/App";
 
 const createStoreWithMiddleware = applyMiddleware(thunk, ReduxPromise)(createStore);
-const container = document.querySelector('.container');
-const root = createRoot(container!);
 
-root.render(
+ReactDOM.render(
 	<Provider store={createStoreWithMiddleware(reducers)}>
           <App />
 	</Provider>
+		, document.querySelector('.container')
 );
