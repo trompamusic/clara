@@ -1,8 +1,8 @@
-import {useSearchParams} from "react-router-dom";
 import React, {useEffect, useState} from "react";
+import {useSearchParams} from "react-router-dom";
 import {useSession} from "@inrupt/solid-ui-react";
-import {useInterval} from "../util/hooks";
-import Api from "../util/api";
+import Companion from "./companion";
+import {getPerformanceFromScore, getStorageForUser} from "../util/clara";
 
 /**
  * The main wrapper to perform a score
@@ -11,18 +11,45 @@ import Api from "../util/api";
  */
 export default function Perform() {
     let [searchParams, setSearchParams] = useSearchParams();
+    let [storage, setStorage] = useState('');
     const {session} = useSession();
-    const container = searchParams.get('container');
+    const score = searchParams.get('score');
+
+    useEffect(() => {
+        let ignore = false;
+
+        async function getStorage() {
+            const storage = await getStorageForUser(session.info.webId!, session.fetch)
+            if (!ignore) {
+                setStorage(storage ? storage : '');
+            }
+        }
+        if (session.info.isLoggedIn) {
+            getStorage().catch(console.error);
+            return () => {
+                ignore = true;
+            };
+        }
+    }, [session]);
 
     if (!session.info.isLoggedIn) {
         return <p>You must be logged in</p>
     }
 
-    if (!container) {
-        return <p>Error: "container" parameter must be specified</p>
+    if (!score) {
+        return <p>Error: "score" parameter must be specified</p>
     }
 
-    return <p>
-        Performing a performance on {container}
-    </p>
+    if (storage !== "" && score) {
+        return <Companion uri={score} userPOD={storage} userProfile={session.info.webId!}/>
+    } else {
+        return <p>loading user storage</p>
+    }
+
+    // return <CombinedDataProvider datasetUrl={session.info.webId!} thingUrl={session.info.webId}>
+    //     {typeof userPOD !== "undefined" && typeof performanceCollection !== "undefined" && annotationCollection !== "undefined" && userProfile !== "undefined"
+    //         ? <Companion userPOD = { userPOD } uri = { performanceCollection } annotationContainerUri = { annotationCollection } userProfile = { userProfile } session = { session } />
+    //         : <div>Loading... </div>
+    //     }
+    // </CombinedDataProvider>
 }
