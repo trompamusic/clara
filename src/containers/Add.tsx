@@ -2,9 +2,9 @@
 import {useSearchParams} from "react-router-dom";
 import React, {useEffect, useState} from "react";
 import {useSession} from "@inrupt/solid-ui-react";
-import {useInterval} from "../util/hooks";
 import Api from "../util/api";
 import {getScoreDocument, getScoresForUser} from "../util/clara";
+import {useNavigate} from "react-router";
 
 /**
  * The main wrapper to perform a score
@@ -22,6 +22,7 @@ export default function Add() {
     let [searchParams, setSearchParams] = useSearchParams();
     const {session} = useSession();
     const url = searchParams.get('url');
+    const navigate = useNavigate();
 
     // If a resource parameter exists, request to the server to create a container in the pod
     useEffect(() => {
@@ -31,7 +32,7 @@ export default function Add() {
             getScoresForUser(session.info.webId!, session.fetch).then(scores => {
                 scores.filter(score_url => {
                     getScoreDocument(score_url, session.fetch).then(doc => {
-
+                        // TODO: Get score document and check if it's the same as the one we're trying to add
                     })
                 })
 
@@ -40,7 +41,7 @@ export default function Add() {
                     url, session.info.webId!
                 ).then(data => {
                     if (!ignore) {
-                        setTaskId(data.task_id)
+                        navigate(`/addwait?task=${data.task_id}`);
                     }
                 });
             })
@@ -60,11 +61,7 @@ export default function Add() {
         return <p>Error: You need to specify the "url" param</p>
     }
 
-    if (taskId) {
-        return <p>Processing file</p>
-    } else {
-        return <p>
-            Loading {url}
-        </p>
-    }
+    return <p>
+        Loading {url}
+    </p>
 }

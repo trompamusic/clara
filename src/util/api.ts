@@ -9,6 +9,12 @@ class Api {
         });
     }
 
+    swrQuery = (query: string) => {
+        return this.client.get(query).then(result => {
+            return result.data;
+        });
+    }
+
     getBackendAuthenticationUrl = (profile: string, redirect_after: string) => {
         const data = new FormData();
         data.append('webid_or_provider', profile);

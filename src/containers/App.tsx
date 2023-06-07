@@ -13,6 +13,7 @@ import Perform from "./Perform";
 import ScoreSelector from "./ScoreSelector";
 import Add from "./Add";
 import AuthCallback from "./AuthCallback";
+import AddWait from "./AddWait";
 
 const publicPerformanceCollection = 'https://clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld';
 const publicUserProfile = 'https://clara.trompa-solid.upf.edu/profile/card#me';
@@ -34,6 +35,10 @@ const router = createBrowserRouter([
             {
                 path: "/add",
                 element: <Add />
+            },
+            {
+                path: "/addwait",
+                element: <AddWait />
             },
             {
                 path: "/perform",
