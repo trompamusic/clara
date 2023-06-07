@@ -676,13 +676,6 @@ class Companion extends Component {
 
       return(
         <div id="wrapper">
-          <div id="logoWrapper" className = { this.state.mode }>
-            <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" 
-              onClick={() => window.open("https://trompamusic.eu/", "_blank", "noopener,noreferrer")} />
-            <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" 
-              onClick={() => window.open("http://www.mdw.ac.at/", "_blank", "noopener,noreferrer")} />
-          </div>
-            
           { featureVisElement }
           <div id="instantBoundingBoxes" />
           { currentScore }

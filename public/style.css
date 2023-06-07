@@ -1,13 +1,13 @@
-body { 
+body {
   font-family: sans-serif;
 }
 
-svg { 
+svg {
   user-select: none;
   overflow:visible;
 }
 
-#zoomBox { 
+#zoomBox {
   position: fixed;
   z-index: 1;
   background: white;
@@ -15,17 +15,17 @@ svg {
   border-radius:20px;
 }
 
-.zoomBoxLine { 
+.zoomBoxLine {
   fill:darkorange !important;
   stroke:darkorange !important;
 }
 
-.zoomBoxLabel, .zoomBoxXIndicatorLabel { 
+.zoomBoxLabel, .zoomBoxXIndicatorLabel {
   fill:darkgrey;
   font-size: 8pt;
 }
 
-.zoomBoxXIndicatorLine { 
+.zoomBoxXIndicatorLine {
   fill:darkgrey;
 }
 
@@ -33,13 +33,13 @@ svg {
   fill: rgb(35, 144, 194) !important;
 }
 
-.scoreAnnotation.selected { 
+.scoreAnnotation.selected {
   fill: rgba(35,144,194, .5)!important;
   stroke: rgb(35, 144, 194) !important;
 }
 
 
-.videoWrapper { 
+.videoWrapper {
   max-width:945px;
   margin-left:20px;
 }
@@ -48,11 +48,11 @@ svg {
   height: 25px !important;
 }
 
-button.active { 
+button.active {
   background-color:darkorange;
 }
 
-.active { 
+.active {
   fill:darkorange;
   stroke:darkorange;
 }
@@ -62,12 +62,12 @@ button.active {
   stroke: #00aaff;
 }
 
-.inserted { 
+.inserted {
   fill: #ff6666;
   stroke: #ff6666;
 }
 
-.wasActive{ 
+.wasActive{
   fill:black;
   stroke:black;
   -webkit-animation-name: wasActive; /* Safari 4.0 - 8.0 */
@@ -76,29 +76,29 @@ button.active {
   animation-duration:0.43;
 }
 /* Safari 4.0 - 8.0 */
-@-webkit-keyframes wasActive { 
+@-webkit-keyframes wasActive {
   from{fill:darkorange; stroke:darkorange}
   to{fill:black; stroke:black;}
 }
 
-@keyframes wasActive { 
+@keyframes wasActive {
   from{fill:darkorange; stroke:darkorange}
   to{fill:#663300; stroke:#663300;}
 }
 
-.scorepane { 
+.scorepane {
   min-height: 460px;
   display:block;
   position: relative;
   z-index: -1;
 }
 
-.scorepane.featureVis { 
+.scorepane.featureVis {
   min-height: 230px;
   max-height: 230px;
 }
 
-#instantBoundingBoxes { 
+#instantBoundingBoxes {
   position: absolute;
 }
 
@@ -106,12 +106,12 @@ button.active {
   display: block;
 }
 
-.selectable-score-postButton { 
+.selectable-score-postButton {
   display:inline;
   margin-left: 10px;
 }
 
-.errorDetected { 
+.errorDetected {
   fill:black;
   stroke:black;
   -webkit-animation-name: errorDetected; /* Safari 4.0 - 8.0 */
@@ -121,12 +121,12 @@ button.active {
 }
 
 /* Safari 4.0 - 8.0 */
-@-webkit-keyframes errorDetected { 
+@-webkit-keyframes errorDetected {
   from {fill:black; stroke:black;}
   to {fill:red; stroke:red;}
 }
 
-@keyframes errorDetected { 
+@keyframes errorDetected {
   from {fill:black; stroke:black;}
   to {fill:red; stroke:red;}
 }
@@ -146,7 +146,7 @@ button.active {
   color: rgba(255, 102, 0);
 }
 
-#pageControlsWrapper.featureVis { 
+#pageControlsWrapper.featureVis {
   max-width: 1253px;
 }
 
@@ -156,27 +156,27 @@ button.active {
   color:white;
 }
 
-#pageControlsWrapper #prev, #pageControlsWrapper #next { 
+#pageControlsWrapper #prev, #pageControlsWrapper #next {
   margin-top:.1em;
   cursor:pointer;
 }
 
 #pageControlsWrapper.following #prev, #pageControlsWrapper.following #next {
  cursor:default;
-} 
+}
 
-#selectWrapper { 
+#selectWrapper {
   clear:both;
   margin-left:20px;
   padding-top:20px;
   padding-bottom:20px;
 }
 
-.loadingMsg { 
+.loadingMsg {
   margin-left:20px;
 }
 
-#logoWrapper { 
+#logoWrapper {
   margin-bottom: -15px;
   display: flex;
   justify-content: space-between;
@@ -186,16 +186,15 @@ button.active {
   cursor:pointer;
 }
 
-#logoWrapper.featureVis { 
+#logoWrapper.featureVis {
   max-width: 1765px;
 }
 
-#logoWrapper #trompaLogo { 
+#trompaLogo {
   height:32px;
-  margin-top:20px;
 }
 
-#logoWrapper #mdwLogo { 
+#mdwLogo {
   height:64px;
 }
 
@@ -203,7 +202,7 @@ button.active {
   visibility:hidden;
 }
 
-.removedFromDisplay { 
+.removedFromDisplay {
   display: none;
 }
 
@@ -215,16 +214,16 @@ button.active {
   width:1280px;
 }
 
-#tempoCurve, #dynamicsVis svg { 
+#tempoCurve, #dynamicsVis svg {
   display:block;
   margin-block: .5em;
 }
 
-#dynamicsVis svg { 
+#dynamicsVis svg {
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(220, 220, 220, .2) 5%, rgba(220, 220, 220, .2) 95%, rgba(255, 255, 255, .2) 100%);
 }
 
-#tempoCurve { 
+#tempoCurve {
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(220, 220, 220, .2) 5%, rgba(220, 220, 220, .2) 95%, rgba(255, 255, 255, .2) 100%);
 }
 
@@ -235,7 +234,7 @@ button.active {
   display:block;
 }
 
-#featureVisContainer line { 
+#featureVisContainer line {
   stroke:lightgrey;
   fill: lightgrey;
   cursor: pointer;
@@ -253,16 +252,16 @@ button.active {
   fill:orange !important;
 }
 
-#featureVisContainer line.barLineAttr { 
+#featureVisContainer line.barLineAttr {
   stroke:lightgrey;
 }
 
-#featureVisContainer line.bpmMarker { 
+#featureVisContainer line.bpmMarker {
   stroke-dasharray:1;
   stroke:lightgrey;
 }
 
-#featureVisContainer line.estimated { 
+#featureVisContainer line.estimated {
   stroke-dasharray: 1.5;
 }
 
@@ -271,36 +270,36 @@ button.active {
   fill: lightgrey;
 }
 
-.clickableBoundedInstant { 
+.clickableBoundedInstant {
   cursor:pointer;
 }
 
 #dynamicsVis ellipse, #dynamicsVis .dynamicsConnector,
-#tempoCurve ellipse, #tempoCurve .tempoConnector{ 
+#tempoCurve ellipse, #tempoCurve .tempoConnector{
   stroke:black;
   fill:black;
   stroke-width:1px;
 }
 
-#midiEvents { 
+#midiEvents {
   max-height:10em;
   overflow:auto;
   display:flex;
   flex-direction: column-reverse;
 }
 
-#recordingIndicator { 
+#recordingIndicator {
   font-family: "Lucida Console", Monaco, monospace;
   margin-left:1em;
   padding:.2em;
   color: white;
 }
 
-#recordingIndicator .isRecording { 
+#recordingIndicator .isRecording {
   background: green;
 }
 
-#recordingIndicator .isNotRecording { 
+#recordingIndicator .isNotRecording {
   background: red;
 }
 line.dynamicsConnector.active{
@@ -308,26 +307,26 @@ line.dynamicsConnector.active{
   fill:red;
 }
 
-.visLabel { 
+.visLabel {
   position:relative;
   top: -40px;
   font-size: xx-small;
 }
 
-#dynamicsLegend { 
+#dynamicsLegend {
   position:relative;
   top: -60px;
   font-size: xx-small;
 }
 
-#dynamicsLegend span { 
+#dynamicsLegend span {
   width: 1em;
   height: 1em;
   margin-left:4em;
   margin-right:1em;
 }
 
-#dynamicsVis :not(#dynamicsVisSummary) polygon:not(.currentTl) { 
+#dynamicsVis :not(#dynamicsVisSummary) polygon:not(.currentTl) {
   stroke:#00000099;
   fill:#00000099;
 }
@@ -412,7 +411,7 @@ line.dynamicsConnector.active{
   font-size: xx-small;
 }
 
-.selectDynamicsAggregate { 
+.selectDynamicsAggregate {
   margin-left:1em;
   border-bottom: 2px solid lightgrey;
   display: inline-block;
@@ -423,7 +422,7 @@ line.dynamicsConnector.active{
   position:absolute;
 }
 
-.scorepane .annotations .highlightEllipse { 
+.scorepane .annotations .highlightEllipse {
   fill:none;
   stroke:red;
   stroke-width: 2;
