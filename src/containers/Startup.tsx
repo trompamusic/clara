@@ -18,14 +18,11 @@ import {useNavigate} from "react-router";
 export default function Startup() {
     const [hasPermission, setHasPermission] = useState(false);
     const [checkingPermission, setCheckingPermission] = useState(true);
+    const [authUrl, setAuthUrl] = useState<string>();
     const {session} = useSession();
     const navigate = useNavigate();
 
     const webId = session.info.webId ?? "";
-    const profileParams = new URLSearchParams({
-        profile: webId,
-        redirect: deployLocation!
-    });
 
     useEffect(() => {
         if (session.info.isLoggedIn) {
@@ -34,6 +31,13 @@ export default function Startup() {
             Api.checkUserPermissions(webId)
             .then(data => {
                 if (!ignore) {
+                    if (data.has_permission === false) {
+                        // No permission, do a lookup to get the auth URL
+                        Api.getBackendAuthenticationUrl(webId, "/").then(data => {
+                            setAuthUrl(data.auth_url);
+                        })
+                        // TODO: Catch error in this request and show error
+                    }
                     setHasPermission(data.has_permission);
                     setCheckingPermission(false);
                 }
@@ -45,6 +49,8 @@ export default function Startup() {
     }, [session.info.isLoggedIn, webId]);
 
     // Check if a clara container exists in the user's pod
+    // TODO: https://react.dev/learn/you-might-not-need-an-effect
+    //  possibe that this should be a part of the previous effect?
     useEffect(() => {
         async function fetchClaraContainer() {
             // TODO: We lookup the user's storage multiple times
@@ -75,7 +81,7 @@ export default function Startup() {
         return <p>Checking if you have let us store items in your Solid pod...</p>
     } else {
         return <p>You haven't given permission for us to act on your behalf <br/>
-            Please visit the <a href={`${authUrl}?${profileParams}`}>Authentication
+            Please visit the <a href={authUrl}>Authentication
                 page</a> to do this</p>
     }
 }

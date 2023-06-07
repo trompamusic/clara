@@ -8,6 +8,7 @@
     "build": "react-app-rewired build",
     "build-dev": "babel src --out-dir lib --source-maps inline"
   },
+  "proxy": "http://localhost:8000",
   "author": "David M. Weigl, IWK, University of Music and Performing Arts Vienna",
   "license": "BSD-3-Clause",
   "devDependencies": {

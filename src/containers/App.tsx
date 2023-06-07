@@ -12,6 +12,7 @@ import Startup from "./Startup";
 import Perform from "./Perform";
 import ScoreSelector from "./ScoreSelector";
 import Add from "./Add";
+import AuthCallback from "./AuthCallback";
 
 const publicPerformanceCollection = 'https://clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld';
 const publicUserProfile = 'https://clara.trompa-solid.upf.edu/profile/card#me';
@@ -42,7 +43,11 @@ const router = createBrowserRouter([
                 path: "/demo",
                 element: <Companion uri={publicPerformanceCollection} userPOD={`https://clara.trompa-solid.upf.edu/`}
                                     userProfile={publicUserProfile} demo/>
-            }
+            },
+            {
+                path: "/auth/callback",
+                element: <AuthCallback />
+            },
         ]
     },
 ]);
