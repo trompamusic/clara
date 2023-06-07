@@ -53,6 +53,7 @@ const scores: ScoreOption[] = [
 export default function ScoreSelector() {
     const [userUrl, setUserUrl] = useState('');
     const [userScores, setUserScores] = useState<ScoreOption[]>([]);
+    const [loadingScores, setLoadingScores] = useState(true);
     let navigate = useNavigate();
     const {session} = useSession();
 
@@ -61,23 +62,34 @@ export default function ScoreSelector() {
         navigate(`/add?url=${url}`);
     };
 
-    const getMetadataForScore = async (url: string): Promise<ScoreOption> => {
-        const doc = await getScoreDocument(url, session.fetch);
-        const name = getStringNoLocale(doc!, DCTERMS.title) ?? "unknown";
-        return {name, url}
-    }
+    const performScore = (url: string) => {
+        navigate(`/perform?score=${url}`);
+    };
 
     useEffect(() => {
         let ignore = false;
+        const getMetadataForScore = async (url: string): Promise<ScoreOption|null> => {
+            const doc = await getScoreDocument(url, session.fetch);
+            if (doc) {
+                const name = getStringNoLocale(doc!, DCTERMS.title) ?? "unknown";
+                return {name, url}
+            }
+            return null;
+        }
 
         async function fetchExistingScores() {
-            const urls = await getScoresForUser(session.info.webId!, session.fetch);
-            Promise.all(urls.map( (u) => {
-                return getMetadataForScore(u)
-            })).then(results => {
-                if (!ignore) {
-                    setUserScores(results)
-                }
+            getScoresForUser(session.info.webId!, session.fetch).then(urls => {
+                Promise.all(urls.map((u) => {
+                    return getMetadataForScore(u)
+                })).then(results => {
+                    if (!ignore) {
+                        const filtered = results.filter((r) => r !== null) as ScoreOption[];
+                        setUserScores(filtered);
+                        setLoadingScores(false);
+                    }
+                });
+            }).catch(() => {
+                setLoadingScores(false);
             });
         }
         if (session.info.isLoggedIn) {
@@ -148,14 +160,15 @@ export default function ScoreSelector() {
             <p>or</p>
             <h3>Load a previous score that you have performed</h3>
             <ul>
+                {loadingScores && <li>Loading...</li>}
                 {userScores.map((score) => {
                     return (
                         <li key={score.url}>
                             <a
-                                href={`/perform?container=${score.url}`}
+                                href={`/perform?score=${score.url}`}
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    loadUrl(score.url);
+                                    performScore(score.url);
                                 }}
                             >
                                 {score.name}
@@ -163,6 +176,7 @@ export default function ScoreSelector() {
                         </li>
                     );
                 })}
+                {!loadingScores && userScores.length === 0 && <li>No scores yet... Load one above</li>}
             </ul>
         </Col>
         <Col sm={2}/>
