@@ -133,12 +133,17 @@ class Companion extends Component {
       objectPrefixWhitelist:[]
     }
     if(this.props.userPOD) {
-      // TODO
+      // TODO: Handle case where userPod ends with a / or not.
       // If we are to load any resources from the external web,
       // e.g. MEI files or segmentations,
       // we must add them all to the whitelist!
       params["objectPrefixWhitelist"] = [this.props.userPOD, ...params["objectPrefixWhitelist"], "https://clara.trompa-solid.upf.edu/"];
-      params["objectPrefixBlacklist"] = [`${this.props.userPOD}/private/audio`, `${this.props.userPOD}private/audio`, `https://tpl-alignment-test.trompa-solid.upf.edu/public/mei`]
+      params["objectPrefixBlacklist"] = [
+          `${this.props.userPOD}at.ac.mdw.trompa/midi`,
+          `${this.props.userPOD}at.ac.mdw.trompa/audio`,
+          `${this.props.userPOD}/private/audio`,
+          `${this.props.userPOD}private/audio`,
+          `https://tpl-alignment-test.trompa-solid.upf.edu/public/mei`]
     }
     this.props.registerTraversal(this.props.uri, params)
     document.addEventListener('keydown', this.monitorKeys);
