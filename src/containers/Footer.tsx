@@ -8,7 +8,7 @@ export default function Footer() {
             <a href="http://iwk.mdw.ac.at/?PageId=140" target="_blank" rel="noopener noreferrer">More information</a>
         </div>
         <div className="col-md-8 d-flex align-items-center">
-            <img alt="Flag of the European Union" src="https://ec.europa.eu/research/participants/docs/h2020-funding-guide/imgs/eu-flag.jpg" width="100px"/>
+            <img alt="Flag of the European Union" src="/static/eu-flag.jpg" width="100px"/>
             <div style={ {marginLeft: "20px", fontSize: "0.8em"} }>
                 This project has received funding from the&nbsp;European Union's Horizon 2020 research and innovation programme<i>&nbsp;</i><em>H2020-EU.3.6.3.1. - Study European heritage, memory, identity, integration and cultural interaction and translation, including its representations in cultural and scientific collections, archives and museums, to better inform and understand the present by richer interpretations of the past</em> under grant agreement No 770376.
             </div>
