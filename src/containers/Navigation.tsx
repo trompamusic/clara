@@ -69,11 +69,9 @@ export default function Navigation() {
     return (
         <Navbar bg="light" expand="lg">
             <Container fluid={true}>
-                <a href={"https://trompamusic.eu/"} target={"_blank"} rel={"noopener noreferrer"}>
-                    <img src="/static/trompa.png" id="trompaLogo" alt="TROMPA Project logo" />
-                </a>
-                <Navbar.Brand href="/">Clara</Navbar.Brand>
+                <Navbar.Brand>Clara</Navbar.Brand>
                 <Nav className="me-auto">
+                    <Nav.Link as={Link} to="/">Home</Nav.Link>
                     <Nav.Link as={Link} to="/demo">Demo</Nav.Link>
                 </Nav>
                 <Nav>
@@ -88,10 +86,6 @@ export default function Navigation() {
                         : <LoginButton/>
                     }
                 </Nav>
-                <a href={"http://www.mdw.ac.at/"} target={"_blank"} rel={"noopener noreferrer"}>
-                    <img src="/static/mdw.svg" id="mdwLogo" alt="University of Music and Performing Arts Vienna, Austria logo" />
-                </a>
-
             </Container>
         </Navbar>
     );

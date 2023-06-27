@@ -3,6 +3,7 @@ import React from "react";
 import {Outlet, useNavigate} from "react-router";
 import {Container} from "react-bootstrap";
 import {SessionProvider} from "@inrupt/solid-ui-react";
+import Footer from "./Footer";
 
 export default function Layout() {
 
@@ -19,5 +20,6 @@ export default function Layout() {
         <Container fluid="lg">
             <Outlet />
         </Container>
+        <Footer />
     </SessionProvider>
 }
