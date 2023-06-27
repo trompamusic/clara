@@ -19,7 +19,7 @@ export default function AddWait() {
     const { data, error } = useSWR(task ? `/add/status?task=${task}` : null, fetcher, { refreshInterval: 1000 })
 
     useEffect(() => {
-        if (data.status === "ok") {
+        if (data && data.status === "ok") {
             navigate(`/perform?score=${data.container}`);
         }
     }, [data]);
