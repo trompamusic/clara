@@ -675,7 +675,11 @@ class Companion extends Component {
                     })
                   }
                 </select>
-                <select name="perfSelect" defaultValue="none" value={this.state.selectedPerformance["@id"]} onChange={ (e) => this.handlePerformanceSelected(e.target.value) }>
+                <select name="perfSelect" defaultValue="none"
+                        value={this.state.selectedPerformance["@id"]}
+                        onChange={ (e) =>
+                            this.handlePerformanceSelected(e.target.value)
+                }>
                   <option value="none">Select a rendition...</option>
                   {
                     this.state.performances
@@ -689,11 +693,13 @@ class Companion extends Component {
                     })
                   }
                 </select>
+              &nbsp;
               	<span>
                   { this.state.performances.length
                     ? <span>
                         <span id="scoreFollowToggle">
                           <input
+                            id="controlAutomaticPageTurning"
                             type="checkbox"
                             ref="scoreFollowingToggle"
                             defaultChecked={ this.state.scoreFollowing }
@@ -701,11 +707,12 @@ class Companion extends Component {
                               this.setState({ scoreFollowing: !this.state.scoreFollowing })
                             }}
                         />
-                        Automatic page turning
-                      </span>
+                          &nbsp;<label htmlFor="controlAutomaticPageTurning">Automatic page turning</label>
+                      </span>&nbsp;
                       <span id="modeToggle">
                             <input
                               type="checkbox"
+                              id="controlFeatureVisualisation"
                               ref="modeToggle"
                               defaultChecked={ this.state.mode === "featureVis" }
                               onChange={ () => {
@@ -726,7 +733,7 @@ class Companion extends Component {
                                 }
                               }}
                             />
-                            Feature visualisation
+                        &nbsp;<label htmlFor="controlFeatureVisualisation">Feature visualisation</label>
                         </span>
                       </span>
                       : <span/>
@@ -846,6 +853,9 @@ class Companion extends Component {
 
   handlePerformanceSelected = (perfId) => {
     console.log("Rendition selected: ", perfId);
+    if (perfId === "none") {
+      return;
+    }
     const selected = this.state.performances.filter( (perf) => { return perf["@id"] === perfId });
     const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
     const selectedPerformance = selected[0];
