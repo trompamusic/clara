@@ -87,29 +87,6 @@ class Companion extends Component {
       deleteAnnoButtonActive: false,
       onSelect: () => console.error("onSelect with no selection handler")
     }
-	// Following bindings required to make 'this' work in the callbacks
-    this.processTraversalOutcomes = this.processTraversalOutcomes.bind(this);
-    this.handleSegmentSelected = this.handleSegmentSelected.bind(this);
-    this.handlePerformanceSelected = this.handlePerformanceSelected.bind(this);
-    this.tick = this.tick.bind(this);
-    this.findInstantToSeekTo = this.findInstantToSeekTo.bind(this);
-    this.assignClickHandlersToNotes = this.assignClickHandlersToNotes.bind(this);
-    this.createInstantBoundingRects = this.createInstantBoundingRects.bind(this);
-    this.highlightDeletedNotes = this.highlightDeletedNotes.bind(this);
-    this.monitorKeys= this.monitorKeys.bind(this);
-    this.mapVelocity = this.mapVelocity.bind(this);
-    this.ensureArray = this.ensureArray.bind(this);
-    this.seekToInstant = this.seekToInstant.bind(this);
-    this.handleDOMChangeObserved = this.handleDOMChangeObserved.bind(this);
-    this.convertCoords = this.convertCoords.bind(this);
-    this.handleSelectionChange = this.handleSelectionChange.bind(this);
-    this.handleResponse = this.handleResponse.bind(this);
-    this.handleReceiveAnnotationContainerContent = this.handleReceiveAnnotationContainerContent.bind(this);
-    this.determineHighlightsOnPage = this.determineHighlightsOnPage.bind(this)
-    this.deleteSelectedPerformance = this.deleteSelectedPerformance.bind(this)
-    this.submitCircleAnnotation = this.submitCircleAnnotation.bind(this)
-    this.deleteAnnotations = this.deleteAnnotations.bind(this)
-
     this.player = React.createRef();
     this.featureVis = React.createRef();
     this.scoreComponent = React.createRef();
@@ -150,7 +127,7 @@ class Companion extends Component {
     this.setState({vrvOptions: this.state.mode === "featureVis" ? vrvOptionsFeatureVis : vrvOptionsPageView});
   }
 
-  submitCircleAnnotation() {
+  submitCircleAnnotation = () => {
     const anno = {
       "@context": "http://www.w3.org/ns/anno.jsonld",
       "target": this.state.selection.map( (elem) => this.state.currentScore + "#" + elem.getAttribute("id") ),
@@ -163,7 +140,7 @@ class Companion extends Component {
     this.setState({circleButtonActive: false, selection:[]});
   }
 
-  deleteAnnotations() {
+  deleteAnnotations = () => {
     if(window.confirm("Do you really wish to permanently erase " + this.state.selection.length + " annotations?")) {
       this.state.selection.map((s) => {
         // this.solidClient.deleteAnnotation(s.dataset.uri)
@@ -175,7 +152,7 @@ class Companion extends Component {
   }
 
 
-  deleteSelectedPerformance() {
+  deleteSelectedPerformance = () => {
     if(window.confirm("Do you really wish to PERMANENTLY DELETE this performance? " + this.state.selectedPerformance["http://www.w3.org/2000/01/rdf-schema#label"])) {
       this.props.session.fetch(this.state.selectedPerformance["@id"], { method: "DELETE" })
         .then(() =>  {
@@ -193,7 +170,7 @@ class Companion extends Component {
     }
   }
 
-  determineHighlightsOnPage() {
+  determineHighlightsOnPage = () => {
     if(this.scoreComponent.current) {
       const highlightsOnPage = this.state.highlights.filter((hl) => {
         const targetsOnPage = this.ensureArray(hl.target).filter((t) => {
@@ -206,7 +183,7 @@ class Companion extends Component {
     }
   }
 
-  handleDOMChangeObserved() {
+  handleDOMChangeObserved = () => {
     if(this.scoreComponent.current) {
       this.setState({
         "observingScore": false,
@@ -223,7 +200,7 @@ class Companion extends Component {
     }
   }
 
-  handleReceiveAnnotationContainerContent(content) {
+  handleReceiveAnnotationContainerContent = (content) => {
     console.log("Received annotation container content: ", content);
     const highlights = [];
     const myHighlights = this.ensureArray(content).filter( (anno) => {
@@ -243,7 +220,7 @@ class Companion extends Component {
     })
   }
 
-  handleResponse(res) {
+  handleResponse = (res) => {
     // POST completed, retrieve the container content
     this.setState({ toggleAnnotationRetrieval: true })
   }
@@ -366,7 +343,7 @@ class Companion extends Component {
     document.removeEventListener('keydown', this.monitorKeys);
   }
 
-  monitorKeys(e) {
+  monitorKeys = (e) => {
     console.log("key pressed: ", e);
     if("score" in this.props) {
       switch(e.which) {
@@ -402,7 +379,7 @@ class Companion extends Component {
     }
   }
 
-  highlightDeletedNotes() {
+  highlightDeletedNotes = () => {
     // highlight deleted notes (i.e., notes missed out during performance) on this page
     // n.b. per Nakamura alignment convention, deleted notes have a performance time of -1
     //
@@ -428,7 +405,7 @@ class Companion extends Component {
       }
     }
   }
-  createInstantBoundingRects() {
+  createInstantBoundingRects = () => {
     // draw bounding rectangles for the note(s) on this page representing each instance
     let notesOnPagePerInstant = {};
     const boundingBoxesWrapper = document.getElementById("instantBoundingBoxes");
@@ -551,7 +528,7 @@ class Companion extends Component {
     })
   }
     // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group
-  convertCoords(elem) {
+  convertCoords = (elem) => {
     if(!!elem && document.getElementById(elem.getAttribute("id"))
       && elem.style.display !== "none" && (elem.getBBox().x !== 0 || elem.getBBox().y !== 0)) {
       const x = elem.getBBox().x;
@@ -572,7 +549,7 @@ class Companion extends Component {
     }
   }
 
-  assignClickHandlersToNotes() {
+  assignClickHandlersToNotes = () => {
     // check if our score page has updated
     const selectedTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
     const notes = ReactDOM.findDOMNode(this.scoreComponent.current).querySelectorAll(".note");
@@ -589,7 +566,7 @@ class Companion extends Component {
     });
   }
 
-  handleSelectionChange(selection) {
+  handleSelectionChange = (selection) => {
     this.setState({ selection });
     this.state.onSelect();
   }
@@ -842,7 +819,7 @@ class Companion extends Component {
     }
   }
 
-  handleSegmentSelected(e) {
+  handleSegmentSelected = (e) => {
     const selected = this.state.segments.filter( (seg) => { return seg["@id"] === e.target.value });
     const target = selected[0]["http://purl.org/vocab/frbr/core#embodiment"]["http://www.w3.org/2000/01/rdf-schema#member"]["@id"];
     this.props.scorePageToComponentTarget(target, this.state.currentScore, this.props.score.MEI[this.state.currentScore]);
@@ -862,7 +839,7 @@ class Companion extends Component {
     }
   }
 
-  seekToInstant(instant) {
+  seekToInstant = (instant) => {
     // seek to a specific instant on a particular timeline
     // (switching to the performance of that timeline if necessary)
     const performances = this.state.performances.filter((p) => p["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] === instant["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"]);
@@ -883,7 +860,7 @@ class Companion extends Component {
     }
   }
 
-  handlePerformanceSelected(perfId) {
+  handlePerformanceSelected = (perfId) => {
     console.log("Rendition selected: ", perfId);
     const selected = this.state.performances.filter( (perf) => { return perf["@id"] === perfId });
     const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
@@ -904,7 +881,7 @@ class Companion extends Component {
     this.setState(newState);
   }
 
-  findInstantToSeekTo(segment, selectedPerformance = this.state.selectedPerformance) {
+  findInstantToSeekTo = (segment, selectedPerformance = this.state.selectedPerformance) => {
     //FIXME Skolemization bug currently causing two identical times (intervals), one for performance and one for signal. For now, pick the first
     const thisTime = this.ensureArray(selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"])
     const selectedTimeline = thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
@@ -942,14 +919,14 @@ class Companion extends Component {
     return filtered;
   }
 
-  mapVelocity(vel) {
+  mapVelocity = (vel) => {
     let value = (vel - this.state.minExpectedVel) * (this.state.maxMappedVelocity - this.state.minMappedVelocity) / (this.state.maxExpectedVel - this.state.minExpectedVel) + this.state.minMappedVelocity;
     value = Math.max(0, value) // can't have < 0
     value = Math.max(value, 1) // can't have > 1
     return Math.floor(value);
   }
 
-  tick(id,t) {
+  tick = (id, t) => {
     t += this.state.videoOffset;
     let newState = { lastMediaTick: t }; // keep track of this time tick)
     // dispatch a "TICK" action
@@ -1070,11 +1047,11 @@ class Companion extends Component {
 		}
 	}
 
-  ensureArray(val) {
+  ensureArray = (val) => {
     return Array.isArray(val) ? val : [val]
   }
 
-  processTraversalOutcomes(outcomes) {
+  processTraversalOutcomes = (outcomes) => {
     console.log("PROCESSING OUTCOMES: ", outcomes)
     let segments = [];
     let performances= [];
