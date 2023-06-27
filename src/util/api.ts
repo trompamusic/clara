@@ -19,7 +19,7 @@ class Api {
         const data = new FormData();
         data.append('webid_or_provider', profile);
         data.append('redirect_after', redirect_after);
-        return this.client.post(`/auth/request`, data).then(result => {
+        return this.client.post(`/api/auth/request`, data).then(result => {
             return result.data;
         });
     }
@@ -28,7 +28,20 @@ class Api {
         const data = new FormData();
         data.append('code', code);
         data.append('state', state);
-        return this.client.post(`/auth/callback`, data).then(result => {
+        return this.client.post(`/api/auth/callback`, data).then(result => {
+            return result.data;
+        });
+    }
+
+    alignMidi = (profile: string, score: string, file: Blob) => {
+        let data = new FormData();
+
+        data.append("file", file);
+        data.append("midi_type", "midi");
+        data.append("score", score);
+        data.append("profile", profile);
+
+        return this.client.post('/api/align', data).then((result) => {
             return result.data;
         });
     }
@@ -38,7 +51,7 @@ class Api {
             score,
             profile,
         };
-        return this.client.post(`/add`, data).then(result => {
+        return this.client.post(`/api/add`, data).then(result => {
             return result.data;
         });
     }
@@ -47,7 +60,7 @@ class Api {
         const profileParams = new URLSearchParams({
             profile
         });
-        return this.client.get(`/check_user_perms?${profileParams}`).then(result => {
+        return this.client.get(`/api/check_user_perms?${profileParams}`).then(result => {
             return result.data;
         })
     }
