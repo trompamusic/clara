@@ -13,6 +13,7 @@ import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObje
 import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/index';
 
 import FeatureVis from './featureVis';
+import {useNavigate} from "react-router";
 
 const vrvOptionsPageView = {
 	scale: 45,
@@ -36,6 +37,14 @@ const vrvOptionsFeatureVis = {
 	svgAdditionalAttribute: ["clef@shape", "clef@line"]
 };
 
+function LinkToUpload({uri}) {
+  const navigate = useNavigate();
+  return <a href={`/upload?score=${uri}`} onClick={(e) => {
+    e.preventDefault();
+    navigate(`/upload?score=${uri}`);
+  }}>Upload a performance</a>
+}
+
 class Companion extends Component {
   constructor(props) {
     super(props);
@@ -49,6 +58,7 @@ class Companion extends Component {
       notesOnPage: [],
       barlinesOnPage: [],
       selectedVideo: "",
+      selectedVideoData: null,
       selectedPerformance: "",
       lastMediaTick: 0,
       previouslyActive: [],
@@ -658,6 +668,7 @@ class Companion extends Component {
 
       return(
         <div id="wrapper">
+          <LinkToUpload uri={this.props.uri} />
           { featureVisElement }
           <div id="instantBoundingBoxes" />
           { currentScore }
@@ -785,10 +796,10 @@ class Companion extends Component {
                 }
             </div>
           <div className="videoWrapper">
-            <ReactPlayer
+            {this.state.selectedVideoData && <ReactPlayer
               playing
               ref={this.player}
-              url={ this.state.selectedVideo }
+              url={ this.state.selectedVideoData }
               progressInterval = { this.state.progressInterval } // update rate in milliseconds
               controls={ true }
               width="100%"
@@ -803,7 +814,7 @@ class Companion extends Component {
                   this.setState({seekTo: ""});
                 }
               }}
-            />
+            />}
           </div>
         </div>
       )
@@ -859,9 +870,9 @@ class Companion extends Component {
     const selected = this.state.performances.filter( (perf) => { return perf["@id"] === perfId });
     const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
     const selectedPerformance = selected[0];
-		this.props.registerClock(selectedVideo);
+    this.props.registerClock(selectedVideo);
     let newState = { selectedVideo, selectedPerformance };
-    if("@id" in this.state.currentSegment) {
+    if ("@id" in this.state.currentSegment) {
       // set up a jump to the currently selected segment in this performance
       const timelineSegment = this.findInstantToSeekTo(this.state.currentSegment, selectedPerformance);
       if(timelineSegment.length) {
@@ -872,6 +883,12 @@ class Companion extends Component {
       }
     }
     document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
+    // this.props.session.fetch(selectedVideo)
+    //     .then(response => response.blob())
+    //     .then((blob) => {
+    //       console.log(`setting response of video data after auth'd fetch: ${selectedVideo}`)
+    //       this.setState({...newState, selectedVideoData: URL.createObjectURL(blob)})
+    //     });
     this.setState(newState);
   }
 

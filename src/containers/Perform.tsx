@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {useSearchParams} from "react-router-dom";
 import {useSession} from "@inrupt/solid-ui-react";
 import Companion from "./companion";
-import {getPerformanceFromScore, getStorageForUser} from "../util/clara";
+import {getStorageForUser} from "../util/clara";
 
 /**
  * The main wrapper to perform a score
@@ -41,7 +41,7 @@ export default function Perform() {
     }
 
     if (storage !== "" && score) {
-        return <Companion uri={score} userPOD={storage} userProfile={session.info.webId!}/>
+        return <Companion uri={score} userPOD={storage} userProfile={session.info.webId!} session={session} />
     } else {
         return <p>loading user storage</p>
     }

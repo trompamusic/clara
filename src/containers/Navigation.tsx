@@ -71,7 +71,12 @@ export default function Navigation() {
             <Container fluid={true}>
                 <Navbar.Brand>Clara</Navbar.Brand>
                 <Nav className="me-auto">
-                    <Nav.Link as={Link} to="/">Home</Nav.Link>
+                    <Nav.Link as={Link} to="/" onClick={(e) => {
+                        // Because the clara/meld interface stores state of a loaded score and it can't
+                        //  currently be reset, reload the app completely to load a new score
+                        e.preventDefault();
+                        window.open("/", "_self");
+                    }}>Home</Nav.Link>
                     <Nav.Link as={Link} to="/demo">Demo</Nav.Link>
                 </Nav>
                 <Nav>
