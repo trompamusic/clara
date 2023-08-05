@@ -14,6 +14,7 @@ import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/
 
 import FeatureVis from './featureVis';
 import {useNavigate} from "react-router";
+import {MidiPlayer} from "./MidiPlayer";
 
 const vrvOptionsPageView = {
 	scale: 45,
@@ -58,7 +59,6 @@ class Companion extends Component {
       notesOnPage: [],
       barlinesOnPage: [],
       selectedVideo: "",
-      selectedVideoData: null,
       selectedPerformance: "",
       lastMediaTick: 0,
       previouslyActive: [],
@@ -68,7 +68,6 @@ class Companion extends Component {
       currentScore: "",
       seekTo:"",
       videoOffset: 0, // in seconds
-      progressInterval: 1, // of video playback (callback rate), in milliseconds
       activeWindow: .1, // window of notes before current instant considered active, in seconds
       traversalThreshold: 10, // max parallel traversal threads,
       loading: true, // flip when traversals are completed
@@ -796,29 +795,25 @@ class Companion extends Component {
                 }
             </div>
           <div className="videoWrapper">
-            {this.state.selectedVideoData && <ReactPlayer
-              playing
-              ref={this.player}
-              url={ this.state.selectedVideoData }
-              progressInterval = { this.state.progressInterval } // update rate in milliseconds
-              controls={ true }
-              width="100%"
-              height="100%"
-              onProgress={ (p) => {
-                this.tick(this.state.selectedVideo, p["playedSeconds"])
-              }}
-              onReady={ () => {
-                if(this.state.seekTo) {
-                  console.log("Render loop onReady: seeking to ", this.state.seekTo);
-                  this.player.current.seekTo(Math.floor(this.state.seekTo));
-                  this.setState({seekTo: ""});
-                }
-              }}
-            />}
+            <MidiPlayer
+                url={this.state.selectedVideo}
+                onNote={(note) => {
+                  this.tick(this.state.selectedVideo, note.endTime);
+                }}
+            />
+
           </div>
         </div>
       )
     }
+    /*
+    TODO: ReactPlayer is able to seek to a time, MidiPlayer doesn't have this?
+                    if(this.state.seekTo) {
+                  console.log("Render loop onReady: seeking to ", this.state.seekTo);
+                  this.player.current.seekTo(Math.floor(this.state.seekTo));
+                  this.setState({seekTo: ""});
+                }
+     */
   }
 
   handleSegmentSelected = (e) => {
@@ -849,7 +844,8 @@ class Companion extends Component {
       console.warn("Tried to seek to instant on timeline of non-existant performance: ", instant);
     } else {
       const selectedPerformance = performances[0];
-      const selectedVideo = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
+      // The performance is mo:recorded_as an mo:Signal, the signal is mo:derived_from the midi file
+      const selectedVideo = selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/derived_from"]["@id"];
       let dur = instant["http://purl.org/NET/c4dm/timeline.owl#at"];
       dur = parseFloat(dur.substr(1, dur.length-2));
       let seekTo = dur + parseFloat(selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
@@ -868,7 +864,7 @@ class Companion extends Component {
       return;
     }
     const selected = this.state.performances.filter( (perf) => { return perf["@id"] === perfId });
-    const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/available_as"]["@id"];
+    const selectedVideo = selected[0]["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/derived_from"]["@id"];
     const selectedPerformance = selected[0];
     this.props.registerClock(selectedVideo);
     let newState = { selectedVideo, selectedPerformance };
@@ -883,12 +879,6 @@ class Companion extends Component {
       }
     }
     document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
-    // this.props.session.fetch(selectedVideo)
-    //     .then(response => response.blob())
-    //     .then((blob) => {
-    //       console.log(`setting response of video data after auth'd fetch: ${selectedVideo}`)
-    //       this.setState({...newState, selectedVideoData: URL.createObjectURL(blob)})
-    //     });
     this.setState(newState);
   }
 
