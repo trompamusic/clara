@@ -1,0 +1,408 @@
+[
+  {
+    "description": "11 Bagatelles, Opus 119 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.189.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr01-Breitkopf.mei",
+        "name": "No. 1"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr02-Breitkopf.mei",
+        "name": "No. 2"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr03-Breitkopf.mei",
+        "name": "No. 3"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr04-Breitkopf.mei",
+        "name": "No. 4"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr05-Breitkopf.mei",
+        "name": "No. 5"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr06-Breitkopf.mei",
+        "name": "No. 6"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr07-Breitkopf.mei",
+        "name": "No. 7"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr08-Breitkopf.mei",
+        "name": "No. 8"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr09-Breitkopf.mei",
+        "name": "No. 9"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr10-Breitkopf.mei",
+        "name": "No. 10"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr11-Breitkopf.mei",
+        "name": "No. 11"
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel",
+    "name": "Beethoven_Op119_BreitkopfHaertel"
+  },
+  {
+    "description": "33 Ver\u00e4nderungen \u00fcber einen Walzer von A. Diabelli, Op. 120 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.165.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op120_BreitkopfHaertel/master/Beethoven_Op120-Breitkopf.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op120_BreitkopfHaertel",
+    "name": "Beethoven_Op120_BreitkopfHaertel"
+  },
+  {
+    "description": "6 Bagatelles, Opus 126 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.190, with corrections from holograph manuscript",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op126_BreitkopfHaertel/master/Beethoven_Op126_Nr1-Breitkopf.mei",
+        "name": "Nr. 1"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op126_BreitkopfHaertel/master/Beethoven_Op126_Nr2-Breitkopf.mei",
+        "name": "Nr. 2"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op126_BreitkopfHaertel/master/Beethoven_Op126_Nr3-Breitkopf.mei",
+        "name": "Nr. 3"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op126_BreitkopfHaertel/master/Beethoven_Op126_Nr4-Breitkopf.mei",
+        "name": "Nr. 4"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op126_BreitkopfHaertel/master/Beethoven_Op126_Nr5-Breitkopf.mei",
+        "name": "Nr. 5"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op126_BreitkopfHaertel/master/Beethoven_Op126_Nr6-Breitkopf.mei",
+        "name": "Nr. 6"
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op126_BreitkopfHaertel",
+    "name": "Beethoven_Op126_BreitkopfHaertel"
+  },
+  {
+    "description": "Rondo a Capriccio in G major, Op. 129 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Series 18 Plate B.191.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op129_BreitkopfHaertel/master/Beethoven_Op129-Breitkopf.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op129_BreitkopfHaertel",
+    "name": "Beethoven_Op129_BreitkopfHaertel"
+  },
+  {
+    "description": "Sonate Op. 28 by Ludwig van Beethoven, encoding of Henle Urtext edition, 1976, Plate HN1032.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op28_HenleUrtext/master/Beethoven_Op28_3-HenleUrtext.mei",
+        "name": "Movement number 3"
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op28_HenleUrtext",
+    "name": "Beethoven_Op28_HenleUrtext"
+  },
+  {
+    "description": "Sonata Op. 31 No. 2 by Ludwig van Beethoven, encoding of Henle Urtext edition, 1976, Plate HN1034",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op31_No2_HenleUrtext/master/Beethoven_Op31_No2_2-HenleUrtext.mei",
+        "name": "Movement number 2"
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op31_No2_HenleUrtext",
+    "name": "Beethoven_Op31_No2_HenleUrtext"
+  },
+  {
+    "description": "Sonata Op. 31 No. 3 by Ludwig van Beethoven, encoding of Henle Urtext edition, 1976, Plate HN1034",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op31_No3_HenleUrtext/master/Beethoven_Op31_No3_1-HenleUrtext.mei",
+        "name": "Movement number 1"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op31_No3_HenleUrtext/master/Beethoven_Op31_No3_2-HenleUrtext.mei",
+        "name": "Movement number 2"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op31_No3_HenleUrtext/master/Beethoven_Op31_No3_3-HenleUrtext.mei",
+        "name": "Movement number 3"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op31_No3_HenleUrtext/master/Beethoven_Op31_No3_4-HenleUrtext.mei",
+        "name": "Movement number 4"
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op31_No3_HenleUrtext",
+    "name": "Beethoven_Op31_No3_HenleUrtext"
+  },
+  {
+    "description": "Sieben Bagatellen, Opus 33 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.183. ",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op33_BreitkopfHaertel/master/Beethoven_Op33_Nr1-Breitkopf.mei",
+        "name": "Nr. 1"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op33_BreitkopfHaertel/master/Beethoven_Op33_Nr2-Breitkopf.mei",
+        "name": "Nr. 2"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op33_BreitkopfHaertel/master/Beethoven_Op33_Nr3-Breitkopf.mei",
+        "name": "Nr. 3"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op33_BreitkopfHaertel/master/Beethoven_Op33_Nr4-Breitkopf.mei",
+        "name": "Nr. 4"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op33_BreitkopfHaertel/master/Beethoven_Op33_Nr5-Breitkopf.mei",
+        "name": "Nr. 5"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op33_BreitkopfHaertel/master/Beethoven_Op33_Nr6-Breitkopf.mei",
+        "name": "Nr. 6"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op33_BreitkopfHaertel/master/Beethoven_Op33_Nr7-Breitkopf.mei",
+        "name": "Nr. 7"
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op33_BreitkopfHaertel",
+    "name": "Beethoven_Op33_BreitkopfHaertel"
+  },
+  {
+    "description": "Six Variations, Opus 34 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.162.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op34_BreitkopfHaertel/master/Beethoven_Op34-Breitkopf.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op34_BreitkopfHaertel",
+    "name": "Beethoven_Op34_BreitkopfHaertel"
+  },
+  {
+    "description": "Eroica Variations, Opus 35 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.163.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op35_BreitkopfHaertel/master/Beethoven_Op35-BreitkopfHaertel.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op35_BreitkopfHaertel",
+    "name": "Beethoven_Op35_BreitkopfHaertel"
+  },
+  {
+    "description": "Two Rondos, Opus 51 No.1 and Opus 51 No. 2 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plates B.185 and B.186.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op51_BreitkopfHaertel/master/Beethoven_Op51_Nr1-BreitkopfHaertel.mei",
+        "name": "Nr. 1"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op51_BreitkopfHaertel/master/Beethoven_Op51_Nr2-BreitkopfHaertel.mei",
+        "name": "Nr. 2"
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op51_BreitkopfHaertel",
+    "name": "Beethoven_Op51_BreitkopfHaertel"
+  },
+  {
+    "description": "Sonata Op. 53 by Ludwig van Beethoven, encoding of Henle Urtext edition, 1976, Plate HN1034",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op53_HenleUrtext/master/Beethoven_Op53_1-HenleUrtext.mei",
+        "name": "Movement number 1"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op53_HenleUrtext/master/Beethoven_Op53_2-HenleUrtext.mei",
+        "name": "Movement number 2"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op53_HenleUrtext/master/Beethoven_Op53_3-HenleUrtext.mei",
+        "name": "Movement number 3"
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op53_HenleUrtext",
+    "name": "Beethoven_Op53_HenleUrtext"
+  },
+  {
+    "description": "Sechs Variationen, Opus 76 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate 164.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op76_BreitkopfHaertel/master/Beethoven_Op76-Breitkopf-Haertel.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op76_BreitkopfHaertel",
+    "name": "Beethoven_Op76_BreitkopfHaertel"
+  },
+  {
+    "description": " Phantasie, Opus 77 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.187.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op77_BreitkopfHaertel/master/Beethoven_Op77-BreitkopfHaertel.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op77_BreitkopfHaertel",
+    "name": "Beethoven_Op77_BreitkopfHaertel"
+  },
+  {
+    "description": "Polonaise, Opus 89 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.188.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op89_BreitkopfHaertel/master/Beethoven_Op89-BreitkopfHaertel.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_Op89_BreitkopfHaertel",
+    "name": "Beethoven_Op89_BreitkopfHaertel"
+  },
+  {
+    "description": "Andante favori in F major, WoO 57 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.192. ",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO57_BreitkopfHaertel/master/Beethoven_WoO57-Breitkopf.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_WoO57_BreitkopfHaertel",
+    "name": "Beethoven_WoO57_BreitkopfHaertel"
+  },
+  {
+    "description": "Clavierst\u00fcck \u201eF\u00fcr Elise\u201c, WoO 59 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.298.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO59_BreitkopfHaertel/master/Beethoven_WoO59-Breitkopf.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_WoO59_BreitkopfHaertel",
+    "name": "Beethoven_WoO59_BreitkopfHaertel"
+  },
+  {
+    "description": "Six variations on a Swiss song, WoO64 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.177.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO64_BreitkopfHaertel/master/Beethoven_WoO64-Breitkopf.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_WoO64_BreitkopfHaertel",
+    "name": "Beethoven_WoO64_BreitkopfHaertel"
+  },
+  {
+    "description": "24 Variations on 'Vieni Amore' by Vincenzo Righini, WoO 65 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.178.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO65_BreitkopfHaertel/master/Beethoven_WoO65-Breitkopf.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_WoO65_BreitkopfHaertel",
+    "name": "Beethoven_WoO65_BreitkopfHaertel"
+  },
+  {
+    "description": "9 Variations, WoO 69 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.167.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO69_BreitkopfHaertel/master/Beethoven_WoO69-Breitkopf.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_WoO69_BreitkopfHaertel",
+    "name": "Beethoven_WoO69_BreitkopfHaertel"
+  },
+  {
+    "description": "6 Variations, WoO 70 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.168.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO70_BreitkopfHaertel/master/Beethoven_WoO70-Breitkopf.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_WoO70_BreitkopfHaertel",
+    "name": "Beethoven_WoO70_BreitkopfHaertel"
+  },
+  {
+    "description": "12 Variations on the Russian Dance 'Das Waldm\u00e4dchen', WoO 71 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.170.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO71_BreitkopfHaertel/master/Beethoven_WoO71-Breitkopf.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_WoO71_BreitkopfHaertel",
+    "name": "Beethoven_WoO71_BreitkopfHaertel"
+  },
+  {
+    "description": "Variations in c minor, WoO 80 by Ludwig van Beethoven, encoding of Breitkopf und H\u00e4rtel edition, 1862\u201390. Plate B.181. ",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO80_BreitkopfHaertel/master/Beethoven_WoO80-Breitkopf.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_WoO80_BreitkopfHaertel",
+    "name": "Beethoven_WoO80_BreitkopfHaertel"
+  },
+  {
+    "description": "Two Sonatinas for Piano, WoO Anh.5 by Ludwig van Beethoven, encoding of Breitkop und H\u00e4rtel edition, 1862\u201390. Plate B.160 and B.161.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoOAnh5_BreitkopfHaertel/master/Beethoven_WoOAnh5_Nr1_1-Breitkopf.mei",
+        "name": "No. 1 Movement 1"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoOAnh5_BreitkopfHaertel/master/Beethoven_WoOAnh5_Nr1_2-Breitkopf.mei",
+        "name": "No. 1 Movement 2"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoOAnh5_BreitkopfHaertel/master/Beethoven_WoOAnh5_Nr2_1-Breitkopf.mei",
+        "name": "No. 2 Movement 1"
+      },
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoOAnh5_BreitkopfHaertel/master/Beethoven_WoOAnh5_Nr2_2-Breitkopf.mei",
+        "name": "No. 2 Movement 2"
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Beethoven_WoOAnh5_BreitkopfHaertel",
+    "name": "Beethoven_WoOAnh5_BreitkopfHaertel"
+  },
+  {
+    "description": "Symphony No. 4 by Gustav Mahler, encoding of 4-hands arrangement by Josef V. W\u00f6ss, Ludwig Doblinger Edition, Plate 33, 1902.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Mahler_Symphony_No4_Doblinger-4hands/master/Mahler_No4_1-Doblinger-4hands.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Mahler_Symphony_No4_Doblinger-4hands",
+    "name": "Mahler_Symphony_No4_Doblinger-4hands"
+  },
+  {
+    "description": "Romanze in a-Moll, WoO 28, by Clara Schumann, encoding of Autograph, 1853.",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll/master/Schumann-Clara_Romanze-ohne-Opuszahl_a-Moll.mei",
+        "name": ""
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll",
+    "name": "Schumann-Clara_Romanze-in-a-Moll"
+  }
+]

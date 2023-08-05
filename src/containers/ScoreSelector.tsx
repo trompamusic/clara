@@ -8,44 +8,20 @@ import {useSession} from "@inrupt/solid-ui-react";
 import {DCTERMS} from "@inrupt/lit-generated-vocab-common";
 import {getScoreDocument, getScoresForUser} from "../util/clara";
 
-interface ScoreOption {
+import _scores from "../scores.json";
+const scores = _scores as ScoreOption[];
+
+interface ScoreUrl {
     name: string,
-    description?: string,
     url: string
 }
 
-const scores: ScoreOption[] = [
-    {
-        name: "Beethoven_Op53_HenleUrtext_1",
-        description: "Sonata Op. 53, Movement 1 by Ludwig van Beethoven, encoding of Henle Urtext edition, 1976, Plate HN1034",
-        url: "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op53_HenleUrtext/master/Beethoven_Op53_1-HenleUrtext.mei"
-    },
-    {
-        name: "Beethoven_WoO57_BreitkopfHaertel",
-        description: "Andante favori in F major, WoO 57 by Ludwig van Beethoven, encoding of Breitkopf und Härtel edition, 1862–90. Plate B.192.",
-        url: "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO57_BreitkopfHaertel/master/Beethoven_WoO57-Breitkopf.mei"
-    },
-    {
-        name: "Beethoven_WoO71_BreitkopfHaertel",
-        description: "12 Variations on the Russian Dance 'Das Waldmädchen', WoO 71 by Ludwig van Beethoven, encoding of Breitkopf und Härtel edition, 1862–90. Plate B.170.",
-        url: "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO71_BreitkopfHaertel/master/Beethoven_WoO71-Breitkopf.mei"
-    },
-    {
-        name: "Beethoven_Op119_BreitkopfHaertel",
-        description: "11 Bagatelles, Opus 119 by Ludwig van Beethoven, encoding of Breitkopf und Härtel edition, 1862–90. Plate B.189.",
-        url: "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op119_BreitkopfHaertel/master/Beethoven_Op119_Nr01-Breitkopf.mei"
-    },
-    {
-        name: "Beethoven_Op89_BreitkopfHaertel",
-        description: "Polonaise, Opus 89 by Ludwig van Beethoven, encoding of Breitkopf und Härtel edition, 1862–90. Plate B.188.",
-        url: "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_Op89_BreitkopfHaertel/master/Beethoven_Op89-BreitkopfHaertel.mei"
-    },
-    {
-        name: "Beethoven_WoO64_BreitkopfHaertel",
-        description: "Six variations on a Swiss song, WoO64 by Ludwig van Beethoven, encoding of Breitkopf und Härtel edition, 1862–90. Plate B.177.",
-        url: "https://raw.githubusercontent.com/trompamusic-encodings/Beethoven_WoO64_BreitkopfHaertel/master/Beethoven_WoO64-Breitkopf.mei"
-    }
-]
+interface ScoreOption {
+    name: string,
+    description?: string,
+    html_url?: string,
+    urls: ScoreUrl[]
+}
 
 /**
  * A list of options where a user can choose which score to perform
@@ -72,7 +48,7 @@ export default function ScoreSelector() {
             const doc = await getScoreDocument(url, session.fetch);
             if (doc) {
                 const name = getStringNoLocale(doc!, DCTERMS.title) ?? "unknown";
-                return {name, url}
+                return {name, urls: [{name: "", url}]}
             }
             return null;
         }
@@ -106,23 +82,31 @@ export default function ScoreSelector() {
             <p>&nbsp;</p>
             <h2>Load a score</h2>
             <h3>Use a score from the Trompa Encodings repository</h3>
-            <ul>
+            <div className="list-group">
                 {scores.map((score) => {
                     return (
-                        <li key={score.url}>
-                            <a
-                                href={`/add?url=${score.url}`}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    loadUrl(score.url);
-                                }}
-                            >
-                                {score.name}
-                            </a>
-                        </li>
+                        <div className="list-group-item" key={score.html_url}>
+                            <h5>{score.name}</h5>
+                            <p>{score.description}</p>
+                            <ul>
+                            {score.urls.map((url) => {
+                                return (
+                                    <li><a
+                                        href={`/add?url=${url.url}`}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            loadUrl(url.url);
+                                        }}
+                                    >
+                                        {url.name || score.name}
+                                    </a></li>
+                                );
+                            })}
+                            </ul>
+                        </div>
                     );
                 })}
-            </ul>
+            </div>
             <p>or</p>
             <h3>Load an MEI URL</h3>
             <Form
@@ -163,12 +147,12 @@ export default function ScoreSelector() {
                 {loadingScores && <li>Loading...</li>}
                 {userScores.map((score) => {
                     return (
-                        <li key={score.url}>
+                        <li key={score.urls[0].url}>
                             <a
-                                href={`/perform?score=${score.url}`}
+                                href={`/perform?score=${score.urls[0]}`}
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    performScore(score.url);
+                                    performScore(score.urls[0].url);
                                 }}
                             >
                                 {score.name}
