@@ -3,11 +3,16 @@ import React, {useEffect} from "react";
 import Api from "../util/api";
 import {useNavigate} from "react-router";
 
+type ErrorMessage = {
+    error: boolean;
+    message?: string;
+}
+
 export default function AuthCallback() {
 
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const [error, setError] = React.useState(false);
+    const [error, setError] = React.useState<ErrorMessage>({error: false});
     const code = searchParams.get("code");
     const state = searchParams.get("state");
 
@@ -20,8 +25,12 @@ export default function AuthCallback() {
                         if (data.status === true) {
                             navigate(`/`);
                         } else {
-                            setError(true);
+                            setError({error: true, message: data.data});
                         }
+                    }
+                }).catch(err => {
+                    if (!ignore) {
+                        setError({error: true, message: err});
                     }
                 });
             return () => {
