@@ -91,7 +91,7 @@ export default function ScoreSelector() {
                             <ul>
                             {score.urls.map((url) => {
                                 return (
-                                    <li><a
+                                    <li key={url.url}><a
                                         href={`/add?url=${url.url}`}
                                         onClick={(e) => {
                                             e.preventDefault();
@@ -149,7 +149,7 @@ export default function ScoreSelector() {
                     return (
                         <li key={score.urls[0].url}>
                             <a
-                                href={`/perform?score=${score.urls[0]}`}
+                                href={`/perform?score=${score.urls[0].url}`}
                                 onClick={(e) => {
                                     e.preventDefault();
                                     performScore(score.urls[0].url);
