@@ -38,14 +38,6 @@ const vrvOptionsFeatureVis = {
 	svgAdditionalAttribute: ["clef@shape", "clef@line"]
 };
 
-function LinkToUpload({uri}) {
-  const navigate = useNavigate();
-  return <a href={`/upload?score=${uri}`} onClick={(e) => {
-    e.preventDefault();
-    navigate(`/upload?score=${uri}`);
-  }}>Upload a performance</a>
-}
-
 class Companion extends Component {
   constructor(props) {
     super(props);
@@ -667,7 +659,6 @@ class Companion extends Component {
 
       return(
         <div id="wrapper">
-          <LinkToUpload uri={this.props.uri} />
           { featureVisElement }
           <div id="instantBoundingBoxes" />
           { currentScore }

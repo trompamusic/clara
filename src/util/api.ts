@@ -46,6 +46,21 @@ class Api {
         });
     }
 
+    alignWebMidi = (profile: string, score: string, webMidi: string) => {
+        let data = new FormData();
+
+        const blob = new Blob([webMidi], {type: "application/json"});
+
+        data.append("file", blob);
+        data.append("midi_type", "webmidi");
+        data.append("score", score);
+        data.append("profile", profile);
+
+        return this.client.post('/api/align', data).then((result) => {
+            return result.data;
+        });
+    }
+
     addScore = (score: string, profile: string) => {
         const data = {
             score,

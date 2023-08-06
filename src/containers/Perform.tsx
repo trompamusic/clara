@@ -3,6 +3,17 @@ import {useSearchParams} from "react-router-dom";
 import {useSession} from "@inrupt/solid-ui-react";
 import Companion from "./companion";
 import {getStorageForUser} from "../util/clara";
+import WebMidiRecorder from "./WebMidiRecorder";
+import {useNavigate} from "react-router";
+
+
+function LinkToUpload({uri}: {uri: string}) {
+    const navigate = useNavigate();
+    return <a href={`/upload?score=${uri}`} onClick={(e) => {
+        e.preventDefault();
+        navigate(`/upload?score=${uri}`);
+    }}>Upload a performance</a>
+}
 
 /**
  * The main wrapper to perform a score
@@ -24,16 +35,18 @@ export default function Perform() {
                 setStorage(storage ? storage : '');
             }
         }
+
+        console.log("session logged in?", session.info.isLoggedIn);
         if (session.info.isLoggedIn) {
             getStorage().catch(console.error);
             return () => {
                 ignore = true;
             };
         }
-    }, [session]);
+    }, [session.fetch, session.info.isLoggedIn, session.info.webId]);
 
     if (!session.info.isLoggedIn) {
-        return <p>You must be logged in</p>
+        return <p>Checking if you're logged in...</p>
     }
 
     if (!score) {
@@ -41,15 +54,13 @@ export default function Perform() {
     }
 
     if (storage !== "" && score) {
-        return <Companion uri={score} userPOD={storage} userProfile={session.info.webId!} session={session} />
-    } else {
-        return <p>loading user storage</p>
-    }
+        return <div>
+            <LinkToUpload uri={score} />
+            <WebMidiRecorder score={score} />
+            <Companion uri={score} userPOD={storage} userProfile={session.info.webId!} session={session} />
+        </div>
 
-    // return <CombinedDataProvider datasetUrl={session.info.webId!} thingUrl={session.info.webId}>
-    //     {typeof userPOD !== "undefined" && typeof performanceCollection !== "undefined" && annotationCollection !== "undefined" && userProfile !== "undefined"
-    //         ? <Companion userPOD = { userPOD } uri = { performanceCollection } annotationContainerUri = { annotationCollection } userProfile = { userProfile } session = { session } />
-    //         : <div>Loading... </div>
-    //     }
-    // </CombinedDataProvider>
+    } else {
+        return <p>Finding your storage location...</p>
+    }
 }
