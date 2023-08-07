@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react';
 import MIDIMessage from 'midimessage';
 import {useSession} from "@inrupt/solid-ui-react";
 import Api from "../util/api";
+import {useNavigate} from "react-router";
 
 
 const MIDI_TIMEOUT = 5000; // milliseconds until we decide rehearsal rendition has stopped
@@ -13,6 +14,7 @@ export default function WebMidiRecorder({score}: {score: string}) {
     const [midiIn, setMidiIn] = useState([]);
     const [midiSupported, setMidiSupported] = useState(false);
     const [midiEvents, setMidiEvents] = useState([])
+    const navigate = useNavigate();
 
     useEffect(() => {
         if (!didInit) {
@@ -41,13 +43,13 @@ export default function WebMidiRecorder({score}: {score: string}) {
     }, []);
 
     function handleMidiMessage(mes: any) {
-        console.log("RAW MIDI MESSAGE: ", mes.data);
         if (mes.data.length === 1 && mes.data[0] === 254) {
             // ignore keep-alive (active sense) message
             return
         }
+        console.log("RAW MIDI MESSAGE: ", mes.data);
         // @ts-ignore
-        setMidiEvents([...midiEvents, mes]);
+        setMidiEvents(midiEvents => [...midiEvents, mes]);
     }
 
     // Track MIDI events and start / end rehearsal rendition recordings based on them
@@ -72,7 +74,10 @@ export default function WebMidiRecorder({score}: {score: string}) {
                 console.log("I declare a rehearsal to be complete: ", midiEventsJson);
 
                 Api.alignWebMidi(webId, score, JSON.stringify(midiEventsJson))
-                    .then(data => console.log("GOT RESPONSE: ", data))
+                    .then(data => {
+                        console.log("GOT RESPONSE: ", data)
+                        navigate(`/uploadwait?task=${data.task_id}&score=${score}`);
+                    })
             }
             setMidiEvents([]);
         }, MIDI_TIMEOUT)
