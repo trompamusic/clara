@@ -118,6 +118,7 @@ class Companion extends Component {
       params["objectPrefixWhitelist"] = [this.props.userPOD, ...params["objectPrefixWhitelist"], "https://clara.trompa-solid.upf.edu/"];
       params["objectPrefixBlacklist"] = [
           `${this.props.userPOD}at.ac.mdw.trompa/midi`,
+          `${this.props.userPOD}at.ac.mdw.trompa/webmidi`,
           `${this.props.userPOD}at.ac.mdw.trompa/audio`,
           `${this.props.userPOD}/private/audio`,
           `${this.props.userPOD}private/audio`,
