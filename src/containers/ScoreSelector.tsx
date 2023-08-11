@@ -1,6 +1,8 @@
 import {Col, Form, Row} from "react-bootstrap";
 
 import {Button} from 'react-bootstrap';
+import { BiLinkExternal } from "react-icons/bi";
+
 import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router";
 import {getSolidDataset, getStringNoLocale, getThing} from "@inrupt/solid-client";
@@ -99,7 +101,14 @@ export default function ScoreSelector() {
                                         }}
                                     >
                                         {url.name || score.name}
-                                    </a></li>
+                                    </a>&nbsp;&nbsp;
+                                    <small>
+                                        <a href={`https://mei-friend.mdw.ac.at/?file=${url.url}`} className="icon-link" target="_blank">
+                                            mei-friend
+                                        <BiLinkExternal />
+                                        </a>
+                                    </small>
+                                    </li>
                                 );
                             })}
                             </ul>
