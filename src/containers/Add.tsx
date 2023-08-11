@@ -38,7 +38,7 @@ export default function Add() {
                 ignore = true;
             };
         }
-    }, [url, session, navigate]);
+    }, [url, session.fetch, session.info.isLoggedIn, session.info.webId, navigate]);
 
 
     if (!session.info.isLoggedIn) {

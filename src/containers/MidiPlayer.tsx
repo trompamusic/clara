@@ -44,7 +44,7 @@ export function MidiPlayer({url, onNote}: MidiPlayerProps) {
                 ignore = true;
             };
         }
-    }, [url, session]);
+    }, [url, session.info.isLoggedIn, session.fetch]);
 
     if (!session.info.isLoggedIn) {
         return <p>waiting to log in...</p>

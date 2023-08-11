@@ -50,7 +50,7 @@ export default function Startup() {
 
     // Check if a clara container exists in the user's pod
     // TODO: https://react.dev/learn/you-might-not-need-an-effect
-    //  possibe that this should be a part of the previous effect?
+    //  possible that this should be a part of the previous effect?
     useEffect(() => {
         async function fetchClaraContainer() {
             // TODO: We lookup the user's storage multiple times

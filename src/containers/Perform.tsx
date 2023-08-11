@@ -36,7 +36,6 @@ export default function Perform() {
             }
         }
 
-        console.log("session logged in?", session.info.isLoggedIn);
         if (session.info.isLoggedIn) {
             getStorage().catch(console.error);
             return () => {

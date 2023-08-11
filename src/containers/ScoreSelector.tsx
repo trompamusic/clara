@@ -76,7 +76,7 @@ export default function ScoreSelector() {
                 ignore = true;
             };
         }
-    }, [session]);
+    }, [session.fetch, session.info.isLoggedIn, session.info.webId]);
 
     return <Row>
         <Col sm={2}/>
