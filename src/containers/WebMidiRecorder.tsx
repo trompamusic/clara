@@ -3,6 +3,8 @@ import MIDIMessage from 'midimessage';
 import {useSession} from "@inrupt/solid-ui-react";
 import Api from "../util/api";
 import {useNavigate} from "react-router";
+import {jsonMidiToSequenceProto} from "../util/midi";
+import {sequenceProtoToMidi} from "@magenta/music";
 
 
 const MIDI_TIMEOUT = 5000; // milliseconds until we decide rehearsal rendition has stopped
@@ -73,16 +75,17 @@ export default function WebMidiRecorder({score}: {score: string}) {
                 })
                 console.log("I declare a rehearsal to be complete: ", midiEventsJson);
 
-                Api.alignWebMidi(webId, score, JSON.stringify(midiEventsJson))
-                    .then(data => {
-                        console.log("GOT RESPONSE: ", data)
+                const noteSequence = jsonMidiToSequenceProto(midiEventsJson)
+                const payload = new Blob([sequenceProtoToMidi(noteSequence)]);
+                Api.alignMidi(webId, score, payload)
+                    .then((data) => {
                         navigate(`/uploadwait?task=${data.task_id}&score=${score}`);
                     })
             }
             setMidiEvents([]);
         }, MIDI_TIMEOUT)
         return () => clearTimeout(timer)
-    }, [midiEvents, score, webId]);
+    }, [midiEvents, navigate, score, webId]);
 
 
 
