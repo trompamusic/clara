@@ -14,7 +14,7 @@ export default function UploadWait() {
     const score = searchParams.get('score');
     const navigate = useNavigate();
 
-    const { data, error: queryError } = useSWR(task ? `/api/align/status?task=${task}` : null, fetcher, { refreshInterval: 1000 })
+    const { data, error: queryError } = useSWR((task && !error) ? `/api/align/status?task=${task}` : null, fetcher, { refreshInterval: 1000 })
 
     useEffect(() => {
         if (data && data.status === "ok") {
