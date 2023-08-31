@@ -5,6 +5,7 @@ import Api from "../util/api";
 import {useNavigate} from "react-router";
 import {jsonMidiToSequenceProto} from "../util/midi";
 import {sequenceProtoToMidi} from "@magenta/music";
+import { useLocalStorage } from 'usehooks-ts'
 
 
 const MIDI_TIMEOUT = 5000; // milliseconds until we decide rehearsal rendition has stopped
@@ -14,9 +15,12 @@ export default function WebMidiRecorder({score}: {score: string}) {
     const {session} = useSession();
     const webId = session.info.webId ?? "";
     const [midiIn, setMidiIn] = useState([]);
+    const [uploadError, setUploadError] = useState(false);
     const [midiSupported, setMidiSupported] = useState(false);
     const [midiEvents, setMidiEvents] = useState([])
     const navigate = useNavigate();
+    const localStorageKey = `at.ac.mdw.trompa-midiPerformance-${webId}-${score}`;
+    const [midiPerformance, setMidiPerformance] = useLocalStorage<Uint8Array|null>(localStorageKey, null);
 
     useEffect(() => {
         if (!didInit) {
@@ -52,6 +56,7 @@ export default function WebMidiRecorder({score}: {score: string}) {
         console.log("RAW MIDI MESSAGE: ", mes.data);
         // @ts-ignore
         setMidiEvents(midiEvents => [...midiEvents, mes]);
+        //setUploadError(false);
     }
 
     // Track MIDI events and start / end rehearsal rendition recordings based on them
@@ -76,18 +81,40 @@ export default function WebMidiRecorder({score}: {score: string}) {
                 console.log("I declare a rehearsal to be complete: ", midiEventsJson);
 
                 const noteSequence = jsonMidiToSequenceProto(midiEventsJson)
-                const payload = new Blob([sequenceProtoToMidi(noteSequence)]);
+                const midi = sequenceProtoToMidi(noteSequence)
+                const payload = new Blob([midi]);
+                console.log(midi)
+                setMidiPerformance(midi);
                 Api.alignMidi(webId, score, payload)
                     .then((data) => {
+                        setMidiPerformance(null);
                         navigate(`/uploadwait?task=${data.task_id}&score=${score}`);
                     })
+                    .catch((err) => {
+                        console.error(err);
+                        setUploadError(true);
+                    });
             }
             setMidiEvents([]);
         }, MIDI_TIMEOUT)
         return () => clearTimeout(timer)
-    }, [midiEvents, navigate, score, webId]);
+    }, [midiEvents, navigate, score, setMidiPerformance, webId]);
 
-
+    const uploadExistingPerformance = () => {
+        if (midiPerformance) {
+            const payload = new Blob([midiPerformance]);
+            console.log("Uploading existing performance: ", midiPerformance);
+            Api.alignMidi(webId, score, payload)
+                .then((data) => {
+                    setMidiPerformance(null);
+                    navigate(`/uploadwait?task=${data.task_id}&score=${score}`);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    setUploadError(true);
+                });
+        }
+    }
 
     return (
         <div id="authWrapper">
@@ -99,6 +126,12 @@ export default function WebMidiRecorder({score}: {score: string}) {
                       : <span className="isNotRecording">Play MIDI notes to start recording</span>
                   }
                 </span>
+                    {uploadError && <p>There was an error uploading your performance. Please try again.</p>}
+                    {midiPerformance &&
+                    <span>You have a saved performance which wasn't uploaded.
+                    <button onClick={uploadExistingPerformance}>Upload it</button>
+                    <button onClick={() => {setMidiPerformance(null)}}>Delete it</button></span>
+                    }
                 </div>
                 : <div/>
             }
