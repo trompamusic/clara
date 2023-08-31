@@ -24,12 +24,13 @@ export function MidiPlayer({url, onNote}: MidiPlayerProps) {
     const {session} = useSession();
     const [notes, setNotes] = useState<NoteSequence | null>(null);
 
+    const {info, fetch: solidFetch} = session;
     useEffect(() => {
         let ignore = false;
 
-        if (session.info.isLoggedIn && url) {
+        if (info.isLoggedIn && url) {
             // This is the same as magenta's urlToNoteSequence, but uses an authenticated SOLID fetch
-            session.fetch(url)
+            solidFetch(url)
                 .then((response) => {
                     return response.blob();
                 })
@@ -44,7 +45,7 @@ export function MidiPlayer({url, onNote}: MidiPlayerProps) {
                 ignore = true;
             };
         }
-    }, [url, session.info.isLoggedIn, session.fetch]);
+    }, [url, info.isLoggedIn, solidFetch]);
 
     if (!session.info.isLoggedIn) {
         return <p>waiting to log in...</p>
