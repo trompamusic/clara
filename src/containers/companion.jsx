@@ -501,7 +501,8 @@ class Companion extends Component {
         nDur = parseFloat(nDur.substr(1, nDur.length-2)) + parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
         this.tick(this.state.selectedVideo, nDur);
         console.log("attempting to seek to ", Math.floor(nDur));
-        this.player.current.seekTo(Math.floor(nDur));
+        console.log(this.player);
+        //this.player.current.seekTo(Math.floor(nDur));
         // reset note velocities display for all notes after this one
         const notesOnPage = document.querySelectorAll(".note");
         const thisNote = document.querySelector("#" + noteId);
@@ -562,7 +563,8 @@ class Companion extends Component {
         n.onclick = (e) => {
           console.log("On note click, attempting to  seek to: ", nDur);
           this.tick(this.state.selectedVideo, nDur);
-          this.player.current.seekTo(Math.floor(nDur));
+          console.log(this.player);
+          //this.player.current.seekTo(Math.floor(nDur));
         }
       }
     });
@@ -798,14 +800,6 @@ class Companion extends Component {
         </div>
       )
     }
-    /*
-    TODO: ReactPlayer is able to seek to a time, MidiPlayer doesn't have this?
-                    if(this.state.seekTo) {
-                  console.log("Render loop onReady: seeking to ", this.state.seekTo);
-                  this.player.current.seekTo(Math.floor(this.state.seekTo));
-                  this.setState({seekTo: ""});
-                }
-     */
   }
 
   handleSegmentSelected = (e) => {
@@ -822,7 +816,7 @@ class Companion extends Component {
         // HACK: Offsets should be incorporated into data model through timeline maps
         startTime += parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]);
         console.log("Trying to seek to: ", startTime, parseFloat(this.state.selectedPerformance["https://meld.linkedmusic.org/terms/offset"]));
-        this.player.current.seekTo(Math.floor(startTime));
+        //this.player.current.seekTo(Math.floor(startTime));
         this.setState({currentSegment: selected[0]});
       }
     }
@@ -844,7 +838,7 @@ class Companion extends Component {
       document.querySelectorAll(".note").forEach( (n) => { n.style.fill=""; n.style.stroke=""; }) // reset note velocities
       this.setState({ selectedVideo, selectedPerformance, seekTo }, () => {
         this.props.registerClock(selectedVideo);
-        this.player.current.seekTo(seekTo);
+        //this.player.current.seekTo(seekTo);
       })
 
     }
