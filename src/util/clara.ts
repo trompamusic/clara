@@ -23,8 +23,15 @@ export const getScoresForUser = async (webId: string, fetch: any): Promise<strin
 }
 
 export const getScoreDocument = async (url: string, fetch: any) => {
-    const dataset = await getSolidDataset(url, { fetch });
-    return getThing(dataset, url);
+    try {
+        const dataset = await getSolidDataset(url, {fetch});
+        return getThing(dataset, url);
+    } catch (e) {
+        console.log(`Error getting score document ${url}`);
+        console.log(e)
+        // TODO: This could be an HTTP 500 error, mostly from NFS errors on the server.
+        return null;
+    }
 }
 
 export const getPerformanceFromScore = async (score: any, fetch: any) => {
