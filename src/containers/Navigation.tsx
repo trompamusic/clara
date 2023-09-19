@@ -13,11 +13,12 @@ import React, {useContext, useState} from "react";
 
 const providers = {
     trompa: "https://trompa-solid.upf.edu",
-    inrupt: "https://start.inrupt.com"
+    inrupt: "https://login.inrupt.com"
 }
 
 function LoginButton() {
     const [idp, setIdp] = useState(providers.trompa);
+    const [loginError, setLoginError] = useState<string|null>(null);
     const [showIdpInput, setShowIdpInput] = useState(false);
     const { login, setSessionRequestInProgress } = useContext(SessionContext);
 
@@ -29,7 +30,7 @@ function LoginButton() {
             redirectUrl: window.location.href,
             oidcIssuer,
         };
-
+        setLoginError(null);
         setSessionRequestInProgress(true);
 
         try {
@@ -38,6 +39,7 @@ function LoginButton() {
         } catch (error) {
             setSessionRequestInProgress(false);
             // TODO: Log this or report in more detail
+            setLoginError("Unable to log in with this provider.");
             console.error(error);
         }
     }
@@ -48,6 +50,7 @@ function LoginButton() {
             <FormControl htmlSize={30} aria-label="SOLID IDP" value={idp} onChange={(e) => setIdp(e.target.value)} />
         </>
         }
+        {loginError && <InputGroup.Text>{loginError}</InputGroup.Text>}
         <SplitButton id='login-button' title='Login' align="end" onClick={async () => {
             await loginHandler(idp);
         }}>
@@ -57,7 +60,10 @@ function LoginButton() {
             <Dropdown.Item onClick={async () => {
                 await loginHandler(providers.inrupt);
             }}>Login with inrupt</Dropdown.Item>
-            <Dropdown.Item onClick={() => setShowIdpInput(true)}>Choose another provider</Dropdown.Item>
+            <Dropdown.Item onClick={() => {
+                setShowIdpInput(true);
+                setLoginError(null);
+            }}>Choose another provider</Dropdown.Item>
         </SplitButton>
     </InputGroup>
 }

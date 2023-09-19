@@ -15,7 +15,7 @@ export default function Layout() {
         }
     }
 
-    return <SessionProvider onError={console.log} restorePreviousSession onSessionRestore={onSessionRestore}>
+    return <SessionProvider restorePreviousSession onSessionRestore={onSessionRestore}>
         <Navigation />
         <Container fluid="lg">
             <Outlet />
