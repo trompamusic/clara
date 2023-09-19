@@ -58,8 +58,13 @@ export default function Startup() {
             const profileDoc = getThing(dataset, webId);
             const storageUrl = getUrl(profileDoc!, WS.storage);
             const claraStorageUrl = storageUrl + CLARA_CONTAINER_NAME;
-            // TODO: Docs say this raises an error if it already exists, but doesn't seem to be a problem
-            await createContainerAt(claraStorageUrl, {fetch: session.fetch});
+            // TODO: Node solid server will allow us to create the same container multiple times but inrupt's server won't
+            try {
+                await createContainerAt(claraStorageUrl, {fetch: session.fetch});
+            } catch (e) {
+                // TODO: Identify this is a "412 precondition failed" error and ignore it, otherwise re-raise
+                console.log("Clara container already exists");
+            }
             if (!ignore) {
                 navigate(`/select`);
             }
