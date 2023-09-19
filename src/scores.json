@@ -404,5 +404,20 @@
     ],
     "html_url": "https://github.com/trompamusic-encodings/Schumann-Clara_Romanze-in-a-Moll",
     "name": "Schumann-Clara_Romanze-in-a-Moll"
+  },
+  {
+    "description": "Some simple scores for testing purposes",
+    "urls": [
+      {
+        "url": "https://raw.githubusercontent.com/DILewis/MEI-samples/main/ah-vous-dirai-je-maman-theme.mei",
+        "name": "Ah! Vous dirai-je, maman (Twinkle Twinkle Little Star)"
+      },
+      {
+        "url": "https://mei-friend.mdw.ac.at/?file=https://raw.githubusercontent.com/Signature-Sound-Vienna/mei-skeleton/main/mary.mei",
+        "name": "Mary Had a Little Lamb"
+      }
+    ],
+    "html_url": "https://github.com/trompamusic-encodings/",
+    "name": "Test scores"
   }
 ]
