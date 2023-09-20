@@ -49,7 +49,7 @@ function midiEventsArrayToMidiFile(midiEvents: any[]) {
         } else {
             console.log(`Unexpected event type in midi stream: ${d}`);
         }
-    });
+    }).filter((e) => e !== undefined);
     return trackToMidi(trackNotes);
 }
 
