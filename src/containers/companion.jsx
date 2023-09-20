@@ -500,9 +500,13 @@ class Companion extends Component {
         this.tick(this.state.selectedVideo, nDur);
         console.log("attempting to seek to ", Math.floor(nDur));
         if (this.player.current) {
-          this.player.current.stop();
-          this.player.current.currentTime = Math.floor(nDur);
-          this.player.current.start();
+          if (this.player.current.playing) {
+            this.player.current.stop();
+            this.player.current.currentTime = Math.floor(nDur);
+            this.player.current.start();
+          } else {
+            this.player.current.currentTime = Math.floor(nDur);
+          }
         }
         // reset note velocities display for all notes after this one
         const notesOnPage = document.querySelectorAll(".note");
