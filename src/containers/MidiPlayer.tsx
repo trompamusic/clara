@@ -1,11 +1,11 @@
-import React, {createRef, DOMAttributes, useEffect, useState} from "react";
+import React, {createRef, DOMAttributes, forwardRef, useEffect, useState} from "react";
 import {useSession} from "@inrupt/solid-ui-react";
 import {blobToNoteSequence, NoteSequence} from "@magenta/music";
 import {PlayerElement} from 'html-midi-player';
 import {createComponent, EventName} from "@lit-labs/react";
 
 // Wrap the <midi-player> web component in a React class that also handles events.
-const MidiPlayerElement = createComponent({
+export const MidiPlayerElement = createComponent({
     tagName: 'midi-player',
     elementClass: PlayerElement,
     react: React,
@@ -20,7 +20,7 @@ interface MidiPlayerProps {
     onNote: (note: NoteSequence.Note) => void
 }
 
-export function MidiPlayer({url, onNote}: MidiPlayerProps) {
+export const MidiPlayer = forwardRef<PlayerElement, MidiPlayerProps>(({url, onNote}: MidiPlayerProps, ref) => {
     const {session} = useSession();
     const [notes, setNotes] = useState<NoteSequence | null>(null);
 
@@ -58,6 +58,7 @@ export function MidiPlayer({url, onNote}: MidiPlayerProps) {
     return (
         <div id="midi-player">
             <MidiPlayerElement
+                ref={ref}
                 noteSequence={notes}
                 soundFont="https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus"
                 onNote={(e) => {
@@ -69,4 +70,4 @@ export function MidiPlayer({url, onNote}: MidiPlayerProps) {
             </MidiPlayerElement>
         </div>
     );
-}
+});
