@@ -18,6 +18,7 @@ import {useNavigate} from "react-router";
 export default function Startup() {
     const [hasPermission, setHasPermission] = useState(false);
     const [checkingPermission, setCheckingPermission] = useState(true);
+    const [permissionError, setPermissionError] = useState(false);
     const [authUrl, setAuthUrl] = useState<string>();
     const {session} = useSession();
     const navigate = useNavigate();
@@ -41,6 +42,9 @@ export default function Startup() {
                     setHasPermission(data.has_permission);
                     setCheckingPermission(false);
                 }
+            }).catch((e) => {
+                setPermissionError(true);
+                setCheckingPermission(false);
             });
             return () => {
                 ignore = true;
@@ -84,9 +88,13 @@ export default function Startup() {
 
     if (checkingPermission) {
         return <p>Checking if you have let us store items in your Solid pod...</p>
+    } else if (permissionError) {
+        return <p>There was an error checking your permissions. We have been informed of the error and are looking into it</p>
     } else {
-        return <p>You haven't given permission for us to act on your behalf <br/>
-            Please visit the <a href={authUrl}>Authentication
-                page</a> to do this</p>
+        let message = <>Please wait... retrieving authentication URL</>;
+        if (authUrl) {
+            message = <>Please visit the <a href={authUrl}>Authentication page</a> to do this</>
+        }
+        return <p>You haven't given permission for us to act on your behalf <br/>{message}</p>
     }
 }
