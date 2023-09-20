@@ -13,7 +13,8 @@ import React, {useContext, useState} from "react";
 
 const providers = {
     trompa: "https://trompa-solid.upf.edu",
-    inrupt: "https://login.inrupt.com"
+    inrupt: "https://login.inrupt.com",
+    solidCommunity: "https://solidcommunity.net",
 }
 
 function LoginButton() {
@@ -60,6 +61,9 @@ function LoginButton() {
             <Dropdown.Item onClick={async () => {
                 await loginHandler(providers.inrupt);
             }}>Login with inrupt</Dropdown.Item>
+            <Dropdown.Item onClick={async () => {
+                await loginHandler(providers.solidCommunity);
+            }}>Login with Solid Community</Dropdown.Item>
             <Dropdown.Item onClick={() => {
                 setShowIdpInput(true);
                 setLoginError(null);

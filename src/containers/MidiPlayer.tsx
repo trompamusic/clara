@@ -52,7 +52,7 @@ export function MidiPlayer({url, onNote}: MidiPlayerProps) {
     }
 
     if (!notes) {
-        return <p>loading...</p>
+        return null;
     }
 
     return (
