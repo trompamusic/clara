@@ -1,6 +1,43 @@
 import {NoteSequence, constants, INoteSequence, sequences} from "@magenta/music";
-import { Midi } from '@tonejs/midi';
-import { TimeSignatureEvent ,TempoEvent } from '@tonejs/midi/dist/Header';
+import { Midi, Track } from '@tonejs/midi';
+import { TimeSignatureEvent, TempoEvent } from '@tonejs/midi/dist/Header';
+
+
+/**
+ * 
+ * @param ns 
+ * @returns 
+ */
+export function trackToMidi(trackData: any) {
+    const midi = new Midi();
+    midi.fromJSON({
+      header: {
+        name: '',
+        ppq: 500,
+        tempos: [],
+        timeSignatures: [],
+        keySignatures: [],
+        meta: []
+      },
+      tracks: []
+    });
+
+    // Add tempo changes. We need to add them in chronological order, so that we
+    // can calculate their times correctly.
+    const tempo = {time: 0, qpm: constants.DEFAULT_QUARTERS_PER_MINUTE};
+    midi.header.tempos.push({ticks: midi.header.secondsToTicks(tempo.time),
+                             bpm: tempo.qpm});
+    midi.header.update();  // Update the tempo times for secondsToTicks to work.
+    midi.header.timeSignatures.push({ticks: 0, timeSignature: [4, 4]});
+    midi.header.update();
+
+    const tr = new Track(trackData, midi.header);
+    midi.tracks.push(tr);
+
+    return midi.toArray();
+}
+
+
 /**
  * Take an array of MIDIMessageEvent objects and convert them to a
  * magenta NoteSequence.
