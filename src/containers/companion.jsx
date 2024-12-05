@@ -69,7 +69,7 @@ class Companion extends Component {
       maxMappedVelocity: 255, // max opacity (when note played at largest expected velocity)
       minExpectedVel: 0, // guesstimate as to a note played at pianissimo (unit: midi velocity)
       maxExpectedVel: 110, // guesstimate as to a note played at fortissimo (unit: midi velocity)
-      mode: "featureVis", // currently either pageView (portrait style) or featureVis (flattened single-system with visualisation)
+      mode: "pageView", // currently either pageView (portrait style) or featureVis (flattened single-system with visualisation)
       featureVisPageNum: 0, // guards against race conditions between Vrv score and featureVis svg
       latestObservedPageNum: 0,
       observingScore: false, // control behaviour of DOM change observer (to catch Verovio SVG render completions)
@@ -343,6 +343,24 @@ class Companion extends Component {
     document.removeEventListener('keydown', this.monitorKeys);
   }
 
+  setModeFeatureVis = () => {
+    this.setState({
+      mode: "featureVis",
+      vrvOptions: vrvOptionsFeatureVis,
+      "scoreComponentLoadingStarted": false,
+      "scoreComponentLoaded": false
+    });
+  }
+
+  setModePageView = () => {
+    this.setState({
+      mode: "pageView",
+      vrvOptions: vrvOptionsPageView,
+      "scoreComponentLoadingStarted": false,
+      "scoreComponentLoaded": false
+    });
+  }
+
   monitorKeys = (e) => {
     console.log("key pressed: ", e);
     if("score" in this.props) {
@@ -368,10 +386,10 @@ class Companion extends Component {
           }
           break;
         case 80: // 'p'  => "pageView"
-          this.setState({ mode: "pageView", vrvOptions: vrvOptionsPageView});
+          this.setModePageView();
           break;
         case 86: // 'v'  => "featureVis"
-          this.setState({ mode: "featureVis", vrvOptions: vrvOptionsFeatureVis });
+          this.setModeFeatureVis();
           break;
  	default: // other key
           console.log("Unhandled key pressed: ", e)
@@ -584,19 +602,12 @@ class Companion extends Component {
 
 
   render() {
-    let vrvOptions;
     if(this.state.loading) {
       return(<div id="wrapper">Loading, please wait</div>);
     } else {
       let currentTimeline = "";
       if(this.state.selectedPerformance) {
         currentTimeline = this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"]["http://purl.org/ontology/mo/time"]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] || ""; // FIXME skolemisation bug causing multiple copies of time entity
-      }
-      // set up score according to mode -- either pageView (portait) or featureVis (flat, single-system)
-      if(this.state.mode === "pageView") {
-        vrvOptions = vrvOptionsPageView;
-      } else {
-        vrvOptions = vrvOptionsFeatureVis;
       }
       let featureVisElement = "";
       if(this.state.scoreComponentLoaded) { //&& this.state.currentScore in this.props.score.pageState) {
@@ -655,7 +666,7 @@ class Companion extends Component {
             <SelectableScore
               uri={ this.state.currentScore }
               key = { this.state.currentScore }
-              vrvOptions = { vrvOptions }
+              vrvOptions = { this.state.vrvOptions }
               selectorString = { this.state.selectorString }
               selectionArea = "#scoreSelectionArea"
               onSelectionChange={ this.handleSelectionChange }
@@ -706,14 +717,14 @@ class Companion extends Component {
                 </select>
               &nbsp;
               	<span>
-                  { this.state.performances.length
+                  { this.state.performances.length && this.state.selectedPerformance !== ""
                     ? <span>
                         <span id="scoreFollowToggle">
                           <input
                             id="controlAutomaticPageTurning"
                             type="checkbox"
                             ref="scoreFollowingToggle"
-                            defaultChecked={ this.state.scoreFollowing }
+                            checked={ this.state.scoreFollowing }
                             onChange={ () => {
                               this.setState({ scoreFollowing: !this.state.scoreFollowing })
                             }}
@@ -725,22 +736,12 @@ class Companion extends Component {
                               type="checkbox"
                               id="controlFeatureVisualisation"
                               ref="modeToggle"
-                              defaultChecked={ this.state.mode === "featureVis" }
+                              checked={ this.state.mode === "featureVis" }
                               onChange={ () => {
-                                if(this.state.mode === "featureVis") {
-                                  this.setState({
-                                    mode: "pageView",
-                                    vrvOptions: vrvOptionsPageView,
-                                    "scoreComponentLoadingStarted": false,
-                                    "scoreComponentLoaded": false
-                                  });
+                                if (this.state.mode === "featureVis") {
+                                  this.setModePageView();
                                 } else {
-                                  this.setState({
-                                    mode: "featureVis",
-                                    vrvOptions: vrvOptionsFeatureVis,
-                                    "scoreComponentLoadingStarted": false,
-                                    "scoreComponentLoaded": false
-                                  });
+                                  this.setModeFeatureVis();
                                 }
                               }}
                             />
