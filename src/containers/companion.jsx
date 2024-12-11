@@ -15,25 +15,26 @@ import FeatureVis from './featureVis';
 import {MidiPlayer} from "./MidiPlayer";
 
 const vrvOptionsPageView = {
-	scale: 45,
-  	adjustPageHeight: 1,
-	pageHeight:2000,
-	pageWidth: 2400,
-	footer: "none",
-	unit: 6,
-	breaks: "encoded",
-	svgAdditionalAttribute: ["note@pname", "note@oct"]
+  scale: 45,
+  adjustPageHeight: true,
+  pageHeight:2000,
+  pageWidth: 2400,
+  footer: "none",
+  unit: 6,
+  breaks: "encoded",
+  svgAdditionalAttribute: ["note@pname", "note@oct"]
 };
 
 const vrvOptionsFeatureVis = {
-	scale: 45,
-	adjustPageHeight: 1,
-	pageHeight: 400,
-	pageWidth:  3000,
-	footer: "none",
-	header: "none",
-	unit: 6,
-	svgAdditionalAttribute: ["clef@shape", "clef@line"]
+  scale: 45,
+  adjustPageHeight: true,
+  pageHeight: 100,
+  pageWidth:  3000,
+  breaks: "line",
+  footer: "none",
+  header: "none",
+  unit: 6,
+  svgAdditionalAttribute: ["clef@shape", "clef@line"]
 };
 
 class Companion extends Component {
