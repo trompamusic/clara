@@ -3,10 +3,9 @@ import ReactDOM from 'react-dom'
 import { connect } from 'react-redux' ;
 import { bindActionCreators } from 'redux';
 
-import SelectableScore from 'selectable-score/lib/selectable-score';
-import NextPageButton from 'selectable-score/lib/next-page-button.js';
-import PrevPageButton from 'selectable-score/lib/prev-page-button.js';
-import SubmitButton from 'selectable-score/lib/submit-button.js';
+import SelectableScore from '../selectable-score/selectable-score';
+import NextPageButton from '../selectable-score/next-page-button';
+import PrevPageButton from '../selectable-score/prev-page-button';
 
 import { traverse, registerTraversal, setTraversalObjectives, checkTraversalObjectives, scoreNextPageStatic, scorePrevPageStatic, scorePageToComponentTarget, fetchScore } from 'meld-clients-core/lib/actions/index';
 import { registerClock, tickTimedResource } from 'meld-clients-core/lib/actions/index';
