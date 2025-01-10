@@ -5,7 +5,7 @@ import { BiLinkExternal } from "react-icons/bi";
 
 import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router";
-import {getSolidDataset, getStringNoLocale, getThing} from "@inrupt/solid-client";
+import {getStringNoLocale} from "@inrupt/solid-client";
 import {useSession} from "@inrupt/solid-ui-react";
 import {DCTERMS} from "@inrupt/lit-generated-vocab-common";
 import {getScoreDocument, getScoresForUser} from "../util/clara";
@@ -103,7 +103,7 @@ export default function ScoreSelector() {
                                         {url.name || score.name}
                                     </a>&nbsp;&nbsp;
                                     <small>
-                                        <a href={`https://mei-friend.mdw.ac.at/?file=${url.url}`} className="icon-link" target="_blank">
+                                        <a href={`https://mei-friend.mdw.ac.at/?file=${url.url}`} className="icon-link" target="_blank" rel="noreferrer">
                                             mei-friend
                                         <BiLinkExternal />
                                         </a>

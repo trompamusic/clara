@@ -1,4 +1,4 @@
-import React, {createRef, DOMAttributes, forwardRef, useEffect, useState} from "react";
+import React, {forwardRef, useEffect, useState} from "react";
 import {useSession} from "@inrupt/solid-ui-react";
 import {blobToNoteSequence, NoteSequence} from "@magenta/music";
 import {PlayerElement} from 'html-midi-player';

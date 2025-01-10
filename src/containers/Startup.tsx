@@ -5,7 +5,7 @@ import {
 import React, {useEffect, useState} from "react";
 import {createContainerAt, getSolidDataset, getThing, getUrl} from "@inrupt/solid-client";
 import {WS} from "@inrupt/vocab-solid-common";
-import {authUrl, CLARA_CONTAINER_NAME, deployLocation} from "../config";
+import {CLARA_CONTAINER_NAME} from "../config";
 import Api from "../util/api";
 import {useNavigate} from "react-router";
 

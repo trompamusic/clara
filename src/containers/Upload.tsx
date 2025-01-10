@@ -1,10 +1,10 @@
 import {useSearchParams} from "react-router-dom";
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {useSession} from "@inrupt/solid-ui-react";
 import UploadDropzone from "./UploadDropzone";
 
 export default function Upload() {
-    let [searchParams, setSearchParams] = useSearchParams();
+    let [searchParams] = useSearchParams();
     const {session} = useSession();
     const score = searchParams.get('score');
 

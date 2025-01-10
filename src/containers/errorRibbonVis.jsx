@@ -26,32 +26,32 @@ export default class ErrorRibbonVis extends Component {
   componentDidMount() {
     console.log("error ribbon visualisation mounted with props ", this.props);
     //this.props.setErrorRibbonReady(false);
-    
+
   }
 
-  componentDidUpdate(prevProps, prevState) { 
+  componentDidUpdate(prevProps, prevState) {
    // if(//Object.keys(prevProps.timemapByNoteId) < Object.keys(this.props.timemapByNoteId) ||
       //"instantsByScoretimeLastModified" in prevProps &&
-     // prevProps.instantsByScoretimeLastModified !== this.props.instantsByScoretimeLastModified) { 
+     // prevProps.instantsByScoretimeLastModified !== this.props.instantsByScoretimeLastModified) {
       // initial load, or page has flipped. (Re-)calculate inserted note contexts.
     if(prevProps.latestScoreUpdateTimestamp !== this.props.latestScoreUpdateTimestamp) {
       this.setState({loading: true}, this.contextualiseInsertedNotes);
     }
   }
 
-  averageScoretime(noteURIs) { 
+  averageScoretime(noteURIs) {
     // given a list of note elements, calculate their average scoretime
     const noteIds = noteURIs.map((n) => n.substr(n.indexOf("#")+1));
-    const knownNotes = noteIds.filter((n) => 
+    const knownNotes = noteIds.filter((n) =>
       Object.keys(this.props.timemapByNoteId).includes(n)
     )
-    if(knownNotes.length) { 
+    if(knownNotes.length) {
       // return average scoretime (qstamp)
       return knownNotes.map((n) => this.props.timemapByNoteId[n].qstamp)
-        .reduce( (sum, scoretime) => 
+        .reduce( (sum, scoretime) =>
           sum + scoretime
         ) / knownNotes.length
-    } else { 
+    } else {
       console.warn("Attempting to calculate average scoretime without known notes: ", noteIds);
     }
   }
@@ -59,12 +59,12 @@ export default class ErrorRibbonVis extends Component {
 
   pitchToNum(pitchName) {
     let nameToNum;
-    switch(pitchName) { 
-      case "C": 
+    switch(pitchName) {
+      case "C":
       case "Cs":
         nameToNum = 0;
         break;
-      case "Db": 
+      case "Db":
       case "D":
       case "Ds":
         nameToNum = 1;
@@ -73,7 +73,7 @@ export default class ErrorRibbonVis extends Component {
       case "E":
         nameToNum = 2;
         break;
-      case "F": 
+      case "F":
       case "Fs":
         nameToNum = 3;
         break;
@@ -88,10 +88,10 @@ export default class ErrorRibbonVis extends Component {
         nameToNum = 5;
         break;
       case "Bb":
-      case "B": 
+      case "B":
         nameToNum = 6;
         break;
-      default: 
+      default:
         console.error("pitchToNum called with unrecognised pitch name:", pitchName)
     }
     return nameToNum;
@@ -101,12 +101,12 @@ export default class ErrorRibbonVis extends Component {
 /* // from Werner's notes
   pitchToNum(pitchName) {
     let nameToNum;
-    switch(pitchName) { 
-      case "C": 
+    switch(pitchName) {
+      case "C":
         nameToNum = 0;
         break;
       case "Cs":
-      case "Db": 
+      case "Db":
         nameToNum = 1;
         break;
       case "D":
@@ -119,7 +119,7 @@ export default class ErrorRibbonVis extends Component {
       case "E":
         nameToNum = 4;
         break;
-      case "F": 
+      case "F":
         nameToNum = 5;
         break;
       case "F#":
@@ -140,10 +140,10 @@ export default class ErrorRibbonVis extends Component {
       case "Bb":
         nameToNum = 10;
         break;
-      case "B": 
+      case "B":
         nameToNum = 11;
         break;
-      default: 
+      default:
         console.error("pitchToNum called with unrecognised pitch name:", pitchName)
     }
     return nameToNum;
@@ -151,17 +151,17 @@ export default class ErrorRibbonVis extends Component {
   */
 
   determineInsertedNoteYPosition(inserted, clef) {
-    if(!"shape" in clef.dataset) { 
+    if(!("shape" in clef.dataset)) {
       console.error("Clef metadata not available. Does your Verovio support svgAdditionalAttribute?")
       return null;
     }
     const clefPitch = clef.dataset.shape
     let clefOct;
-    switch(clefPitch) { 
-      case "F": 
+    switch(clefPitch) {
+      case "F":
         clefOct = 3;
         break;
-      case "G": 
+      case "G":
       case "C":
         clefOct = 4;
         break;
@@ -195,13 +195,13 @@ export default class ErrorRibbonVis extends Component {
       // (half since one inter-line distance spans two semitones)
       return heightOfOrigin + (offset * interLineDistance/2)
    // }
- //   else { 
+ //   else {
  //     console.log("Wasn't able to determine coords for line ", lines[0]);
  //     return null;
  //   }
   }
   contextualiseInsertedNotes() {
-    // For inserted notes, we have a performance time but no score time. 
+    // For inserted notes, we have a performance time but no score time.
     // In order to place them in our ribbon we need to approximate a score time.
     // To do this, look for neighbouring "correctly performed" notes for hints.
     this.state.worker.postMessage({
@@ -211,21 +211,21 @@ export default class ErrorRibbonVis extends Component {
       timemapByNoteId: this.props.timemapByNoteId
     });
     this.state.worker.onerror = (err) => err;
-    this.state.worker.onmessage = (e) => { 
+    this.state.worker.onmessage = (e) => {
       console.log("Received from worker: ", e);
       this.setState({insertedNotesByScoretime: e.data, loading:false}, this.renderSvg);
     }
   }
 
   renderSvg() {
-    if(!(this.state.loading) && Object.keys(this.props.timemapByNoteId).length) { 
+    if(!(this.state.loading) && Object.keys(this.props.timemapByNoteId).length) {
       let svgElements = [];
       let inpaintElements = [];
       let notesOnPageForDebug = [];
       let deletedNoteIndicators = [];
       let insertedNoteIndicators = [];
       // set up positioning for inpaint SVG
-      const scoreComponentBoundingRect = this.props.scoreComponent.current.getBoundingClientRect(); 
+      const scoreComponentBoundingRect = this.props.scoreComponent.current.getBoundingClientRect();
       const inpaintSvgStyle = {
         position: "absolute",
         top: scoreComponentBoundingRect.top + window.scrollY + "px",
@@ -248,8 +248,8 @@ export default class ErrorRibbonVis extends Component {
       })
 
       const errorLineSpacing = (this.state.height * (1-padding)) / this.props.timelinesToVis.length;
-      
-      this.props.timelinesToVis.slice(0).sort().forEach( (tl, ix) => { 
+
+      this.props.timelinesToVis.slice(0).sort().forEach( (tl, ix) => {
         let className = tl === this.props.currentTimeline ? "currentTl" : "";
         // draw lines to represent each performance timeline
         const timelineY = (errorLineSpacing * ix+1) + 2*(this.state.height * padding);
@@ -257,22 +257,22 @@ export default class ErrorRibbonVis extends Component {
           this.props.makeLine(
             className + " timelineMarker", // className
             null, // qstamp - timelineMarker doesn't need one!
-            tl["@id"], // timeline 
+            tl["@id"], // timeline
             "0", timelineY, this.state.width, timelineY, // x1, y1, x2, y2
             "error-vis-timeline-" + ix, // reactKey
             tl["@id"] // title string
           )
         )
         // draw any errors (deleted or inserted notes)
-        if(tl in this.props.performanceErrors) { 
+        if(tl in this.props.performanceErrors) {
           if("deleted" in this.props.performanceErrors[tl]) {
             // this timeline has deleted notes
             this.props.ensureArray(this.props.performanceErrors[tl].deleted).forEach((d) => {
-              const deletedNoteIds = this.props.ensureArray(d).map((e) => 
+              const deletedNoteIds = this.props.ensureArray(d).map((e) =>
                 e["@id"].substr(e["@id"].indexOf("#")+1)
               )
               // are any of them on the current page?
-              const deletedNotesOnPage = Array.from(this.props.notesOnPage).filter( (noteOnPage) =>  
+              const deletedNotesOnPage = Array.from(this.props.notesOnPage).filter( (noteOnPage) =>
                 deletedNoteIds.includes(noteOnPage.getAttribute("id"))
               )
               deletedNoteIndicators = [
@@ -287,17 +287,17 @@ export default class ErrorRibbonVis extends Component {
                     "deleted-"+tl+noteElement.getAttribute("id"), // react key
                     "deleted point in timeline " + tl
                   )
-                }), 
+                }),
                 ...deletedNoteIndicators
               ]
             })
           }
-          if("inserted" in this.props.performanceErrors[tl] && tl in this.state.insertedNotesByScoretime) { 
+          if("inserted" in this.props.performanceErrors[tl] && tl in this.state.insertedNotesByScoretime) {
             // figure out whether there are inserted notes on this page
-            // heuristic: figure out scoretime (qstamp) of "first" (top-left) and "last" (bottom-right) 
+            // heuristic: figure out scoretime (qstamp) of "first" (top-left) and "last" (bottom-right)
             // note element on page.  Render any inserted notes with approximate scoretimes in this range
-            const positionSortedNoteElements = Array.from(this.props.notesOnPage).slice(0).sort( (a, b) => 
-              a.getBoundingClientRect().x - b.getBoundingClientRect().x || 
+            const positionSortedNoteElements = Array.from(this.props.notesOnPage).slice(0).sort( (a, b) =>
+              a.getBoundingClientRect().x - b.getBoundingClientRect().x ||
               a.getBoundingClientRect().y - b.getBoundingClientRect().y
             );
             const minPageScoretime = this.props.timemapByNoteId[positionSortedNoteElements[0].getAttribute("id")].qstamp;
@@ -305,8 +305,8 @@ export default class ErrorRibbonVis extends Component {
             const scoretimesOfInsertedOnPage = this.state.insertedNotesByScoretime[tl].filter( (t) => Object.keys(t)[0] >= minPageScoretime && Object.keys(t)[0] <= maxPageScoretime )
             // for the inserted notes on page, find the closest predecessor and successor scoretimes and calculate their corresponding note elements' avg X positions
             const orderedScoretimesOnPage = this.props.timemap.filter( (t) => t.qstamp >= minPageScoretime && t.qstamp <= maxPageScoretime ).sort()
-            insertedNoteIndicators = [ ...insertedNoteIndicators, ...scoretimesOfInsertedOnPage.map( (t, ix) => { 
-              if(Object.keys(t).length > 1) { 
+            insertedNoteIndicators = [ ...insertedNoteIndicators, ...scoretimesOfInsertedOnPage.map( (t, ix) => {
+              if(Object.keys(t).length > 1) {
                 console.warn("Found scoretime of inserted on page with more than one key: ", t)
               }
               const scoretimeOfInsertedOnPage = Object.keys(t)[0];
@@ -317,13 +317,13 @@ export default class ErrorRibbonVis extends Component {
               const inserted = this.state.insertedNotesByScoretime[tl].find( (note) => Object.keys(note)[0] === scoretimeOfInsertedOnPage);
               const closestPredecessorScoretime = orderedScoretimesOnPage.slice(0).reverse().find((p) => p.qstamp <= scoretimeOfInsertedOnPage);
               const closestSuccessorScoretime = orderedScoretimesOnPage.find((p) => p.qstamp >= scoretimeOfInsertedOnPage);
-              if(closestPredecessorScoretime && closestPredecessorScoretime.qstamp in this.props.instantsByScoretime[tl]) { 
+              if(closestPredecessorScoretime && closestPredecessorScoretime.qstamp in this.props.instantsByScoretime[tl]) {
                 predecessorNoteElements = this.props.instantsByScoretime[tl][closestPredecessorScoretime.qstamp]
                   .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
                 predecessorNoteElementXPositions = predecessorNoteElements
                   .map( (noteElement) => convertCoords(noteElement).x )
               }
-              if(closestSuccessorScoretime && closestSuccessorScoretime.qstamp in this.props.instantsByScoretime[tl]) { 
+              if(closestSuccessorScoretime && closestSuccessorScoretime.qstamp in this.props.instantsByScoretime[tl]) {
                 successorNoteElements = this.props.instantsByScoretime[tl][closestSuccessorScoretime.qstamp]
                   .map( (instant) => this.props.noteElementsForInstant(instant) ).flat()
                 successorNoteElementXPositions = successorNoteElements
@@ -331,13 +331,13 @@ export default class ErrorRibbonVis extends Component {
               }
               const contextNoteElements = [...predecessorNoteElements, ...successorNoteElements]
               const contextNoteElementXPositions = [...predecessorNoteElementXPositions, ...successorNoteElementXPositions]
-              if(!contextNoteElementXPositions.length || !closestPredecessorScoretime) { 
+              if(!contextNoteElementXPositions.length || !closestPredecessorScoretime) {
                 console.log("Error Ribbon: Found inserted note with no valid note context: ", inserted);
-                return ""; 
-              } else { 
-                if(tl === this.props.currentTimeline) { 
+                return "";
+              } else {
+                if(tl === this.props.currentTimeline) {
                   // for debug purposes
-                  Array.from(this.props.notesOnPage).forEach((n, ix) => { 
+                  Array.from(this.props.notesOnPage).forEach((n, ix) => {
                       notesOnPageForDebug = [notesOnPageForDebug, this.props.makePoint(
                         className + " debug " + n.getAttribute("id"),
                         "NONE",
@@ -355,7 +355,7 @@ export default class ErrorRibbonVis extends Component {
 
                   // determine closest clef for purposes of inpainting error:
                   const clef = closestClef(contextNoteElements[0].getAttribute("id"));
-                  if(!!clef) { 
+                  if(!!clef) {
                     const insertedNoteY = this.determineInsertedNoteYPosition(inserted, clef);
                     //const contextNoteCoords = convertCoords(contextNoteElements[0].querySelector(".notehead"));
                     const contextNoteAverageX = contextNoteElements
@@ -365,7 +365,7 @@ export default class ErrorRibbonVis extends Component {
                     if(!!insertedNoteY) {
                       console.log("ADDING", inserted)
                       inpaintElements = [...inpaintElements, this.props.makePoint(
-                        className + " inpainted " + 
+                        className + " inpainted " +
                         this.props.ensureArray(Object.values(inserted)[0]["http://purl.org/vocab/frbr/core#embodimentOf"])[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
                         closestPredecessorScoretime.qstamp,
                         tl,
@@ -382,8 +382,8 @@ export default class ErrorRibbonVis extends Component {
                 const xPos = contextNoteElementXPositions.reduce( (sum, x) => sum + x, 0 ) / contextNoteElementXPositions.length;
                 return this.props.makeRect(
                   className + " inserted",
-                  closestPredecessorScoretime.qstamp, 
-                  tl, 
+                  closestPredecessorScoretime.qstamp,
+                  tl,
                   xPos, timelineY, insertedNoteWidth, errorIndicatorHeight*.8,
                   "inserted-" + inserted[scoretimeOfInsertedOnPage]["@id"] + "-" + ix,
                   "inserted point in timeline " + tl,
@@ -394,9 +394,9 @@ export default class ErrorRibbonVis extends Component {
           }
         }
       })
-      
+
       svgElements = [...svgElements, ...deletedNoteIndicators, ...insertedNoteIndicators];
-      this.setState({svgElementsWrapper: 
+      this.setState({svgElementsWrapper:
         <div>
           <svg id="errorRibbon" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width={this.state.width} height={this.state.height} transform="scale(1,-1) translate(0, 50)" ref = { this.errorRibbonSvg }>
                 { svgElements }
@@ -411,7 +411,7 @@ export default class ErrorRibbonVis extends Component {
 
 
   render() {
-    // FIXME: Move all dom-based calculation OUTSIDE OF RENDER FUNCTION 
+    // FIXME: Move all dom-based calculation OUTSIDE OF RENDER FUNCTION
     return this.state.svgElementsWrapper
   }
 }

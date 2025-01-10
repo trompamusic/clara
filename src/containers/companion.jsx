@@ -128,12 +128,12 @@ class Companion extends Component {
   }
 
   submitCircleAnnotation = () => {
-    const anno = {
-      "@context": "http://www.w3.org/ns/anno.jsonld",
-      "target": this.state.selection.map( (elem) => this.state.currentScore + "#" + elem.getAttribute("id") ),
-      "motivation": "highlighting"
-    }
-    let submitHandlerArgs = "submitHandlerArgs" in this.props ? this.props.submitHandlerArgs : {};
+    // const anno = {
+    //   "@context": "http://www.w3.org/ns/anno.jsonld",
+    //   "target": this.state.selection.map( (elem) => this.state.currentScore + "#" + elem.getAttribute("id") ),
+    //   "motivation": "highlighting"
+    // }
+    // let submitHandlerArgs = "submitHandlerArgs" in this.props ? this.props.submitHandlerArgs : {};
     // this.solidClient.saveAnnotation(anno, new URL(this.props.annotationContainerUri).pathname)
     //     .then((resp) => this.handleResponse(resp))
     //     .catch((err) => `Couldn't save annotation: ${err}`);
@@ -142,11 +142,11 @@ class Companion extends Component {
 
   deleteAnnotations = () => {
     if(window.confirm("Do you really wish to permanently erase " + this.state.selection.length + " annotations?")) {
-      this.state.selection.map((s) => {
-        // this.solidClient.deleteAnnotation(s.dataset.uri)
-        //   .then(() => s.parentNode.removeChild(s))
-        //   .catch((e) => console.error("Couldn't delete annotation: ", s, e))
-      })
+      // this.state.selection.map((s) => {
+      //   this.solidClient.deleteAnnotation(s.dataset.uri)
+      //     .then(() => s.parentNode.removeChild(s))
+      //     .catch((e) => console.error("Couldn't delete annotation: ", s, e))
+      // })
     }
     this.setState({deleteAnnoButtonActive: false, selection:[]});
   }
@@ -202,7 +202,6 @@ class Companion extends Component {
 
   handleReceiveAnnotationContainerContent = (content) => {
     console.log("Received annotation container content: ", content);
-    const highlights = [];
     const myHighlights = this.ensureArray(content).filter( (anno) => {
       // filter out any annotations that don't concern the current score
       let forMe = [];

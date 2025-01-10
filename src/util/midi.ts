@@ -4,9 +4,9 @@ import { TimeSignatureEvent, TempoEvent } from '@tonejs/midi/dist/Header';
 
 
 /**
- * 
- * @param ns 
- * @returns 
+ *
+ * @param ns
+ * @returns
  */
 export function trackToMidi(trackData: any) {
     const midi = new Midi();
@@ -64,7 +64,6 @@ export function jsonMidiToSequenceProto(midiMessages: any): NoteSequence {
         const messageType = note.data.messageType;
         const eventTimestamp = note.timestamp / 1000;
         const pitch = note.data.key;
-        const velocity = undefined;
         if (firstNoteOffset === null) {
             firstNoteOffset = eventTimestamp;
         }
@@ -124,10 +123,10 @@ export function localSequenceProtoToMidi(ns: INoteSequence) {
     tempos.sort((a, b) => a.time - b.time);
     for (const tempo of tempos) {
         if (tempo.time != null) {
-            midi.header.tempos.push(<TempoEvent>{
+            midi.header.tempos.push({
                 ticks: midi.header.secondsToTicks(tempo.time),
                 bpm: tempo.qpm
-            });
+            } as TempoEvent);
         }
         midi.header.update();  // Update the tempo times for secondsToTicks to work.
     }
@@ -138,10 +137,10 @@ export function localSequenceProtoToMidi(ns: INoteSequence) {
     } else {
         for (const ts of ns.timeSignatures) {
             if (ts.time != null) {
-                midi.header.timeSignatures.push(<TimeSignatureEvent>{
+                midi.header.timeSignatures.push({
                     ticks: midi.header.secondsToTicks(ts.time),
                     timeSignature: [ts.numerator, ts.denominator]
-                });
+                } as TimeSignatureEvent);
             }
         }
     }

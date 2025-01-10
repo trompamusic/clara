@@ -11,7 +11,7 @@ type ErrorMessage = {
 export default function AuthCallback() {
 
     const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
     const [error, setError] = React.useState<ErrorMessage>({error: false});
     const code = searchParams.get("code");
     const state = searchParams.get("state");

@@ -1,13 +1,13 @@
 // Add a new score
 import {useSearchParams} from "react-router-dom";
-import React, {useEffect, useState} from "react";
+import React, {useEffect} from "react";
 import {useSession} from "@inrupt/solid-ui-react";
 import Api from "../util/api";
 import {getScoreDocument, getScoresForUser} from "../util/clara";
 import {useNavigate} from "react-router";
 
 export default function Add() {
-    let [searchParams, setSearchParams] = useSearchParams();
+    let [searchParams] = useSearchParams();
     const {session} = useSession();
     const url = searchParams.get('url');
     const navigate = useNavigate();
@@ -19,7 +19,7 @@ export default function Add() {
 
             getScoresForUser(session.info.webId!, session.fetch).then(scores => {
                 scores.filter(score_url => {
-                    getScoreDocument(score_url, session.fetch).then(doc => {
+                    return getScoreDocument(score_url, session.fetch).then(doc => {
                         // TODO: Get score document and check if it's the same as the one we're trying to add
                     })
                 })

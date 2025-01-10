@@ -14,7 +14,7 @@ export default function AddWait() {
     const fetcher = (url: string) => Api.swrQuery(url);
     const [error, setError] = useState<string|null>(null);
 
-    let [searchParams, setSearchParams] = useSearchParams();
+    let [searchParams] = useSearchParams();
     const task = searchParams.get('task');
     const navigate = useNavigate();
 

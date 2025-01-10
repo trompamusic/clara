@@ -24,7 +24,7 @@ function localStorageMidiToBlob(midiString: string) {
 
 /**
  * Take an array of Uint8Arrays (i.e. midi [event, note, velocity] tuples) and convert them to a midi file
- * @param midiEvents 
+ * @param midiEvents
  */
 function midiEventsArrayToMidiFile(midiEvents: any[]) {
     let firstTimestamp = midiEvents[0].timeStamp;
@@ -48,6 +48,7 @@ function midiEventsArrayToMidiFile(midiEvents: any[]) {
             } as (MidiNoteOffEvent & WithAbsoluteTime);
         } else {
             console.log(`Unexpected event type in midi stream: ${d}`);
+            return undefined;
         }
     }).filter((e) => e !== undefined);
     return trackToMidi(trackNotes);

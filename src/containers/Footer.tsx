@@ -1,6 +1,4 @@
 import React from "react"
-import {Nav} from "react-bootstrap";
-import {Link} from "react-router-dom";
 
 export default function Footer() {
     return <footer className="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
