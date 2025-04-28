@@ -1,5 +1,8 @@
 module.exports = function override(config, env) {
-    config.resolve.fallback = {"crypto": require.resolve("crypto-browserify")}
+    config.resolve.fallback = {
+        "crypto": require.resolve("crypto-browserify"),
+        "vm": false
+    }
 
     config.ignoreWarnings = [
         /*
