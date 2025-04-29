@@ -27,6 +27,9 @@ function LoginButton() {
      * Copied from inrupt/solid-ui-react LoginButton
      */
     async function loginHandler(oidcIssuer: string) {
+        if (setSessionRequestInProgress === undefined) {
+            return;
+        }
         const options = {
             redirectUrl: window.location.href,
             oidcIssuer,
