@@ -1,8 +1,23 @@
+const webpack = require('webpack');
+
 module.exports = function override(config, env) {
     config.resolve.fallback = {
         "crypto": require.resolve("crypto-browserify"),
-        "vm": false
+        "vm": false,
+        "stream": require.resolve("stream-browserify"),
+        "buffer": require.resolve("buffer")
     }
+
+    // Add Buffer and process to the global scope
+    config.plugins = [
+        ...config.plugins,
+        new webpack.ProvidePlugin({
+            Buffer: ['buffer', 'Buffer'],
+        }),
+        new webpack.ProvidePlugin({
+            process: 'process/browser',
+        }),
+    ];
 
     config.ignoreWarnings = [
         /*
@@ -26,6 +41,8 @@ module.exports = function override(config, env) {
             return false;
         },
     ];
+    // https://github.com/axios/axios/issues/6571
+    config.module.rules.push({ test: /\.m?js/, resolve: { fullySpecified: false } })
 
     return config;
 }
