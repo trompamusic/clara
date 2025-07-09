@@ -1,6 +1,3 @@
-import {
-    useSession,
-} from "@inrupt/solid-ui-react";
 
 import React, {useEffect, useState} from "react";
 import {createContainerAt, getSolidDataset, getThing, getUrl} from "@inrupt/solid-client";
@@ -8,6 +5,7 @@ import {WS} from "@inrupt/vocab-solid-common";
 import {CLARA_CONTAINER_NAME} from "../config";
 import Api from "../util/api";
 import {useNavigate} from "react-router";
+import { useSolidAuth } from "@ldo/solid-react";
 
 /**
  * Identifies if a user has set up their account
@@ -20,13 +18,13 @@ export default function Startup() {
     const [checkingPermission, setCheckingPermission] = useState(true);
     const [permissionError, setPermissionError] = useState(false);
     const [authUrl, setAuthUrl] = useState<string>();
-    const {session} = useSession();
+    const {session, fetch} = useSolidAuth();
     const navigate = useNavigate();
 
-    const webId = session.info.webId ?? "";
+    const webId = session.webId ?? "";
 
     useEffect(() => {
-        if (session.info.isLoggedIn) {
+        if (session.isLoggedIn) {
             let ignore = false;
 
             Api.checkUserPermissions(webId)
@@ -50,7 +48,7 @@ export default function Startup() {
                 ignore = true;
             };
         }
-    }, [session.info.isLoggedIn, webId]);
+    }, [session.isLoggedIn, webId]);
 
     // Check if a clara container exists in the user's pod
     // TODO: https://react.dev/learn/you-might-not-need-an-effect
@@ -58,13 +56,13 @@ export default function Startup() {
     useEffect(() => {
         async function fetchClaraContainer() {
             // TODO: We lookup the user's storage multiple times
-            const dataset = await getSolidDataset(webId, { fetch: session.fetch });
+            const dataset = await getSolidDataset(webId, { fetch: fetch });
             const profileDoc = getThing(dataset, webId);
             const storageUrl = getUrl(profileDoc!, WS.storage);
             const claraStorageUrl = storageUrl + CLARA_CONTAINER_NAME;
             // TODO: Node solid server will allow us to create the same container multiple times but inrupt's server won't
             try {
-                await createContainerAt(claraStorageUrl, {fetch: session.fetch});
+                await createContainerAt(claraStorageUrl, {fetch: fetch});
             } catch (e) {
                 // TODO: Identify this is a "412 precondition failed" error and ignore it, otherwise re-raise
                 console.log("Clara container already exists");
@@ -74,15 +72,15 @@ export default function Startup() {
             }
         }
         let ignore = false;
-        if (session.info.isLoggedIn && hasPermission) {
+        if (session.isLoggedIn && hasPermission) {
             fetchClaraContainer().catch(console.error);
             return () => {
                 ignore = true;
             };
         }
-    }, [hasPermission, webId, navigate, session.fetch, session.info.isLoggedIn]);
+    }, [hasPermission, webId, navigate, fetch, session.isLoggedIn]);
 
-    if (!session.info.isLoggedIn) {
+    if (!session.isLoggedIn) {
         return <p>You must be logged in</p>
     }
 

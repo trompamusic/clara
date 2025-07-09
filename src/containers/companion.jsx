@@ -154,7 +154,7 @@ class Companion extends Component {
 
   deleteSelectedPerformance = () => {
     if(window.confirm("Do you really wish to PERMANENTLY DELETE this performance? " + this.state.selectedPerformance["http://www.w3.org/2000/01/rdf-schema#label"])) {
-      this.props.session.fetch(this.state.selectedPerformance["@id"], { method: "DELETE" })
+      this.props.fetch(this.state.selectedPerformance["@id"], { method: "DELETE" })
         .then(() =>  {
           /*
           timelinesToVis = { Object.keys(this.state.instantsByNoteId) }

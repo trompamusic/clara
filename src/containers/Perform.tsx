@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {useSearchParams} from "react-router-dom";
-import {useSession} from "@inrupt/solid-ui-react";
+import { useSolidAuth } from "@ldo/solid-react";
 import Companion from "./companion";
 import {getStorageForUser} from "../util/clara";
 import WebMidiRecorder from "./WebMidiRecorder";
@@ -23,28 +23,28 @@ function LinkToUpload({uri}: {uri: string}) {
 export default function Perform() {
     let [searchParams] = useSearchParams();
     let [storage, setStorage] = useState('');
-    const {session} = useSession();
+    const { session, fetch } = useSolidAuth();
     const score = searchParams.get('score');
 
     useEffect(() => {
         let ignore = false;
 
         async function getStorage() {
-            const storage = await getStorageForUser(session.info.webId!, session.fetch)
+            const storage = await getStorageForUser(session.webId!, fetch)
             if (!ignore) {
                 setStorage(storage ? storage : '');
             }
         }
 
-        if (session.info.isLoggedIn) {
+        if (session.isLoggedIn) {
             getStorage().catch(console.error);
             return () => {
                 ignore = true;
             };
         }
-    }, [session.fetch, session.info.isLoggedIn, session.info.webId]);
+    }, [fetch, session.isLoggedIn, session.webId]);
 
-    if (!session.info.isLoggedIn) {
+    if (!session.isLoggedIn) {
         return <p>Checking if you're logged in...</p>
     }
 
@@ -56,7 +56,7 @@ export default function Perform() {
         return <div>
             <LinkToUpload uri={score} />
             <WebMidiRecorder score={score} />
-            <Companion uri={score} userPOD={storage} userProfile={session.info.webId!} session={session} />
+            <Companion uri={score} userPOD={storage} userProfile={session.webId!} fetch={fetch} />
         </div>
 
     } else {

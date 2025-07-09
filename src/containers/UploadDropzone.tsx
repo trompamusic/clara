@@ -1,13 +1,13 @@
 import React, {useCallback} from 'react'
 import {useDropzone} from 'react-dropzone'
-import {useSession} from "@inrupt/solid-ui-react";
+import {useSolidAuth} from "@ldo/solid-react";
 import {useNavigate} from "react-router";
 import Api from "../util/api";
 
 export default function UploadDropzone({score} : {score: string}) {
-    const {session} = useSession();
+    const {session, fetch} = useSolidAuth();
     const navigate = useNavigate();
-    const webId = session.info.webId ?? "";
+    const webId = session.webId ?? "";
 
     const onDrop = useCallback((acceptedFiles: Blob[]) => {
         acceptedFiles.forEach((file: Blob) => {
@@ -19,7 +19,7 @@ export default function UploadDropzone({score} : {score: string}) {
     }, [navigate, score, webId])
     const {getRootProps, getInputProps} = useDropzone({onDrop})
 
-    if (!session.info.isLoggedIn) {
+    if (!session.isLoggedIn) {
         return <p>loading...</p>
     }
 

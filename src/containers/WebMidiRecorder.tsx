@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {useSession} from "@inrupt/solid-ui-react";
+import { useSolidAuth } from "@ldo/solid-react";
 import Api from "../util/api";
 import {useNavigate} from "react-router";
 import {trackToMidi} from "../util/midi";
@@ -55,8 +55,8 @@ function midiEventsArrayToMidiFile(midiEvents: any[]) {
 }
 
 export default function WebMidiRecorder({score}: {score: string}) {
-    const {session} = useSession();
-    const webId = session.info.webId ?? "";
+    const {session} = useSolidAuth();
+    const webId = session.webId ?? "";
     const [midiIn, setMidiIn] = useState([]);
     const [uploadError, setUploadError] = useState(false);
     const [midiSupported, setMidiSupported] = useState(false);

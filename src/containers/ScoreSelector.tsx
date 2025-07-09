@@ -6,9 +6,9 @@ import { BiLinkExternal } from "react-icons/bi";
 import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router";
 import {getStringNoLocale} from "@inrupt/solid-client";
-import {useSession} from "@inrupt/solid-ui-react";
 import {DCTERMS} from "@inrupt/lit-generated-vocab-common";
 import {getScoreDocument, getScoresForUser} from "../util/clara";
+import { useSolidAuth } from "@ldo/solid-react";
 
 import _scores from "../scores.json";
 const scores = _scores as ScoreOption[];
@@ -33,7 +33,7 @@ export default function ScoreSelector() {
     const [userScores, setUserScores] = useState<ScoreOption[]>([]);
     const [loadingScores, setLoadingScores] = useState(true);
     let navigate = useNavigate();
-    const {session} = useSession();
+    const {session, fetch} = useSolidAuth();
 
 
     const loadUrl = (url: string) => {
@@ -47,7 +47,7 @@ export default function ScoreSelector() {
     useEffect(() => {
         let ignore = false;
         const getMetadataForScore = async (url: string): Promise<ScoreOption|null> => {
-            const doc = await getScoreDocument(url, session.fetch);
+            const doc = await getScoreDocument(url, fetch);
             if (doc) {
                 const name = getStringNoLocale(doc!, DCTERMS.title) ?? "unknown";
                 return {name, urls: [{name: "", url}]}
@@ -56,7 +56,7 @@ export default function ScoreSelector() {
         }
 
         async function fetchExistingScores() {
-            getScoresForUser(session.info.webId!, session.fetch).then(urls => {
+            getScoresForUser(session.webId!, fetch).then(urls => {
                 Promise.all(urls.map((u) => {
                     return getMetadataForScore(u)
                 })).then(results => {
@@ -70,13 +70,13 @@ export default function ScoreSelector() {
                 setLoadingScores(false);
             });
         }
-        if (session.info.isLoggedIn) {
+        if (session.isLoggedIn) {
             fetchExistingScores().catch(console.error);
             return () => {
                 ignore = true;
             };
         }
-    }, [session.fetch, session.info.isLoggedIn, session.info.webId]);
+    }, [fetch, session.isLoggedIn, session.webId]);
 
     return <Row>
         <Col sm={2}/>

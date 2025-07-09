@@ -1,14 +1,14 @@
 import {useSearchParams} from "react-router-dom";
 import React from "react";
-import {useSession} from "@inrupt/solid-ui-react";
+import {useSolidAuth} from "@ldo/solid-react";
 import UploadDropzone from "./UploadDropzone";
 
 export default function Upload() {
     let [searchParams] = useSearchParams();
-    const {session} = useSession();
+    const {session} = useSolidAuth();
     const score = searchParams.get('score');
 
-    if (!session.info.isLoggedIn) {
+    if (!session.isLoggedIn) {
         return <p>You must be logged in</p>
     }
 
