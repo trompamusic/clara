@@ -17,6 +17,9 @@ function LoginButton() {
     const [loginError, setLoginError] = useState<string|null>(null);
     const [showIdpInput, setShowIdpInput] = useState(false);
     const { login } = useSolidAuth();
+    const loginOptions = {
+        clientId: process.env.REACT_APP_CLIENT_ID,
+    }
 
     return <InputGroup className="mb-3">
         {showIdpInput && <>
@@ -25,17 +28,17 @@ function LoginButton() {
         </>
         }
         {loginError && <InputGroup.Text>{loginError}</InputGroup.Text>}
-        <SplitButton id='login-button' title='Login' align="end" onClick={() => {
-            login(idp);
+        <SplitButton id='login-button' title={`Login with ${idp}`} align="end" onClick={() => {
+            login(idp, loginOptions);
         }}>
             <Dropdown.Item onClick={() => {
-                login(providers.trompa);
+                login(providers.trompa, loginOptions);
             }}>Login with Trompa</Dropdown.Item>
             <Dropdown.Item onClick={() => {
-                login(providers.inrupt);
+                login(providers.inrupt, loginOptions);
             }}>Login with inrupt</Dropdown.Item>
             <Dropdown.Item onClick={() => {
-                login(providers.solidCommunity);
+                login(providers.solidCommunity, loginOptions);
             }}>Login with Solid Community</Dropdown.Item>
             <Dropdown.Item onClick={() => {
                 setShowIdpInput(true);
