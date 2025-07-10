@@ -7,13 +7,12 @@ import React, {useState} from "react";
 import { useSolidAuth } from "@ldo/solid-react";
 
 const providers = {
-    trompa: "https://trompa-solid.upf.edu",
     inrupt: "https://login.inrupt.com",
     solidCommunity: "https://solidcommunity.net",
 }
 
 function LoginButton() {
-    const [idp, setIdp] = useState(providers.trompa);
+    const [idp, setIdp] = useState(providers.solidCommunity);
     const [loginError, setLoginError] = useState<string|null>(null);
     const [showIdpInput, setShowIdpInput] = useState(false);
     const { login } = useSolidAuth();
@@ -22,18 +21,16 @@ function LoginButton() {
     }
 
     return <InputGroup className="mb-3">
-        {showIdpInput && <>
+        {showIdpInput ? <>
             <InputGroup.Text>IDP</InputGroup.Text>
             <FormControl htmlSize={30} aria-label="SOLID IDP" value={idp} onChange={(e) => setIdp(e.target.value)} />
-        </>
+        </> :
+            <InputGroup.Text>{idp}</InputGroup.Text>
         }
         {loginError && <InputGroup.Text>{loginError}</InputGroup.Text>}
-        <SplitButton id='login-button' title={`Login with ${idp}`} align="end" onClick={() => {
+        <SplitButton id='login-button' title="Login" toggleLabel={`Login with ${idp}`} align="end" onClick={() => {
             login(idp, loginOptions);
         }}>
-            <Dropdown.Item onClick={() => {
-                login(providers.trompa, loginOptions);
-            }}>Login with Trompa</Dropdown.Item>
             <Dropdown.Item onClick={() => {
                 login(providers.inrupt, loginOptions);
             }}>Login with inrupt</Dropdown.Item>
