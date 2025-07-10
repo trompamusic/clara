@@ -1,5 +1,4 @@
-
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useState, useCallback} from "react";
 import {createContainerAt, getSolidDataset, getThing, getUrl} from "@inrupt/solid-client";
 import {WS} from "@inrupt/vocab-solid-common";
 import {CLARA_CONTAINER_NAME} from "../config";
@@ -14,71 +13,68 @@ import { useSolidAuth } from "@ldo/solid-react";
  * Once these steps are done, show the interface to select a score to perform
  */
 export default function Startup() {
-    const [hasPermission, setHasPermission] = useState(false);
     const [checkingPermission, setCheckingPermission] = useState(true);
     const [permissionError, setPermissionError] = useState(false);
     const [authUrl, setAuthUrl] = useState<string>();
+    const [isSettingUp, setIsSettingUp] = useState(false);
     const {session, fetch} = useSolidAuth();
     const navigate = useNavigate();
 
     const webId = session.webId ?? "";
 
-    useEffect(() => {
-        if (session.isLoggedIn) {
-            let ignore = false;
+    const setupUser = useCallback(async (ignore: boolean) => {
+        try {
+            // Check permissions first
+            const permissionData = await Api.checkUserPermissions(webId);
 
-            Api.checkUserPermissions(webId)
-            .then(data => {
+            if (ignore) return;
+
+            if (permissionData.has_permission === false) {
+                // No permission, get auth URL
+                const authData = await Api.getBackendAuthenticationUrl(webId, "/");
                 if (!ignore) {
-                    if (data.has_permission === false) {
-                        // No permission, do a lookup to get the auth URL
-                        Api.getBackendAuthenticationUrl(webId, "/").then(data => {
-                            setAuthUrl(data.auth_url);
-                        })
-                        // TODO: Catch error in this request and show error
-                    }
-                    setHasPermission(data.has_permission);
-                    setCheckingPermission(false);
+                    setAuthUrl(authData.auth_url);
                 }
-            }).catch((e) => {
-                setPermissionError(true);
                 setCheckingPermission(false);
-            });
-            return () => {
-                ignore = true;
-            };
-        }
-    }, [session.isLoggedIn, webId]);
+                return;
+            }
 
-    // Check if a clara container exists in the user's pod
-    // TODO: https://react.dev/learn/you-might-not-need-an-effect
-    //  possible that this should be a part of the previous effect?
-    useEffect(() => {
-        async function fetchClaraContainer() {
-            // TODO: We lookup the user's storage multiple times
+            // User has permission, now set up the container
+            setIsSettingUp(true);
+
+            // Create clara container
             const dataset = await getSolidDataset(webId, { fetch: fetch });
             const profileDoc = getThing(dataset, webId);
             const storageUrl = getUrl(profileDoc!, WS.storage);
             const claraStorageUrl = storageUrl + CLARA_CONTAINER_NAME;
-            // TODO: Node solid server will allow us to create the same container multiple times but inrupt's server won't
+
             try {
                 await createContainerAt(claraStorageUrl, {fetch: fetch});
             } catch (e) {
                 // TODO: Identify this is a "412 precondition failed" error and ignore it, otherwise re-raise
                 console.log("Clara container already exists");
             }
+
             if (!ignore) {
                 navigate(`/select`);
             }
+        } catch (e) {
+            if (!ignore) {
+                setPermissionError(true);
+                setCheckingPermission(false);
+            }
         }
-        let ignore = false;
-        if (session.isLoggedIn && hasPermission) {
-            fetchClaraContainer().catch(console.error);
+    }, [webId, fetch, navigate]);
+
+    useEffect(() => {
+        if (session.isLoggedIn) {
+            let ignore = false;
+            setupUser(ignore);
             return () => {
                 ignore = true;
             };
         }
-    }, [hasPermission, webId, navigate, fetch, session.isLoggedIn]);
+    }, [session.isLoggedIn, setupUser]);
 
     if (!session.isLoggedIn) {
         return <p>You must be logged in</p>
@@ -88,6 +84,8 @@ export default function Startup() {
         return <p>Checking if you have let us store items in your Solid pod...</p>
     } else if (permissionError) {
         return <p>There was an error checking your permissions. We have been informed of the error and are looking into it</p>
+    } else if (isSettingUp) {
+        return <p>Permission granted, setting up your workspace...</p>
     } else {
         let message = <>Please wait... retrieving authentication URL</>;
         if (authUrl) {
