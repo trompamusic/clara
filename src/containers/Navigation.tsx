@@ -1,10 +1,10 @@
 import {Container, Dropdown, FormControl, InputGroup, Nav, Navbar, SplitButton} from "react-bootstrap";
 
-import { FOAF } from "@inrupt/lit-generated-vocab-common";
 import {Link} from "react-router-dom";
 import {Button} from 'react-bootstrap';
 import React, {useState} from "react";
-import { useSolidAuth } from "@ldo/solid-react";
+import { useResource, useSolidAuth, useSubject } from "@ldo/solid-react";
+import { SolidProfileShapeShapeType } from "../.ldo/solidProfile.shapeTypes";
 
 const providers = {
     inrupt: "https://login.inrupt.com",
@@ -17,7 +17,7 @@ function LoginButton() {
     const [showIdpInput, setShowIdpInput] = useState(false);
     const { login } = useSolidAuth();
     const loginOptions = {
-        clientId: process.env.REACT_APP_CLIENT_ID,
+        clientId: process.env.REACT_APP_CLIENT_ID_DOCUMENT_URL,
     }
 
     return <InputGroup className="mb-3">
@@ -49,6 +49,19 @@ function LoginButton() {
 export default function Navigation() {
     const { session, logout } = useSolidAuth();
     const webId = session.webId;
+    const webIdResource = useResource(session.webId);
+    const profile = useSubject(SolidProfileShapeShapeType, session.webId);
+
+    let loggedInName: string;
+    if (webIdResource?.type === "InvalidIdentifierResouce") {
+        loggedInName = session.webId || "Unknown";
+    } else if (webIdResource?.isReading && webIdResource.isReading()) {
+        loggedInName = "loading...";
+    } else if (profile?.name) {
+        loggedInName = profile.name;
+    } else {
+        loggedInName = session.webId || "Unknown";
+    }
     return (
         <Navbar bg="light" expand="lg">
             <Container fluid={true}>
@@ -65,7 +78,7 @@ export default function Navigation() {
                 <Nav>
                     {session.isLoggedIn
                         ? <><Navbar.Text>
-                                Logged in: {session.webId}
+                                Logged in: {loggedInName}
                         </Navbar.Text>&emsp;
                             <Button onClick={() => logout()}>Log out</Button>
                         </>
