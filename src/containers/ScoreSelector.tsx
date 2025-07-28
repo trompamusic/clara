@@ -1,7 +1,7 @@
 import {Col, Form, Row} from "react-bootstrap";
 
 import {Button} from 'react-bootstrap';
-import { BiLinkExternal } from "react-icons/bi";
+import { BiLinkExternal, BiEdit } from "react-icons/bi";
 
 import React, {useEffect, useState} from "react";
 import {useNavigate} from "react-router";
@@ -165,7 +165,18 @@ export default function ScoreSelector() {
                                 }}
                             >
                                 {score.name}
-                            </a>
+                            </a>&nbsp;&nbsp;
+                            <small>
+                                <a href={`/editscore?score=${score.urls[0].url}`} className="icon-edit"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        navigate(`/editscore?score=${score.urls[0].url}`);
+                                    }}
+                                >
+                                    edit 
+                                    <BiEdit />
+                                </a>
+                            </small>
                         </li>
                     );
                 })}

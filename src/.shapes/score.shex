@@ -1,0 +1,28 @@
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX meld: <https://meld.linkedmusic.org/terms/>
+PREFIX mo: <http://purl.org/ontology/mo/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+# Shape for a Score resource that represents a musical score
+mo:ScoreShape {
+  a [ mo:Score ]
+    // rdfs:comment "Defines the node as a Score (from Music Ontology)" ;
+  dcterms:title xsd:string ?
+    // rdfs:comment "The title of the musical score" ;
+  mo:published_as IRI ?
+    // rdfs:comment "A link to the published version of this score (e.g., MEI file)" ;
+  skos:related IRI ?
+    // rdfs:comment "A related resource, such as a performance of this score" ;
+  meld:segments IRI ?
+    // rdfs:comment "A link to segments data for this score" ;
+}
+
+# Shape for a PublishedScore resource that represents our local copy of the original web resource
+mo:PublishedScoreShape {
+  a [ mo:PublishedScore ]
+    // rdfs:comment "Defines the node as a PublishedScore (from Music Ontology)" ;
+  skos:exactMatch IRI ?
+    // rdfs:comment "The location online where this score was copied from" ;
+}

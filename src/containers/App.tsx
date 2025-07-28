@@ -16,6 +16,7 @@ import AuthCallback from "./AuthCallback";
 import AddWait from "./AddWait";
 import Upload from "./Upload";
 import UploadWait from "./UploadWait";
+import EditScore from './EditScore';
 
 const publicPerformanceCollection = 'https://clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld';
 const publicUserProfile = 'https://clara.trompa-solid.upf.edu/profile/card#me';
@@ -62,6 +63,10 @@ const router = createBrowserRouter([
             {
                 path: "/auth/callback",
                 element: <AuthCallback />
+            },
+            {
+                path: "/editscore",
+                element: <EditScore />
             },
         ]
     },

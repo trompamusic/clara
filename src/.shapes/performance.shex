@@ -1,0 +1,42 @@
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX mo: <http://purl.org/ontology/mo/>
+PREFIX meld: <https://meld.linkedmusic.org/terms/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX tl: <http://purl.org/NET/c4dm/timeline.owl#>
+
+# Shape for a Performance resource
+mo:PerformanceShape {
+  a [ mo:Performance ]
+    // rdfs:comment "Defines the node as a Performance (from Music Ontology)" ;
+  rdfs:label xsd:string ?
+    // rdfs:comment "The label of the performance (usually date/time)" ;
+  dcterms:created xsd:dateTime ?
+    // rdfs:comment "The creation date and time of the performance" ;
+  mo:performance_of IRI ?
+    // rdfs:comment "The score that this performance is of" ;
+  mo:recorded_as IRI ?
+    // rdfs:comment "The recording of this performance" ;
+  meld:offset xsd:string ?
+    // rdfs:comment "The offset value for this performance" ;
+}
+
+# Shape for a Signal resource (recording)
+mo:SignalShape {
+  a [ mo:Signal ]
+    // rdfs:comment "Defines the node as a Signal (from Music Ontology)" ;
+  mo:available_as IRI ?
+    // rdfs:comment "The audio file for this signal" ;
+  mo:derived_from IRI ?
+    // rdfs:comment "The MIDI file this signal is derived from" ;
+  mo:time @tl:IntervalShape ?
+    // rdfs:comment "The time interval for this signal" ;
+}
+
+# Shape for a Timeline Interval
+tl:IntervalShape {
+  a [ tl:Interval ]
+    // rdfs:comment "Defines the node as a Timeline Interval" ;
+  tl:onTimeLine IRI ?
+    // rdfs:comment "The timeline this interval belongs to" ;
+} 

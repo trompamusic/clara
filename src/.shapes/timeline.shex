@@ -1,0 +1,50 @@
+PREFIX oa: <http://www.w3.org/ns/oa#>
+PREFIX tl: <http://purl.org/NET/c4dm/timeline.owl#>
+PREFIX frbr: <http://purl.org/vocab/frbr/core#>
+PREFIX maps: <https://terms.trompamusic.eu/maps#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+# Shape for a Timeline resource
+tl:TimelineShape {
+  a [ tl:Timeline ]
+    // rdfs:comment "Defines the node as a Timeline" ;
+}
+
+# Shape for a Timeline Instant (timing point)
+tl:InstantShape {
+  a [ tl:Instant ]
+    // rdfs:comment "Defines the node as a Timeline Instant" ;
+  tl:at xsd:string ?
+    // rdfs:comment "The time position on the timeline (e.g., 'P6.721S')" ;
+  tl:onTimeLine IRI ?
+    // rdfs:comment "The timeline this instant belongs to" ;
+  frbr:embodimentOf IRI ?
+    // rdfs:comment "The musical element this instant represents" ;
+  maps:confidence xsd:string ?
+    // rdfs:comment "The confidence value for this instant" ;
+  maps:velocity xsd:string ?
+    // rdfs:comment "The velocity value for this instant" ;
+}
+
+# Shape for a Web Annotation
+oa:AnnotationShape {
+  a [ oa:Annotation ]
+    // rdfs:comment "Defines the node as a Web Annotation" ;
+  oa:bodyValue xsd:string ?
+    // rdfs:comment "The body value of the annotation (e.g., '95', '-1')" ;
+  oa:hasTarget IRI ?
+    // rdfs:comment "The target of this annotation" ;
+  oa:motivatedBy IRI ?
+    // rdfs:comment "The motivation for this annotation (e.g., oa:describing)" ;
+}
+
+# Shape for an Annotation Target
+oa:TargetShape {
+  a [ oa:Target ]
+    // rdfs:comment "Defines the node as an Annotation Target" ;
+  oa:hasScope IRI ?
+    // rdfs:comment "The scope of this target (usually the timeline)" ;
+  oa:hasSource IRI ?
+    // rdfs:comment "The source of this target (usually a MEI element)" ;
+} 

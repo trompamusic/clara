@@ -1,0 +1,40 @@
+PREFIX frbr: <http://purl.org/vocab/frbr/core#>
+PREFIX meld: <https://meld.linkedmusic.org/terms/>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX so: <http://www.linkedmusic.org/ontologies/segment/>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+
+# Shape for a SegmentLine resource
+so:SegmentLineShape {
+  a [ so:SegmentLine ]
+    // rdfs:comment "Defines the node as a SegmentLine" ;
+}
+
+# Shape for a MEIManifestation resource (used within embodiment)
+meld:MEIManifestationShape {
+  a [ rdf:Bag meld:MEIManifestation ]
+    // rdfs:comment "Defines the node as a MEI Manifestation" ;
+  rdfs:member IRI *
+    // rdfs:comment "Members of the manifestation" ;
+  meld:endsWith IRI ?
+    // rdfs:comment "The element that ends this manifestation" ;
+  meld:measures IRI *
+    // rdfs:comment "Measure elements in this manifestation" ;
+  meld:notes IRI *
+    // rdfs:comment "Note elements in this manifestation" ;
+  meld:startsWith IRI ?
+    // rdfs:comment "The element that starts this manifestation" ;
+}
+
+# Shape for a Segment resource
+so:SegmentShape {
+  a [ so:Segment ]
+    // rdfs:comment "Defines the node as a Segment" ;
+  frbr:embodiment @meld:MEIManifestationShape ?
+    // rdfs:comment "The embodiment of this segment" ;
+  so:onSegmentLine IRI ?
+    // rdfs:comment "The segment line this segment belongs to" ;
+  meld:order xsd:string ?
+    // rdfs:comment "The order of this segment" ;
+} 
