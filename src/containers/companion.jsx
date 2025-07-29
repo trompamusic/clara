@@ -106,15 +106,15 @@ class Companion extends Component {
     console.log("Attempting to start traversal with ", this.props.uri, " with profile: ", this.props.userProfile);
     const params = {
       numHops:6,
-      objectPrefixWhitelist:[]
+      extendObjectPrefix:[]
     }
     if(this.props.userPOD) {
       // TODO: Handle case where userPod ends with a / or not.
       // If we are to load any resources from the external web,
       // e.g. MEI files or segmentations,
       // we must add them all to the whitelist!
-      params["objectPrefixWhitelist"] = [this.props.userPOD, ...params["objectPrefixWhitelist"], "https://clara.trompa-solid.upf.edu/"];
-      params["objectPrefixBlacklist"] = [
+      params["extendObjectPrefix"] = [this.props.userPOD, ...params["extendObjectPrefix"], "https://clara.trompa-solid.upf.edu/"];
+      params["ignoreObjectPrefix"] = [
           `${this.props.userPOD}at.ac.mdw.trompa/midi`,
           `${this.props.userPOD}at.ac.mdw.trompa/webmidi`,
           `${this.props.userPOD}at.ac.mdw.trompa/audio`,
