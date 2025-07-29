@@ -1,6 +1,13 @@
 declare module 'meld-clients-core/lib/actions';
 
 declare module 'meld-clients-core/lib/actions/index' {
+  export function setFetchFunction(fetch: any): {
+    type: string;
+    payload: {
+      fetch: any;
+    };
+  };
+
   export function scoreNextPageStatic(uri: string, currentPage: number, mei: any): {
     type: string;
     payload: {

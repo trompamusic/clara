@@ -25,7 +25,6 @@ export default function Perform() {
     let [searchParams] = useSearchParams();
     const { session, fetch } = useSolidAuth();
     const score = searchParams.get('score');
-    const inruptSession = getDefaultSession();
 
     // Use the LDO-based hook to get the user's main storage container
     const { mainContainerUri, isLoading, error } = useMainContainer();
@@ -45,12 +44,6 @@ export default function Perform() {
     if (error) {
         return <p>Error finding your storage location: {error}</p>
     }
-    console.log("fetch", fetch);
-    fetch(score).then(r => r.text()).then(text => {
-        console.log("text", text);
-    });
-    console.log("inruptSession", inruptSession);
-    console.log("session", session);
 
     if (mainContainerUri && score) {
         return <div>
