@@ -1,10 +1,11 @@
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {useSearchParams} from "react-router-dom";
 import { useSolidAuth } from "@ldo/solid-react";
 import Companion from "./companion";
-import {getStorageForUser} from "../util/clara";
+import { useMainContainer } from "../util/hooks";
 import WebMidiRecorder from "./WebMidiRecorder";
 import {useNavigate} from "react-router";
+import { getDefaultSession, fetch as solid_fetch } from '@inrupt/solid-client-authn-browser';
 
 
 function LinkToUpload({uri}: {uri: string}) {
@@ -22,27 +23,12 @@ function LinkToUpload({uri}: {uri: string}) {
  */
 export default function Perform() {
     let [searchParams] = useSearchParams();
-    let [storage, setStorage] = useState('');
     const { session, fetch } = useSolidAuth();
     const score = searchParams.get('score');
+    const inruptSession = getDefaultSession();
 
-    useEffect(() => {
-        let ignore = false;
-
-        async function getStorage() {
-            const storage = await getStorageForUser(session.webId!, fetch)
-            if (!ignore) {
-                setStorage(storage ? storage : '');
-            }
-        }
-
-        if (session.isLoggedIn) {
-            getStorage().catch(console.error);
-            return () => {
-                ignore = true;
-            };
-        }
-    }, [fetch, session.isLoggedIn, session.webId]);
+    // Use the LDO-based hook to get the user's main storage container
+    const { mainContainerUri, isLoading, error } = useMainContainer();
 
     if (!session.isLoggedIn) {
         return <p>Checking if you're logged in...</p>
@@ -52,14 +38,27 @@ export default function Perform() {
         return <p>Error: "score" parameter must be specified</p>
     }
 
-    if (storage !== "" && score) {
+    if (isLoading) {
+        return <p>Finding your storage location...</p>
+    }
+
+    if (error) {
+        return <p>Error finding your storage location: {error}</p>
+    }
+    console.log("fetch", fetch);
+    fetch(score).then(r => r.text()).then(text => {
+        console.log("text", text);
+    });
+    console.log("inruptSession", inruptSession);
+    console.log("session", session);
+
+    if (mainContainerUri && score) {
         return <div>
             <LinkToUpload uri={score} />
             <WebMidiRecorder score={score} />
-            <Companion uri={score} userPOD={storage} userProfile={session.webId!} fetch={fetch} />
+            <Companion uri={score} userPOD={mainContainerUri} userProfile={session.webId!} fetch={fetch} />
         </div>
-
     } else {
-        return <p>Finding your storage location...</p>
+        return <p>Unable to find your storage location</p>
     }
 }

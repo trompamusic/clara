@@ -1,0 +1,29 @@
+PREFIX dc: <http://purl.org/dc/terms/>
+PREFIX ldp: <http://www.w3.org/ns/ldp#>
+PREFIX posix: <http://www.w3.org/ns/posix/stat#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+# Shape for an LDP Container that can contain other resources
+ldp:ContainerShape {
+  a [ ldp:Container ldp:BasicContainer ldp:Resource ] ?
+    // rdfs:comment "Defines the node as an LDP Container" ;
+  dc:modified xsd:dateTime ?
+    // rdfs:comment "The last modification date of the container" ;
+  ldp:contains IRI *
+    // rdfs:comment "A list of resources contained within this container" ;
+  posix:mtime xsd:integer ?
+    // rdfs:comment "POSIX modification time as Unix timestamp" ;
+}
+
+# Shape for an LDP Resource (files within containers)
+ldp:ResourceShape {
+  a [ ldp:Resource ] ?
+    // rdfs:comment "Defines the node as an LDP Resource" ;
+  dc:modified xsd:dateTime ?
+    // rdfs:comment "The last modification date of the resource" ;
+  posix:mtime xsd:integer ?
+    // rdfs:comment "POSIX modification time as Unix timestamp" ;
+  posix:size xsd:integer ?
+    // rdfs:comment "Size of the resource in bytes" ;
+} 

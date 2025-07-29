@@ -1,10 +1,8 @@
 import React, {useEffect, useState, useCallback} from "react";
-import {createContainerAt, getSolidDataset, getThing, getUrl} from "@inrupt/solid-client";
-import {WS} from "@inrupt/vocab-solid-common";
-import {CLARA_CONTAINER_NAME} from "../config";
 import Api from "../util/api";
 import {useNavigate} from "react-router";
 import { useSolidAuth } from "@ldo/solid-react";
+import { useClaraContainer } from "../util/hooks";
 
 /**
  * Identifies if a user has set up their account
@@ -16,11 +14,12 @@ export default function Startup() {
     const [checkingPermission, setCheckingPermission] = useState(true);
     const [permissionError, setPermissionError] = useState(false);
     const [authUrl, setAuthUrl] = useState<string>();
-    const [isSettingUp, setIsSettingUp] = useState(false);
-    const {session, fetch} = useSolidAuth();
+    const {session} = useSolidAuth();
     const navigate = useNavigate();
 
     const webId = session.webId ?? "";
+
+    const { claraContainer, isLoading: claraLoading, error: claraError } = useClaraContainer();
 
     const setupUser = useCallback(async (ignore: boolean) => {
         try {
@@ -38,23 +37,6 @@ export default function Startup() {
                 setCheckingPermission(false);
                 return;
             }
-
-            // User has permission, now set up the container
-            setIsSettingUp(true);
-
-            // Create clara container
-            const dataset = await getSolidDataset(webId, { fetch: fetch });
-            const profileDoc = getThing(dataset, webId);
-            const storageUrl = getUrl(profileDoc!, WS.storage);
-            const claraStorageUrl = storageUrl + CLARA_CONTAINER_NAME;
-
-            try {
-                await createContainerAt(claraStorageUrl, {fetch: fetch});
-            } catch (e) {
-                // TODO: Identify this is a "412 precondition failed" error and ignore it, otherwise re-raise
-                console.log("Clara container already exists");
-            }
-
             if (!ignore) {
                 navigate(`/select`);
             }
@@ -64,7 +46,7 @@ export default function Startup() {
                 setCheckingPermission(false);
             }
         }
-    }, [webId, fetch, navigate]);
+    }, [webId, navigate]);
 
     useEffect(() => {
         if (session.isLoggedIn) {
@@ -76,6 +58,15 @@ export default function Startup() {
         }
     }, [session.isLoggedIn, setupUser]);
 
+    // Handle CLARA container errors
+    useEffect(() => {
+        if (claraError) {
+            console.error("CLARA container error:", claraError);
+            setPermissionError(true);
+            setCheckingPermission(false);
+        }
+    }, [claraError]);
+
     if (!session.isLoggedIn) {
         return <p>You must be logged in</p>
     }
@@ -84,7 +75,7 @@ export default function Startup() {
         return <p>Checking if you have let us store items in your Solid pod...</p>
     } else if (permissionError) {
         return <p>There was an error checking your permissions. We have been informed of the error and are looking into it</p>
-    } else if (isSettingUp) {
+    } else if (claraLoading) {
         return <p>Permission granted, setting up your workspace...</p>
     } else {
         let message = <>Please wait... retrieving authentication URL</>;
