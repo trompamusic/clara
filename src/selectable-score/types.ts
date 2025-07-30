@@ -1,6 +1,6 @@
-import { ReactNode, RefObject } from 'react';
-import DragSelect from 'dragselect';
-import Score from 'meld-clients-core/lib/containers/score';
+import { ReactNode, RefObject } from "react";
+import DragSelect from "dragselect";
+import Score from "meld-clients-core/lib/containers/score";
 
 export interface ScoreData {
   pageState: {

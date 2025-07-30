@@ -1,6 +1,6 @@
-declare module 'meld-clients-core/lib/actions';
+declare module "meld-clients-core/lib/actions";
 
-declare module 'meld-clients-core/lib/actions/index' {
+declare module "meld-clients-core/lib/actions/index" {
   export function setFetchFunction(fetch: any): {
     type: string;
     payload: {
@@ -8,7 +8,11 @@ declare module 'meld-clients-core/lib/actions/index' {
     };
   };
 
-  export function scoreNextPageStatic(uri: string, currentPage: number, mei: any): {
+  export function scoreNextPageStatic(
+    uri: string,
+    currentPage: number,
+    mei: any,
+  ): {
     type: string;
     payload: {
       uri: string;
@@ -17,7 +21,11 @@ declare module 'meld-clients-core/lib/actions/index' {
     };
   };
 
-  export function scorePrevPageStatic(uri: string, currentPage: number, mei: any): {
+  export function scorePrevPageStatic(
+    uri: string,
+    currentPage: number,
+    mei: any,
+  ): {
     type: string;
     payload: {
       uri: string;
@@ -31,7 +39,7 @@ declare module 'meld-clients-core/lib/actions/index' {
     motivation: string,
     body: any,
     target: string,
-    callback: (response: any) => void
+    callback: (response: any) => void,
   ): {
     type: string;
     payload: {
@@ -53,7 +61,7 @@ declare module 'meld-clients-core/lib/actions/index' {
       footer?: string;
       unit?: number;
       [key: string]: any;
-    }
+    },
   ): {
     type: string;
     payload: {
@@ -63,8 +71,8 @@ declare module 'meld-clients-core/lib/actions/index' {
   };
 }
 
-declare module 'meld-clients-core/lib/containers/score' {
-  import { Component } from 'react';
+declare module "meld-clients-core/lib/containers/score" {
+  import { Component } from "react";
 
   interface ScoreProps {
     uri: string;
@@ -85,7 +93,7 @@ declare module 'meld-clients-core/lib/containers/score' {
   export default Score;
 }
 
-declare module 'dragselect' {
+declare module "dragselect" {
   export interface DragSelectOptions {
     selectables?: Element[] | NodeListOf<Element>;
     area?: HTMLElement;

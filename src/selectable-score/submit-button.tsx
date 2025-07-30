@@ -1,8 +1,8 @@
-import React from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators, Dispatch } from 'redux';
-import { postAnnotation } from 'meld-clients-core/lib/actions/index';
-import { ScoreState } from './types';
+import React from "react";
+import { connect } from "react-redux";
+import { bindActionCreators, Dispatch } from "redux";
+import { postAnnotation } from "meld-clients-core/lib/actions/index";
+import { ScoreState } from "./types";
 
 interface SubmitButtonProps {
   submitUri: string;
@@ -19,7 +19,7 @@ interface DispatchProps {
     motivation: string,
     body: any,
     target: string,
-    callback: (response: any) => void
+    callback: (response: any) => void,
   ) => void;
 }
 
@@ -32,7 +32,7 @@ const SubmitButton: React.FC<Props> = ({
   buttonContent = "Submit",
   onResponse,
   disabled,
-  postAnnotation
+  postAnnotation,
 }) => {
   const defaultOnResponse = (resp: any) => {
     console.log("Received response: ", resp);
@@ -44,7 +44,7 @@ const SubmitButton: React.FC<Props> = ({
       "",
       submitHandler(submitHandlerArgs),
       "",
-      typeof onResponse === "function" ? onResponse : defaultOnResponse
+      typeof onResponse === "function" ? onResponse : defaultOnResponse,
     );
   };
 
@@ -66,9 +66,6 @@ const SubmitButton: React.FC<Props> = ({
 const mapStateToProps = () => ({});
 
 const mapDispatchToProps = (dispatch: Dispatch): DispatchProps =>
-  bindActionCreators(
-    { postAnnotation },
-    dispatch
-  );
+  bindActionCreators({ postAnnotation }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchToProps)(SubmitButton);
