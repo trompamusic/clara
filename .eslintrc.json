@@ -1,0 +1,68 @@
+{
+	"root": true,
+	"extends": [
+		"eslint:recommended",
+		"plugin:react/recommended",
+		"plugin:react-hooks/recommended"
+	],
+	"plugins": ["react", "react-hooks"],
+	"parserOptions": {
+		"ecmaVersion": 2020,
+		"sourceType": "module",
+		"ecmaFeatures": {
+			"jsx": true
+		}
+	},
+	"settings": {
+		"react": {
+			"version": "detect"
+		}
+	},
+	"rules": {
+		"react/react-in-jsx-scope": "off",
+		"react/prop-types": "off"
+	},
+	"overrides": [
+		{
+			"files": ["**/*.js", "**/*.jsx"],
+			"env": {
+				"browser": true,
+				"es2020": true
+			},
+			"parser": "@babel/eslint-parser",
+			"parserOptions": {
+				"ecmaVersion": 2020,
+				"sourceType": "module",
+				"ecmaFeatures": {
+					"jsx": true
+				},
+				"requireConfigFile": false,
+				"babelOptions": {
+					"presets": ["@babel/preset-react"]
+				}
+			}
+		},
+		{
+			"files": ["**/*.ts", "**/*.tsx"],
+			"env": {
+				"browser": true,
+				"es2020": true
+			},
+			"extends": [
+				"plugin:@typescript-eslint/recommended"
+			],
+			"parser": "@typescript-eslint/parser",
+			"parserOptions": {
+				"project": ["./tsconfig.json"]
+			},
+			"plugins": ["@typescript-eslint"],
+			"rules": {
+				"@typescript-eslint/ban-ts-comment": "off",
+				"@typescript-eslint/no-explicit-any": "off",
+				"@typescript-eslint/strict-boolean-expressions": "off",
+				"@typescript-eslint/no-non-null-assertion": "off"
+			}
+		}
+	],
+	"ignorePatterns": ["public/**/*", "build/**/*", "config-overrides.js"]
+}
