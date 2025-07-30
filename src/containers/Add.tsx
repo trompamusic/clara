@@ -7,7 +7,7 @@ import { getScoreDocument, getScoresForUser } from "../util/clara";
 import { useNavigate } from "react-router";
 
 export default function Add() {
-  let [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { session, fetch } = useSolidAuth();
   const url = searchParams.get("url");
   const navigate = useNavigate();

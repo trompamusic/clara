@@ -16,7 +16,7 @@ function localStorageMidiToBlob(midiString: string) {
   const parts = midiString.split(",");
   const buf = new ArrayBuffer(parts.length);
   const bufView = new Uint8Array(buf);
-  for (var i = 0; i < parts.length; i++) {
+  for (let i = 0; i < parts.length; i++) {
     bufView[i] = parseInt(parts[i]);
   }
   return new Blob([bufView], { type: "audio/midi" });
@@ -27,7 +27,7 @@ function localStorageMidiToBlob(midiString: string) {
  * @param midiEvents
  */
 function midiEventsArrayToMidiFile(midiEvents: any[]) {
-  let firstTimestamp = midiEvents[0].timeStamp;
+  const firstTimestamp = midiEvents[0].timeStamp;
   console.log("midiEventsJson: ", midiEvents);
   const trackNotes = midiEvents
     .map((e) => {
@@ -78,7 +78,7 @@ export default function WebMidiRecorder({ score }: { score: string }) {
         navigator.requestMIDIAccess({ sysex: false }).then(
           (midi: any) => {
             setMidiSupported(true);
-            let i = [];
+            const i = [];
             const inputs = midi.inputs.values();
             for (
               let input = inputs.next();

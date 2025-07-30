@@ -31,7 +31,7 @@ function LinkToUpload({ uri }: { uri: string }) {
  *  - Load the Clara interface, using the score that we downloaded to the user's pod
  */
 export default function Perform() {
-  let [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { session, fetch } = useSolidAuth();
   const score = searchParams.get("score");
 

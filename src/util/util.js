@@ -27,14 +27,14 @@ export function convertCoords(elem) {
 export function closestClef(noteid) {
   let clef;
   const note = document.querySelector("#" + noteid);
-  if (!!!note) {
+  if (!note) {
     console.warn("closestClef called with non-existant note id: ", noteid);
     return null;
   }
   const staff = note.closest(".staff");
   const staves = Array.from(document.querySelectorAll(".staff"));
 
-  if (!!staff) {
+  if (staff) {
     let check = false;
     let found = false;
     // walk backwards through the staves until we hit one with clef(s)
@@ -57,7 +57,7 @@ export function closestClef(noteid) {
               clef = c;
             }
           });
-          if (!!clef) {
+          if (clef) {
             found = true;
           }
         }

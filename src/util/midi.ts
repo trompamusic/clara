@@ -66,7 +66,7 @@ export function jsonMidiToSequenceProto(midiMessages: any): NoteSequence {
   );
 
   let firstNoteOffset = null;
-  let noteOnTimes = {};
+  const noteOnTimes = {};
   for (const note of midiMessages) {
     const messageType = note.data.messageType;
     const eventTimestamp = note.timestamp / 1000;

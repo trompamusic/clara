@@ -489,7 +489,7 @@ export default class ErrorRibbonVis extends Component {
                       const clef = closestClef(
                         contextNoteElements[0].getAttribute("id"),
                       );
-                      if (!!clef) {
+                      if (clef) {
                         const insertedNoteY =
                           this.determineInsertedNoteYPosition(inserted, clef);
                         //const contextNoteCoords = convertCoords(contextNoteElements[0].querySelector(".notehead"));
@@ -504,7 +504,7 @@ export default class ErrorRibbonVis extends Component {
                             .reduce((a, b) => a + b) /
                           contextNoteElements.length;
 
-                        if (!!insertedNoteY) {
+                        if (insertedNoteY) {
                           console.log("ADDING", inserted);
                           inpaintElements = [
                             ...inpaintElements,

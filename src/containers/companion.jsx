@@ -294,7 +294,7 @@ class Companion extends Component {
         this.scoreComponent.current,
       ).querySelector(".scorepane");
       //  reflect the mode (pageView vs featureVis) onto the scorepane
-      if (!!scorepane) {
+      if (scorepane) {
         // if scorepane has rendered...
         let modes = ["pageView", "featureVis"];
         scorepane.classList.remove(...modes);

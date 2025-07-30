@@ -8,7 +8,7 @@ import { useNavigate } from "react-router";
 export default function UploadWait() {
   const fetcher = (url: string) => Api.swrQuery(url);
 
-  let [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const task = searchParams.get("task");
   const score = searchParams.get("score");

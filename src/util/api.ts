@@ -34,7 +34,7 @@ class Api {
   };
 
   alignMidi = (profile: string, score: string, file: Blob) => {
-    let data = new FormData();
+    const data = new FormData();
 
     data.append("file", file);
     data.append("midi_type", "midi");
@@ -47,7 +47,7 @@ class Api {
   };
 
   alignWebMidi = (profile: string, score: string, webMidi: string) => {
-    let data = new FormData();
+    const data = new FormData();
 
     const blob = new Blob([webMidi], { type: "application/json" });
 

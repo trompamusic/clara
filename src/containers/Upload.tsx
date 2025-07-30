@@ -4,7 +4,7 @@ import { useSolidAuth } from "@ldo/solid-react";
 import UploadDropzone from "./UploadDropzone";
 
 export default function Upload() {
-  let [searchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { session } = useSolidAuth();
   const score = searchParams.get("score");
 

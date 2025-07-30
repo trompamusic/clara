@@ -32,7 +32,7 @@ export default function ScoreSelector() {
   const [userUrl, setUserUrl] = useState("");
   const [userScores, setUserScores] = useState<ScoreOption[]>([]);
   const [loadingScores, setLoadingScores] = useState(true);
-  let navigate = useNavigate();
+  const navigate = useNavigate();
   const { session, fetch } = useSolidAuth();
 
   const loadUrl = (url: string) => {
