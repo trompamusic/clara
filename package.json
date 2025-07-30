@@ -7,7 +7,8 @@
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
     "build-dev": "babel src --out-dir lib --source-maps inline",
-    "build:ldo": "ldo build --input src/.shapes --output src/.ldo"
+    "build:ldo": "ldo build --input src/.shapes --output src/.ldo",
+    "prepare": "husky install"
   },
   "proxy": "http://localhost:8000",
   "author": "David M. Weigl, IWK, University of Music and Performing Arts Vienna",
@@ -25,7 +26,9 @@
     "eslint": "^8.57.1",
     "eslint-plugin-react": "^7.37.5",
     "globals": "^16.3.0",
+    "husky": "^9.1.7",
     "jsdom": "^8.1.0",
+    "lint-staged": "^16.1.2",
     "mocha": "^7.1.1",
     "prettier": "3.6.2",
     "react-app-rewired": "^2.2.1",
@@ -97,5 +100,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": "eslint --cache --fix",
+    "*.{js,jsx,ts,tsx,css,md}": "prettier --write"
   }
 }

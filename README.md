@@ -10,15 +10,14 @@ CLARA is implemented as a MELD application; see http://github.com/oerc-music/mel
 
 Documentation to follow.
 
-This project has received funding from the European Union's Horizon 2020 research and innovation programme H2020-EU.3.6.3.1. - Study European heritage, memory, identity, integration and cultural interaction and translation, including its representations in cultural and scientific collections, archives and museums, to better inform and understand the present by richer interpretations of the past under grant agreement No 770376. 
-
+This project has received funding from the European Union's Horizon 2020 research and innovation programme H2020-EU.3.6.3.1. - Study European heritage, memory, identity, integration and cultural interaction and translation, including its representations in cultural and scientific collections, archives and museums, to better inform and understand the present by richer interpretations of the past under grant agreement No 770376.
 
 ## Local development
 
 This application works in parallel with [`trompa-align`](https://github.com/trompamusic/trompa-align), you need to also set up
-that project 
+that project
 
-We use the `"proxy"` flag in package.json to seamlessly send API requests to trompa-align. In development the default setup 
+We use the `"proxy"` flag in package.json to seamlessly send API requests to trompa-align. In development the default setup
 should work, but if you run trompa-align in a different location then you may need to change this.
 
 In order to provide a seamless experience to users, we take advantage of Solid [Client ID Documents](https://solidproject.org/TR/oidc#clientids-document). This means that there must be a public URL pointing to the document. Follow the instructions
