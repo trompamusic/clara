@@ -20,7 +20,7 @@ interface MidiPlayerProps {
 }
 
 export const MidiPlayer = forwardRef<PlayerElement, MidiPlayerProps>(
-  ({ url, onNote }: MidiPlayerProps, ref) => {
+  ({ url }: MidiPlayerProps, ref) => {
     const { session, fetch } = useSolidAuth();
     const [notes, setNotes] = useState<NoteSequence | null>(null);
 
@@ -72,3 +72,4 @@ export const MidiPlayer = forwardRef<PlayerElement, MidiPlayerProps>(
     );
   },
 );
+MidiPlayer.displayName = "MidiPlayer";

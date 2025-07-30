@@ -27,7 +27,6 @@ export default function AddWait() {
   useEffect(() => {
     if (data && data.status === "ok") {
       navigate(`/perform?score=${data.container}`);
-    } else if (data && data.status === "pending") {
     } else if (data) {
       setError(data.error);
     } else if (queryError) {

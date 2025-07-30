@@ -18,7 +18,7 @@ export default class TempoCurveVis extends Component {
   componentDidMount() {
     console.log("tempo mounted with props ", this.props);
   }
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (
       "currentQstamp" in prevProps &&
       prevProps.currentQstamp !== this.props.currentQstamp
@@ -55,7 +55,7 @@ export default class TempoCurveVis extends Component {
 
   setPointsPerTimeline() {
     let pointsPerTimeline = {};
-    this.props.timelinesToVis.forEach((tl, ix) => {
+    this.props.timelinesToVis.forEach((tl) => {
       let scoretimeArray = Object.keys(this.props.instantsByScoretime[tl]).sort(
         (a, b) => {
           return parseFloat(a) - parseFloat(b);

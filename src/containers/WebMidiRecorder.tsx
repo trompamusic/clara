@@ -59,7 +59,7 @@ function midiEventsArrayToMidiFile(midiEvents: any[]) {
 export default function WebMidiRecorder({ score }: { score: string }) {
   const { session } = useSolidAuth();
   const webId = session.webId ?? "";
-  const [midiIn, setMidiIn] = useState([]);
+  const [setMidiIn] = useState([]);
   const [uploadError, setUploadError] = useState(false);
   const [midiSupported, setMidiSupported] = useState(false);
   const [midiEvents, setMidiEvents] = useState<any[]>([]);

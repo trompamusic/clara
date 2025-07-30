@@ -11,7 +11,7 @@ import { PerformanceShapeShapeType } from "../.ldo/performance.shapeTypes";
 import { useClaraContainer } from "./hooks";
 import { WS } from "@inrupt/vocab-solid-common";
 import { CLARA_CONTAINER_NAME } from "../config";
-import { LDP, SKOS } from "@inrupt/lit-generated-vocab-common";
+import { LDP } from "@inrupt/lit-generated-vocab-common";
 
 export const getStorageForUser = async (
   webId: string,

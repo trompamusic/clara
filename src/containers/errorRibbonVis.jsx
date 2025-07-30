@@ -30,7 +30,7 @@ export default class ErrorRibbonVis extends Component {
     //this.props.setErrorRibbonReady(false);
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     // if(//Object.keys(prevProps.timemapByNoteId) < Object.keys(this.props.timemapByNoteId) ||
     //"instantsByScoretimeLastModified" in prevProps &&
     // prevProps.instantsByScoretimeLastModified !== this.props.instantsByScoretimeLastModified) {
@@ -208,8 +208,7 @@ export default class ErrorRibbonVis extends Component {
         Object.values(inserted)[0][
           "http://purl.org/vocab/frbr/core#embodimentOf"
         ],
-      )[0]
-      ["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", "");
+      )[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", "");
     const insertedPitchComponents = /([A-G])([sb]?)(\d)/.exec(insertedPitch);
     const insertedPitchName = insertedPitchComponents[1];
     const insertedPitchAccid = insertedPitchComponents[2];
@@ -516,10 +515,7 @@ export default class ErrorRibbonVis extends Component {
                                     Object.values(inserted)[0][
                                       "http://purl.org/vocab/frbr/core#embodimentOf"
                                     ],
-                                  )[0]
-                                  [
-                                    "@id"
-                                  ].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
+                                  )[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
                               closestPredecessorScoretime.qstamp,
                               tl,
                               contextNoteAverageX,
@@ -535,10 +531,7 @@ export default class ErrorRibbonVis extends Component {
                                   Object.values(inserted)[0][
                                     "http://purl.org/vocab/frbr/core#embodimentOf"
                                   ],
-                                )[0]
-                                [
-                                  "@id"
-                                ].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
+                                )[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
                             ),
                           ];
                         }

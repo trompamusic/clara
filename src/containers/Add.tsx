@@ -19,7 +19,7 @@ export default function Add() {
 
       getScoresForUser(session.webId!, fetch).then((scores) => {
         scores.filter((score_url) => {
-          return getScoreDocument(score_url, fetch).then((doc) => {
+          return getScoreDocument(score_url, fetch).then(() => {
             // TODO: Get score document and check if it's the same as the one we're trying to add
           });
         });

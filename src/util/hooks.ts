@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLdo, useResource, useSolidAuth } from "@ldo/solid-react";
 import { ContainerUri } from "@ldo/solid";
 import { CLARA_CONTAINER_NAME } from "../config";
@@ -103,7 +103,7 @@ export function useMainContainer() {
  * Wraps useMainContainer and provides CLARA-specific functionality
  */
 export function useClaraContainer() {
-  const { mainContainer, mainContainerUri, isLoading, error } =
+  const { mainContainerUri, isLoading, error } =
     useMainContainer();
   const { getResource } = useLdo();
   const [claraContainerUri, setClaraContainerUri] = useState<

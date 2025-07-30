@@ -2,7 +2,6 @@ import React from "react";
 import { connect } from "react-redux";
 import { bindActionCreators, Dispatch } from "redux";
 import { postAnnotation } from "meld-clients-core/lib/actions/index";
-import { ScoreState } from "./types";
 
 interface SubmitButtonProps {
   submitUri: string;

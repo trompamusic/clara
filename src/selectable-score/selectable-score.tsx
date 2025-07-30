@@ -6,7 +6,6 @@ import { scoreSetOptions } from "meld-clients-core/lib/actions/index";
 import DragSelect from "dragselect";
 import { fetch } from "@inrupt/solid-client-authn-browser";
 import {
-  ScoreData,
   ScoreState,
   SelectableScoreProps,
   VrvOptions,

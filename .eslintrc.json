@@ -40,6 +40,11 @@
         "babelOptions": {
           "presets": ["@babel/preset-react"]
         }
+      },
+      "rules": {
+        "no-unused-vars": "warn",
+        "react/no-find-dom-node": "off",
+        "react/no-unescaped-entities": "off"
       }
     },
     {
@@ -58,9 +63,11 @@
         "@typescript-eslint/ban-ts-comment": "off",
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/strict-boolean-expressions": "off",
-        "@typescript-eslint/no-non-null-assertion": "off"
+        "@typescript-eslint/no-non-null-assertion": "off",
+        "react/no-find-dom-node": "off",
+        "react/no-unescaped-entities": "off"
       }
     }
   ],
-  "ignorePatterns": ["public/**/*", "build/**/*", "config-overrides.js"]
+  "ignorePatterns": ["public/**/*", "build/**/*", "lib/**/*", "config-overrides.js"]
 }

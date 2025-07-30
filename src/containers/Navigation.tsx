@@ -82,7 +82,6 @@ function LoginButton() {
 
 export default function Navigation() {
   const { session, logout } = useSolidAuth();
-  const webId = session.webId;
   const webIdResource = useResource(session.webId);
   const profile = useSubject(SolidProfileShapeShapeType, session.webId);
 

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router";
 import Api from "../util/api";
 
 export default function UploadDropzone({ score }: { score: string }) {
-  const { session, fetch } = useSolidAuth();
+  const { session } = useSolidAuth();
   const navigate = useNavigate();
   const webId = session.webId ?? "";
 

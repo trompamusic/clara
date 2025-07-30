@@ -23,7 +23,6 @@ export default function UploadWait() {
   useEffect(() => {
     if (data && data.status === "ok") {
       window.open(`/perform?score=${score}`, "_self");
-    } else if (data && data.status === "pending") {
     } else if (data) {
       setError(data.error);
     } else if (queryError) {

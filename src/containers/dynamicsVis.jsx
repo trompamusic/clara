@@ -25,7 +25,7 @@ export default class DynamicsVis extends Component {
    *    - Draw points and lines to previous lowest and highest per layer
    */
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     if (
       "currentQstamp" in prevProps &&
       prevProps.currentQstamp !== this.props.currentQstamp
@@ -71,7 +71,7 @@ export default class DynamicsVis extends Component {
         },
       );
       // for each scoretime (qtime)
-      scoretimeArray.forEach((qt, qt_ix) => {
+      scoretimeArray.forEach((qt) => {
         // extract the corresponding timeline instants
         const instantsAtQt = this.props.instantsByScoretime[tl][qt];
         let performedNoteElementsAtQt = [];
@@ -120,7 +120,7 @@ export default class DynamicsVis extends Component {
         // Our x-coords should in each case be the average x-coord of the staff / layer's note elements at this qtime
         // y-coords should correspond to min/max velocity (per staff, or per staff-layer)
         Object.keys(instantsByQtStaffLayer).forEach((staffId) => {
-          Object.keys(instantsByQtStaffLayer[staffId]).forEach((layerId) => {
+          Object.keys(instantsByQtStaffLayer[staffId]).forEach(() => {
             // pull out and flatten note elements within the staff's layers:
             const staffNoteElements = Object.keys(
               noteElementsByQtStaffLayer[staffId],

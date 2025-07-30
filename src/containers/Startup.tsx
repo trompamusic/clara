@@ -20,7 +20,6 @@ export default function Startup() {
   const webId = session.webId ?? "";
 
   const {
-    claraContainer,
     isLoading: claraLoading,
     error: claraError,
   } = useClaraContainer();

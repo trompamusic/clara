@@ -124,7 +124,7 @@ class FeatureVis extends Component {
     });
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps) {
     //if(prevProps.notesOnPage[0] !== this.props.notesOnPage[0]
     if (
       prevProps.latestScoreUpdateTimestamp <

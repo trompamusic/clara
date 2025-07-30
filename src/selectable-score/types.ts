@@ -1,6 +1,5 @@
-import { ReactNode, RefObject } from "react";
+import { ReactNode } from "react";
 import DragSelect from "dragselect";
-import Score from "meld-clients-core/lib/containers/score";
 
 export interface ScoreData {
   pageState: {
@@ -9,7 +8,7 @@ export interface ScoreData {
     };
   };
   MEI: {
-    [key: string]: any; // Replace with more specific MEI type if available
+    [key: string]: any;
   };
   SVG: Record<string, any>;
   vrvTk?: any;

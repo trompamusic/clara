@@ -5,10 +5,6 @@ import Companion from "./companion";
 import { useMainContainer } from "../util/hooks";
 import WebMidiRecorder from "./WebMidiRecorder";
 import { useNavigate } from "react-router";
-import {
-  getDefaultSession,
-  fetch as solid_fetch,
-} from "@inrupt/solid-client-authn-browser";
 
 function LinkToUpload({ uri }: { uri: string }) {
   const navigate = useNavigate();
