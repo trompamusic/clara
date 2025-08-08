@@ -44,7 +44,10 @@
       "rules": {
         "no-unused-vars": "warn",
         "react/no-find-dom-node": "off",
-        "react/no-unescaped-entities": "off"
+        "react/no-unescaped-entities": "off",
+        "react/no-string-refs": "warn",
+        "react/no-direct-mutation-state": "warn",
+        "prefer-const": "off"
       }
     },
     {
@@ -65,7 +68,10 @@
         "@typescript-eslint/strict-boolean-expressions": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "react/no-find-dom-node": "off",
-        "react/no-unescaped-entities": "off"
+        "react/no-unescaped-entities": "off",
+        "react/no-string-refs": "warn",
+        "react/no-direct-mutation-state": "warn",
+        "prefer-const": "off"
       }
     }
   ],
