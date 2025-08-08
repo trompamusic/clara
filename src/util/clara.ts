@@ -1,63 +1,13 @@
-import {
-  getSolidDataset,
-  getThing,
-  getUrl,
-  getUrlAll,
-} from "@inrupt/solid-client";
-import { useResource, useSubject } from "@ldo/solid-react";
+import { useResource, useSubject, useLdo } from "@ldo/solid-react";
 import { ContainerShapeShapeType } from "../.ldo/container.shapeTypes";
 import { ScoreShapeShapeType } from "../.ldo/score.shapeTypes";
-import { PerformanceShapeShapeType } from "../.ldo/performance.shapeTypes";
 import { useClaraContainer } from "./hooks";
-import { WS } from "@inrupt/vocab-solid-common";
-import { CLARA_CONTAINER_NAME } from "../config";
-import { LDP } from "@inrupt/lit-generated-vocab-common";
-
-export const getStorageForUser = async (
-  webId: string,
-  fetch: any,
-): Promise<string | null> => {
-  console.log(`Getting storage for user ${webId}`);
-  const dataset = await getSolidDataset(webId, { fetch });
-  const profileDoc = getThing(dataset, webId);
-  return getUrl(profileDoc!, WS.storage);
-};
-
-export const getScoresForUser = async (
-  webId: string,
-  fetch: any,
-): Promise<string[]> => {
-  const storageUrl = await getStorageForUser(webId, fetch);
-  const claraScoreContainerUrl = storageUrl + CLARA_CONTAINER_NAME + "scores/";
-  return getSolidDataset(claraScoreContainerUrl, { fetch })
-    .then((performanceDataset) => {
-      const performanceDoc = getThing(
-        performanceDataset,
-        claraScoreContainerUrl,
-      );
-      return getUrlAll(performanceDoc!, LDP.contains);
-    })
-    .catch(() => {
-      return [];
-    });
-};
-
-export const getScoreDocument = async (url: string, fetch: any) => {
-  try {
-    const dataset = await getSolidDataset(url, { fetch });
-    return getThing(dataset, url);
-  } catch (e) {
-    console.log(`Error getting score document ${url}`);
-    console.log(e);
-    // TODO: This could be an HTTP 500 error, mostly from NFS errors on the server.
-    return null;
-  }
-};
+import { useState, useEffect } from "react";
 
 /**
  * Get the scores container for a user
  */
-export const useScoresForUser = () => {
+export const useClaraScoresForUser = () => {
   const { claraContainer } = useClaraContainer();
 
   // Get the scores container within CLARA
@@ -75,7 +25,7 @@ export const useScoresForUser = () => {
   return {
     scoresContainer,
     scoresContainerData,
-    scores: scoresContainerData?.contains || [],
+    scores: scoresContainerData?.contains,
     isLoading:
       scoresContainer && "isReading" in scoresContainer
         ? scoresContainer.isReading()
@@ -92,7 +42,7 @@ export const useScoresForUser = () => {
 /**
  * Hook to get a specific score document
  */
-export const useScoreDocument = (scoreUrl: string | undefined) => {
+export const useClaraScore = (scoreUrl: string | undefined) => {
   const scoreResource = useResource(scoreUrl);
   const scoreData = useSubject(ScoreShapeShapeType, scoreUrl);
 
@@ -111,29 +61,251 @@ export const useScoreDocument = (scoreUrl: string | undefined) => {
 };
 
 /**
- * Hook to get performance from a score
+ * Hook to download all scores in a container for inspection/analysis
+ * Uses imperative methods from useLdo to avoid hook rules violations
  */
-export const usePerformanceFromScore = (scoreUrl: string | undefined) => {
-  const { scoreData } = useScoreDocument(scoreUrl);
+export const useScoresForInspection = () => {
+  const {
+    scores,
+    isLoading: containerLoading,
+    error: containerError,
+  } = useClaraScoresForUser();
+  const { getResource, getSubject } = useLdo();
 
-  // Get the related performance URI
-  const performanceUri = scoreData?.related?.["@id"];
-  const performanceResource = useResource(performanceUri);
-  const performanceData = useSubject(PerformanceShapeShapeType, performanceUri);
+  const [scoreDataResults, setScoreDataResults] = useState<
+    Array<{
+      scoreUrl: string;
+      scoreData: any;
+      isLoading: boolean;
+      error: string | null;
+    }>
+  >([]);
+  const [isDownloading, setIsDownloading] = useState(true);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  // Download all scores when the container data finishes loading
+  useEffect(() => {
+    const downloadAllScores = async () => {
+      // Convert LdSet to array of URLs
+      const scoreUrls: string[] = [];
+      if (scores) {
+        scores.forEach((scoreItem) => {
+          const scoreUrl = scoreItem["@id"];
+          if (scoreUrl) {
+            scoreUrls.push(scoreUrl);
+          }
+        });
+      }
+
+      // Reset error state
+      setDownloadError(null);
+
+      // Only proceed if the container has finished loading and we have URLs
+      if (containerLoading || scoreUrls.length === 0) {
+        setScoreDataResults([]);
+        setIsDownloading(false);
+        return;
+      }
+
+      try {
+        const results = await Promise.all(
+          scoreUrls.map(async (scoreUrl) => {
+            try {
+              // Use imperative methods that can be called in loops
+              const scoreResource = getResource(scoreUrl);
+              const scoreData = getSubject(ScoreShapeShapeType, scoreUrl);
+
+              return {
+                scoreUrl,
+                scoreData,
+                isLoading: false,
+                error: null,
+              };
+            } catch (error) {
+              return {
+                scoreUrl,
+                scoreData: null,
+                isLoading: false,
+                error: error instanceof Error ? error.message : "Unknown error",
+              };
+            }
+          }),
+        );
+
+        setScoreDataResults(results);
+      } catch (error) {
+        setDownloadError(
+          error instanceof Error ? error.message : "Unknown error",
+        );
+      } finally {
+        setIsDownloading(false);
+      }
+    };
+
+    downloadAllScores();
+  }, [containerLoading, getResource, getSubject]);
+
+  // Check if any individual score is still loading
+  const anyScoreLoading = scoreDataResults.some((result) => result.isLoading);
+
+  // Check if any individual score has an error
+  const anyScoreError = scoreDataResults.find((result) => result.error);
+  const error = anyScoreError
+    ? anyScoreError.error
+    : containerError || downloadError;
+
+  // Filter out scores that failed to load
+  const validScores = scoreDataResults.filter(
+    (result) => result.scoreData && !result.error,
+  );
 
   return {
-    performanceResource,
-    performanceData,
-    performanceUri,
-    isLoading:
-      performanceResource && "isReading" in performanceResource
-        ? performanceResource.isReading()
-        : false,
-    error:
-      performanceResource &&
-      "status" in performanceResource &&
-      performanceResource.status.isError
-        ? performanceResource.status.message
-        : null,
+    scores: validScores.map((result) => result.scoreData), // Return actual score data
+    scoreDataResults, // Detailed results for debugging
+    isLoading: containerLoading || isDownloading || anyScoreLoading,
+    error,
+    totalScores: scores?.size || 0,
+    downloadedCount: validScores.length,
+    failedCount: scoreDataResults.length - validScores.length,
+  };
+};
+
+/**
+ * Hook to check if a specific score URL exists in the container
+ * Uses batch loading to reduce server load and cancels pending requests when match is found
+ */
+export const useScoreExists = (targetUrl: string | null) => {
+  const { scores, isLoading, error } = useClaraScoresForUser();
+  const { getResource, getSubject } = useLdo();
+
+  const [exists, setExists] = useState<boolean | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+  const [checkError, setCheckError] = useState<string | null>(null);
+  const [checkedCount, setCheckedCount] = useState(0);
+
+  // Check scores in batches and exit early when match is found
+  useEffect(() => {
+    // Handle null URL case
+    if (targetUrl === null) {
+      setExists(false);
+      setCheckedCount(0);
+      setCheckError("true");
+      setIsChecking(false);
+      return;
+    }
+
+    // Handle empty scores case
+    if (!targetUrl || !scores || scores.size === 0) {
+      setExists(false);
+      setCheckedCount(0);
+      setCheckError(null);
+      setIsChecking(false);
+      return;
+    }
+
+    const checkScoresInBatches = async () => {
+      setIsChecking(true);
+      setCheckError(null);
+      setCheckedCount(0);
+
+      // Convert LdSet to array of URLs
+      const scoreUrls: string[] = [];
+      scores.forEach((scoreItem) => {
+        const scoreUrl = scoreItem["@id"];
+        if (scoreUrl) {
+          scoreUrls.push(scoreUrl);
+        }
+      });
+
+      const BATCH_SIZE = 5;
+      let found = false;
+      let abortController: AbortController | null = null;
+
+      try {
+        // Process scores in batches
+        for (let i = 0; i < scoreUrls.length && !found; i += BATCH_SIZE) {
+          const batch = scoreUrls.slice(i, i + BATCH_SIZE);
+          abortController = new AbortController();
+
+          const batchPromises = batch.map(async (scoreUrl, batchIndex) => {
+            const globalIndex = i + batchIndex;
+
+            try {
+              if (abortController?.signal.aborted) {
+                throw new Error("Aborted");
+              }
+
+              // Get score data
+              const scoreResource = getResource(scoreUrl);
+              const scoreData = getSubject(ScoreShapeShapeType, scoreUrl);
+
+              if (abortController?.signal.aborted) {
+                throw new Error("Aborted");
+              }
+
+              const publishedAsUri = scoreData?.publishedAs?.["@id"];
+              if (!publishedAsUri) {
+                return { found: false, index: globalIndex };
+              }
+
+              if (publishedAsUri === targetUrl) {
+                return { found: true, index: globalIndex };
+              }
+
+              return { found: false, index: globalIndex };
+            } catch (error) {
+              if (error instanceof Error && error.message === "Aborted") {
+                throw error; // Re-throw abort errors
+              }
+              return { found: false, index: globalIndex, error: true };
+            }
+          });
+
+          // Wait for batch to complete
+          const batchResults = await Promise.all(batchPromises);
+
+          // Update checked count
+          const newCheckedCount = Math.min(i + batch.length, scoreUrls.length);
+          setCheckedCount(newCheckedCount);
+
+          // Check if we found a match in this batch
+          const matchResult = batchResults.find((result) => result.found);
+          if (matchResult) {
+            found = true;
+            setExists(true);
+            // Abort any remaining operations
+            abortController?.abort();
+            break;
+          }
+        }
+
+        // If we get here, no match was found
+        if (!found) {
+          setExists(false);
+        }
+      } catch (error) {
+        if (error instanceof Error && error.message === "Aborted") {
+          // Don't set error for aborted operations
+          return;
+        }
+        console.error(
+          `❌ useScoreExists: Error during batch processing:`,
+          error,
+        );
+        setCheckError(error instanceof Error ? error.message : "Unknown error");
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkScoresInBatches();
+  }, [targetUrl, scores, getResource, getSubject]);
+
+  return {
+    exists: exists ?? false,
+    isLoading: isLoading || isChecking,
+    error: error || checkError,
+    totalScores: scores?.size || 0,
+    checkedScores: checkedCount,
   };
 };

@@ -14,15 +14,12 @@ export default function Startup() {
   const [checkingPermission, setCheckingPermission] = useState(true);
   const [permissionError, setPermissionError] = useState(false);
   const [authUrl, setAuthUrl] = useState<string>();
-  const { session } = useSolidAuth();
+  const { session, ranInitialAuthCheck } = useSolidAuth();
   const navigate = useNavigate();
 
   const webId = session.webId ?? "";
 
-  const {
-    isLoading: claraLoading,
-    error: claraError,
-  } = useClaraContainer();
+  const { isLoading: claraLoading, error: claraError } = useClaraContainer();
 
   const setupUser = useCallback(
     async (ignore: boolean) => {
