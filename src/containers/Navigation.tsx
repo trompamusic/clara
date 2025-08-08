@@ -86,7 +86,7 @@ export default function Navigation() {
   const profile = useSubject(SolidProfileShapeShapeType, session.webId);
 
   let loggedInName: string;
-  if (webIdResource?.type === "InvalidIdentifierResouce") {
+  if (webIdResource?.type === "InvalidIdentifierResource") {
     loggedInName = session.webId || "Unknown";
   } else if (webIdResource?.isReading && webIdResource.isReading()) {
     loggedInName = "loading...";

@@ -53,7 +53,7 @@ export function useMainContainer() {
         const webIdResource = getResource(session.webId!);
 
         // Check if the resource is valid
-        if (webIdResource.type === "InvalidIdentifierResouce") {
+        if (webIdResource.type === "InvalidIdentifierResource") {
           setError("Invalid WebId resource");
           setIsLoading(false);
           return;
@@ -103,8 +103,7 @@ export function useMainContainer() {
  * Wraps useMainContainer and provides CLARA-specific functionality
  */
 export function useClaraContainer() {
-  const { mainContainerUri, isLoading, error } =
-    useMainContainer();
+  const { mainContainerUri, isLoading, error } = useMainContainer();
   const { getResource } = useLdo();
   const [claraContainerUri, setClaraContainerUri] = useState<
     ContainerUri | undefined

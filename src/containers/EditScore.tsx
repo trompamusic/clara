@@ -403,7 +403,7 @@ const EditScore: FunctionComponent = () => {
   }
 
   // Check if there was an error loading the score
-  if (scoreResource?.type === "InvalidIdentifierResouce" || !score) {
+  if (scoreResource?.type === "InvalidIdentifierResource" || !score) {
     return (
       <div className="container mt-4">
         <div className="alert alert-danger">
