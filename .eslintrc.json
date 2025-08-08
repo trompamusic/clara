@@ -3,7 +3,8 @@
   "extends": [
     "eslint:recommended",
     "plugin:react/recommended",
-    "plugin:react-hooks/recommended"
+    "plugin:react-hooks/recommended",
+    "prettier"
   ],
   "plugins": ["react", "react-hooks"],
   "parserOptions": {
@@ -56,7 +57,7 @@
         "browser": true,
         "es2020": true
       },
-      "extends": ["plugin:@typescript-eslint/recommended"],
+      "extends": ["plugin:@typescript-eslint/recommended", "prettier"],
       "parser": "@typescript-eslint/parser",
       "parserOptions": {
         "project": ["./tsconfig.json"]
