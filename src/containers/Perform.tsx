@@ -1,7 +1,7 @@
 import React from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSolidAuth } from "@ldo/solid-react";
-import Companion from "./companion";
+import Companion from "./companion/Companion";
 import { useMainContainer } from "../util/hooks";
 import WebMidiRecorder from "./WebMidiRecorder";
 import { useNavigate } from "react-router";

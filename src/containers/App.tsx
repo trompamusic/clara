@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import React from "react";
 import RouterError from "./RouterError";
 import Layout from "./Layout";
-import Companion from "./companion";
+import Companion from "./companion/Companion";
 import Startup from "./Startup";
 import Perform from "./Perform";
 import ScoreSelector from "./ScoreSelector";

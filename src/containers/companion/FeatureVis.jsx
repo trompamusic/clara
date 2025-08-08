@@ -1,10 +1,10 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import TempoCurveVis from "./tempoCurveVis";
-import ErrorRibbonVis from "./errorRibbonVis";
-import DynamicsVis from "./dynamicsVis";
-import ZoomBox from "./zoomBox";
+import TempoCurveVis from "./TempoCurveVis";
+import ErrorRibbonVis from "./ErrorRibbonVis";
+import DynamicsVis from "./DynamicsVis";
+import ZoomBox from "./ZoomBox";
 
 class FeatureVis extends Component {
   constructor(props) {

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { closestClef, convertCoords } from "../util/util";
+import { closestClef, convertCoords } from "../../util/util";
 
 const padding = 0.1; // proportion of ribbon reserved for whitespace
 const errorIndicatorHeight = 20; // currently in pixels -- perhaps make a proportion instead?
@@ -208,7 +208,8 @@ export default class ErrorRibbonVis extends Component {
         Object.values(inserted)[0][
           "http://purl.org/vocab/frbr/core#embodimentOf"
         ],
-      )[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", "");
+      )[0]
+      ["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", "");
     const insertedPitchComponents = /([A-G])([sb]?)(\d)/.exec(insertedPitch);
     const insertedPitchName = insertedPitchComponents[1];
     const insertedPitchAccid = insertedPitchComponents[2];
@@ -515,7 +516,10 @@ export default class ErrorRibbonVis extends Component {
                                     Object.values(inserted)[0][
                                       "http://purl.org/vocab/frbr/core#embodimentOf"
                                     ],
-                                  )[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
+                                  )[0]
+                                  [
+                                    "@id"
+                                  ].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
                               closestPredecessorScoretime.qstamp,
                               tl,
                               contextNoteAverageX,
@@ -531,7 +535,10 @@ export default class ErrorRibbonVis extends Component {
                                   Object.values(inserted)[0][
                                     "http://purl.org/vocab/frbr/core#embodimentOf"
                                   ],
-                                )[0]["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
+                                )[0]
+                                [
+                                  "@id"
+                                ].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
                             ),
                           ];
                         }

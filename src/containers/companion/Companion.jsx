@@ -3,9 +3,9 @@ import ReactDOM from "react-dom";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 
-import SelectableScore from "../selectable-score/selectable-score";
-import NextPageButton from "../selectable-score/next-page-button";
-import PrevPageButton from "../selectable-score/prev-page-button";
+import SelectableScore from "../../selectable-score/selectable-score";
+import NextPageButton from "../../selectable-score/next-page-button";
+import PrevPageButton from "../../selectable-score/prev-page-button";
 
 import {
   traverse,
@@ -22,7 +22,7 @@ import {
   tickTimedResource,
 } from "meld-clients-core/lib/actions/index";
 
-import FeatureVis from "./featureVis";
+import FeatureVis from "./FeatureVis";
 import { MidiPlayer } from "./MidiPlayer";
 
 const vrvOptionsPageView = {
