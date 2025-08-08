@@ -1,6 +1,7 @@
 import React, { forwardRef, useEffect, useState } from "react";
 import { blobToNoteSequence, NoteSequence } from "@magenta/music";
 import { useSolidAuth } from "@ldo/solid-react";
+import { useAuthentication } from "../../util/hooks";
 import { PlayerElement } from "html-midi-player";
 import { createComponent, EventName } from "@lit-labs/react";
 
@@ -22,12 +23,13 @@ interface MidiPlayerProps {
 export const MidiPlayer = forwardRef<PlayerElement, MidiPlayerProps>(
   ({ url }: MidiPlayerProps, ref) => {
     const { session, fetch } = useSolidAuth();
+    const { isAuthenticated, isLoading } = useAuthentication();
     const [notes, setNotes] = useState<NoteSequence | null>(null);
 
     useEffect(() => {
       let ignore = false;
 
-      if (session.isLoggedIn && url) {
+      if (isAuthenticated && url) {
         // This is the same as magenta's urlToNoteSequence, but uses an authenticated SOLID fetch
         fetch(url)
           .then((response) => {
@@ -45,10 +47,14 @@ export const MidiPlayer = forwardRef<PlayerElement, MidiPlayerProps>(
           ignore = true;
         };
       }
-    }, [url, session.isLoggedIn, fetch]);
+    }, [url, isAuthenticated, fetch]);
 
-    if (!session.isLoggedIn) {
-      return <p>waiting to log in...</p>;
+    if (isLoading) {
+      return <p>Checking authentication...</p>;
+    }
+
+    if (!isAuthenticated) {
+      return <p>You must be logged in to play MIDI files</p>;
     }
 
     if (!notes) {

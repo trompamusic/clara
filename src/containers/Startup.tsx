@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Api from "../util/api";
-import { useNavigate } from "react-router";
-import { useSolidAuth } from "@ldo/solid-react";
+import { useNavigate, useLocation } from "react-router";
+import { useAuthentication } from "../util/hooks";
 import { useClaraContainer } from "../util/hooks";
 
 /**
@@ -14,52 +14,44 @@ export default function Startup() {
   const [checkingPermission, setCheckingPermission] = useState(true);
   const [permissionError, setPermissionError] = useState(false);
   const [authUrl, setAuthUrl] = useState<string>();
-  const { session, ranInitialAuthCheck } = useSolidAuth();
+  const { isAuthenticated, isLoading, webId } = useAuthentication();
   const navigate = useNavigate();
-
-  const webId = session.webId ?? "";
+  const location = useLocation();
 
   const { isLoading: claraLoading, error: claraError } = useClaraContainer();
 
-  const setupUser = useCallback(
-    async (ignore: boolean) => {
-      try {
-        // Check permissions first
-        const permissionData = await Api.checkUserPermissions(webId);
+  const setupUser = useCallback(async () => {
+    try {
+      // Check permissions first
+      const permissionData = await Api.checkUserPermissions(webId || "");
 
-        if (ignore) return;
-
-        if (permissionData.has_permission === false) {
-          // No permission, get auth URL
-          const authData = await Api.getBackendAuthenticationUrl(webId, "/");
-          if (!ignore) {
-            setAuthUrl(authData.auth_url);
-          }
-          setCheckingPermission(false);
-          return;
-        }
-        if (!ignore) {
-          navigate(`/select`);
-        }
-      } catch (e) {
-        if (!ignore) {
-          setPermissionError(true);
-          setCheckingPermission(false);
-        }
+      if (permissionData.has_permission === false) {
+        // No permission, get auth URL
+        const currentPath = `${location.pathname}${location.search}` || "/";
+        const authData = await Api.getBackendAuthenticationUrl(
+          webId || "",
+          currentPath,
+        );
+        setAuthUrl(authData.auth_url);
+        setCheckingPermission(false);
+        return;
       }
-    },
-    [webId, navigate],
-  );
+      // This interacts with Layout.tsx to redirect to /select if the user accessed / initially
+      //  (and didn't get here due to a solid auth flow)
+      window.dispatchEvent(new Event("clara:permissions-ok"));
+      setCheckingPermission(false);
+    } catch (e) {
+      setPermissionError(true);
+      setCheckingPermission(false);
+    }
+  }, [webId, navigate, location.pathname, location.search]);
 
   useEffect(() => {
-    if (session.isLoggedIn) {
-      let ignore = false;
-      setupUser(ignore);
-      return () => {
-        ignore = true;
-      };
+    // Only proceed if the user is authenticated (logged in and auth check completed)
+    if (isAuthenticated) {
+      setupUser();
     }
-  }, [session.isLoggedIn, setupUser]);
+  }, [isAuthenticated, setupUser]);
 
   // Handle CLARA container errors
   useEffect(() => {
@@ -70,7 +62,11 @@ export default function Startup() {
     }
   }, [claraError]);
 
-  if (!session.isLoggedIn) {
+  if (isLoading) {
+    return <p>Checking authentication...</p>;
+  }
+
+  if (!isAuthenticated) {
     return <p>You must be logged in</p>;
   }
 

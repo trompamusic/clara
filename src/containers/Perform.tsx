@@ -2,7 +2,7 @@ import React from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSolidAuth } from "@ldo/solid-react";
 import Companion from "./companion/Companion";
-import { useMainContainer } from "../util/hooks";
+import { useAuthentication, useMainContainer } from "../util/hooks";
 import WebMidiRecorder from "./WebMidiRecorder";
 import { useNavigate } from "react-router";
 
@@ -29,20 +29,31 @@ function LinkToUpload({ uri }: { uri: string }) {
 export default function Perform() {
   const [searchParams] = useSearchParams();
   const { session, fetch } = useSolidAuth();
+  const {
+    isAuthenticated,
+    isLoading: authLoading,
+    webId,
+  } = useAuthentication();
   const score = searchParams.get("score");
+  const {
+    mainContainerUri,
+    isLoading: containerLoading,
+    error,
+  } = useMainContainer();
 
-  // Use the LDO-based hook to get the user's main storage container
-  const { mainContainerUri, isLoading, error } = useMainContainer();
+  if (authLoading) {
+    return <p>Checking authentication...</p>;
+  }
 
-  if (!session.isLoggedIn) {
-    return <p>Checking if you're logged in...</p>;
+  if (!isAuthenticated) {
+    return <p>You must be logged in</p>;
   }
 
   if (!score) {
     return <p>Error: "score" parameter must be specified</p>;
   }
 
-  if (isLoading) {
+  if (containerLoading) {
     return <p>Finding your storage location...</p>;
   }
 
@@ -58,7 +69,7 @@ export default function Perform() {
         <Companion
           uri={score}
           userPOD={mainContainerUri}
-          userProfile={session.webId!}
+          userProfile={webId!}
           fetch={fetch}
         />
       </div>

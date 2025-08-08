@@ -3,6 +3,26 @@ import { useLdo, useResource, useSolidAuth } from "@ldo/solid-react";
 import { ContainerUri } from "@ldo/solid";
 import { CLARA_CONTAINER_NAME } from "../config";
 
+/**
+ * Hook to get the authentication state and handle if the library is still checking authentication
+ *
+ * @returns {Object} Authentication state
+ * @returns {boolean} isAuthenticated - true if user is logged in and auth check is complete
+ * @returns {boolean} isLoading - true if authentication is still being checked
+ * @returns {boolean} isLoggedIn - true if user is logged in (regardless of auth check status)
+ * @returns {string|null} webId - the user's webId if logged in
+ */
+export function useAuthentication() {
+  const { session, ranInitialAuthCheck } = useSolidAuth();
+
+  return {
+    isAuthenticated: session.isLoggedIn && ranInitialAuthCheck,
+    isLoading: !ranInitialAuthCheck,
+    isLoggedIn: session.isLoggedIn,
+    webId: session.webId,
+  };
+}
+
 export function useInterval(callback: () => any, delay: number) {
   const savedCallback = useRef();
 
