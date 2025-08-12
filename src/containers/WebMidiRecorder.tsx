@@ -91,29 +91,26 @@ export default function WebMidiRecorder({ score }: { score: string }) {
               );
               i.push(input.value);
             }
-            // @ts-ignore
-            setMidiIn(i);
           },
           (err: any) => console.log("Something went wrong", err),
         );
       } else {
         console.warn("Browser does not support WebMIDI");
+        setMidiSupported(false);
       }
     }
   }, []);
 
   function handleMidiMessage(mes: any) {
-    if (mes.data.length === 1 && mes.data[0] === 254) {
-      // ignore keep-alive (active sense) message
+    const [status] = mes.data;
+    // Only handle note on (0x90) and note off (0x80) events
+    if (status !== 144 && status !== 128) {
       return;
     }
-    console.log("RAW MIDI MESSAGE: ", mes.data);
-    // @ts-ignore
     setMidiEvents((midiEvents) => [
       ...midiEvents,
       { data: mes.data, timeStamp: mes.timeStamp },
     ]);
-    //setUploadError(false);
   }
 
   // Track MIDI events and start / end rehearsal rendition recordings based on them
