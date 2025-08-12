@@ -98,6 +98,114 @@ button.active {
   max-height: 230px;
 }
 
+/* MIDI Recorder Styles */
+.midi-status {
+  margin: 15px 0;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.midi-header {
+  background-color: #f8f9fa;
+  padding: 12px 15px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  transition: background-color 0.2s ease;
+}
+
+.midi-header:hover {
+  background-color: #e9ecef;
+}
+
+.midi-header-text {
+  font-weight: 600;
+  color: #495057;
+}
+
+.midi-header-arrow {
+  color: #6c757d;
+  font-size: 0.8em;
+  transition: transform 0.2s ease;
+}
+
+.midi-content {
+  padding: 15px;
+  background-color: white;
+}
+
+.device-select-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #495057;
+}
+
+.device-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.device-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.selected-device-info {
+  background-color: #f8f9fa;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.selected-device-info p {
+  margin: 5px 0;
+  font-size: 0.9em;
+  color: #495057;
+}
+
+.loading-spinner {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-style: italic;
+}
+
+.isRecording {
+  color: #d32f2f;
+  font-weight: bold;
+  animation: pulse 1.5s infinite;
+}
+
+.isNotRecording {
+  color: #666;
+  font-style: italic;
+}
+
+.noDeviceSelected {
+  color: #dc3545;
+  font-weight: bold;
+  background-color: #f8d7da;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #f5c6cb;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
 #instantBoundingBoxes {
   position: absolute;
 }
@@ -428,3 +536,5 @@ line.dynamicsConnector.active{
   stroke-width: 2;
   stroke-opacity: .7;
 }
+
+
