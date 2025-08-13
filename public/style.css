@@ -121,6 +121,12 @@ button.active {
   background-color: #e9ecef;
 }
 
+.midi-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
 .midi-header-text {
   font-weight: 600;
   color: #495057;
@@ -178,12 +184,6 @@ button.active {
   padding: 20px;
   color: #666;
   font-style: italic;
-}
-
-.isRecording {
-  color: #d32f2f;
-  font-weight: bold;
-  animation: pulse 1.5s infinite;
 }
 
 .isNotRecording {
@@ -536,5 +536,80 @@ line.dynamicsConnector.active{
   stroke-width: 2;
   stroke-opacity: .7;
 }
+
+.midi-header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.midi-status-indicator {
+  font-size: 0.9em;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.recording-status {
+  color: #dc3545;
+}
+
+.recording-status .emoji {
+  animation: pulse 1.5s infinite;
+}
+
+.elapsed-time {
+  background-color: rgba(220, 53, 69, 0.2);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-family: monospace;
+  font-weight: 600;
+  margin-left: 8px;
+  border: 1px solid rgba(220, 53, 69, 0.5);
+  color: #dc3545;
+  display: inline-block;
+  min-width: 45px;
+  text-align: center;
+}
+
+.ready-status {
+  color: #28a745;
+}
+
+
+
+.countdown-status {
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.countdown-time {
+  background-color: rgba(108, 117, 125, 0.1);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-family: monospace;
+  font-weight: 600;
+  margin-left: 8px;
+  border: 1px solid rgba(108, 117, 125, 0.3);
+  color: #6c757d;
+}
+
+
+
+.saved-recording-indicator {
+  color: #ffc107;
+  font-weight: 500;
+  background-color: #fff3cd;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+}
+
+
+
+
 
 

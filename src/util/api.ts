@@ -33,13 +33,27 @@ class Api {
     });
   };
 
-  alignMidi = (profile: string, score: string, file: Blob) => {
+  alignMidi = (
+    profile: string,
+    score: string,
+    file: Blob,
+    label?: string,
+    expansion?: string,
+  ) => {
     const data = new FormData();
 
     data.append("file", file);
     data.append("midi_type", "midi");
     data.append("score", score);
     data.append("profile", profile);
+
+    if (label) {
+      data.append("label", label);
+    }
+
+    if (expansion) {
+      data.append("expansion", expansion);
+    }
 
     return this.client.post("/api/align", data).then((result) => {
       return result.data;

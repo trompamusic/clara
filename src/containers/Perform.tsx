@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useSolidAuth } from "@ldo/solid-react";
 import Companion from "./companion/Companion";
 import { useAuthentication, useMainContainer } from "../util/hooks";
-import WebMidiRecorder from "./WebMidiRecorder";
+import WebMidiRecorder from "./midi-recorder";
 import { useNavigate } from "react-router";
 
 function LinkToUpload({ uri }: { uri: string }) {
@@ -66,7 +66,7 @@ export default function Perform() {
     return (
       <div>
         <LinkToUpload uri={score} />
-        <WebMidiRecorder score={score} />
+        <WebMidiRecorder score={score} expansionOptions={[]} />
         <Companion
           uri={score}
           userPOD={mainContainerUri}
