@@ -75,6 +75,11 @@ export const useScoreExists = (targetUrl: string | null) => {
 
   // Check scores in batches and exit early when match is found
   useEffect(() => {
+    // Don't start checking until we have the scores loaded (or confirmed empty/error)
+    if (isLoading && !error) {
+      return; // Still loading scores, don't do anything yet
+    }
+
     // Handle null URL case
     if (targetUrl === null) {
       setExists(false);
@@ -84,11 +89,11 @@ export const useScoreExists = (targetUrl: string | null) => {
       return;
     }
 
-    // Handle empty scores case
-    if (!targetUrl || !scores || scores.size === 0) {
+    // Handle empty scores case or error from useClaraScoresForUser
+    if (!targetUrl || error || !scores || scores.size === 0) {
       setExists(false);
       setCheckedCount(0);
-      setCheckError(null);
+      setCheckError(error);
       setIsChecking(false);
       return;
     }
@@ -189,7 +194,7 @@ export const useScoreExists = (targetUrl: string | null) => {
     };
 
     checkScoresInBatches();
-  }, [targetUrl, scores, getResource, getSubject]);
+  }, [targetUrl, scores, isLoading, error, getResource, getSubject]);
 
   return {
     exists: exists ?? false,

@@ -13,6 +13,10 @@ export default function Add() {
   const navigate = useNavigate();
   const { exists, isLoading: scoreLoading, error } = useScoreExists(url);
 
+  if (!url) {
+    return <p>Error: You need to specify the "url" param</p>;
+  }
+
   if (isLoading) {
     return <p>Checking authentication...</p>;
   }
@@ -21,11 +25,15 @@ export default function Add() {
     return <p>You must be logged in</p>;
   }
 
-  if (!exists && !scoreLoading && !error && url && isAuthenticated) {
-    Api.addScore(url, webId!).then((data) => {
-      navigate(`/addwait?task=${data.task_id}`);
-    });
-  } else {
+  if (scoreLoading) {
+    return <p>Checking if score exists...</p>;
+  }
+
+  if (error) {
+    return <p>Error checking score: {error}</p>;
+  }
+
+  if (exists) {
     return (
       <p>
         Score already exists, not adding:
@@ -35,9 +43,10 @@ export default function Add() {
     );
   }
 
-  if (!url) {
-    return <p>Error: You need to specify the "url" param</p>;
-  }
+  // If we get here, score doesn't exist and we should add it
+  Api.addScore(url, webId!).then((data) => {
+    navigate(`/addwait?task=${data.task_id}`);
+  });
 
-  return <p>Loading {url}</p>;
+  return <p>Adding score: {url}</p>;
 }
