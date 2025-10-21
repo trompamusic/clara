@@ -133,7 +133,7 @@ class Companion extends Component {
       params["extendObjectPrefix"] = [
         this.props.userPOD,
         ...params["extendObjectPrefix"],
-        "https://clara.trompa-solid.upf.edu/",
+        "https://clara.solidcommunity.net/",
       ];
       params["ignoreObjectPrefix"] = [
         `${this.props.userPOD}at.ac.mdw.trompa/midi`,

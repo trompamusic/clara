@@ -16,8 +16,8 @@ import UploadWait from "./UploadWait";
 import EditScore from "./EditScore";
 
 const publicPerformanceCollection =
-  "https://clara.trompa-solid.upf.edu/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld";
-const publicUserProfile = "https://clara.trompa-solid.upf.edu/profile/card#me";
+  "https://clara.solidcommunity.net/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld";
+const publicUserProfile = "https://clara.solidcommunity.net/profile/card#me";
 
 const router = createBrowserRouter([
   {
@@ -58,7 +58,7 @@ const router = createBrowserRouter([
         element: (
           <Companion
             uri={publicPerformanceCollection}
-            userPOD={`https://clara.trompa-solid.upf.edu/`}
+            userPOD={`https://clara.solidcommunity.net/`}
             userProfile={publicUserProfile}
             demo
           />
