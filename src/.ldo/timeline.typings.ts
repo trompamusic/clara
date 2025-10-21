@@ -7,9 +7,9 @@ import { LdoJsonldContext, LdSet } from "@ldo/ldo";
  */
 
 /**
- * TimelineShape Type
+ * Timeline Type
  */
-export interface TimelineShape {
+export interface Timeline {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**
@@ -21,9 +21,9 @@ export interface TimelineShape {
 }
 
 /**
- * InstantShape Type
+ * Instant Type
  */
-export interface InstantShape {
+export interface Instant {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**
@@ -59,9 +59,9 @@ export interface InstantShape {
 }
 
 /**
- * AnnotationShape Type
+ * Annotation Type
  */
-export interface AnnotationShape {
+export interface Annotation {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**
@@ -89,9 +89,9 @@ export interface AnnotationShape {
 }
 
 /**
- * TargetShape Type
+ * Target Type
  */
-export interface TargetShape {
+export interface Target {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**

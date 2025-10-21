@@ -1,7 +1,7 @@
 import { ShapeType } from "@ldo/ldo";
 import { containerSchema } from "./container.schema";
 import { containerContext } from "./container.context";
-import { ContainerShape, ResourceShape } from "./container.typings";
+import { Container, Resource } from "./container.typings";
 
 /**
  * =============================================================================
@@ -10,18 +10,18 @@ import { ContainerShape, ResourceShape } from "./container.typings";
  */
 
 /**
- * ContainerShape ShapeType
+ * Container ShapeType
  */
-export const ContainerShapeShapeType: ShapeType<ContainerShape> = {
+export const ContainerShapeType: ShapeType<Container> = {
   schema: containerSchema,
   shape: "http://www.w3.org/ns/ldp#ContainerShape",
   context: containerContext,
 };
 
 /**
- * ResourceShape ShapeType
+ * Resource ShapeType
  */
-export const ResourceShapeShapeType: ShapeType<ResourceShape> = {
+export const ResourceShapeType: ShapeType<Resource> = {
   schema: containerSchema,
   shape: "http://www.w3.org/ns/ldp#ResourceShape",
   context: containerContext,

@@ -7,9 +7,9 @@ import { LdoJsonldContext, LdSet } from "@ldo/ldo";
  */
 
 /**
- * PerformanceShape Type
+ * Performance Type
  */
-export interface PerformanceShape {
+export interface Performance {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**
@@ -45,9 +45,9 @@ export interface PerformanceShape {
 }
 
 /**
- * SignalShape Type
+ * Signal Type
  */
-export interface SignalShape {
+export interface Signal {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**
@@ -71,13 +71,13 @@ export interface SignalShape {
   /**
    * The time interval for this signal
    */
-  time?: IntervalShape;
+  time?: Interval;
 }
 
 /**
- * IntervalShape Type
+ * Interval Type
  */
-export interface IntervalShape {
+export interface Interval {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**

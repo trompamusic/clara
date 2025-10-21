@@ -7,9 +7,9 @@ import { LdoJsonldContext, LdSet } from "@ldo/ldo";
  */
 
 /**
- * ContainerShape Type
+ * Container Type
  */
-export interface ContainerShape {
+export interface Container {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**
@@ -43,9 +43,9 @@ export interface ContainerShape {
 }
 
 /**
- * ResourceShape Type
+ * Resource Type
  */
-export interface ResourceShape {
+export interface Resource {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**

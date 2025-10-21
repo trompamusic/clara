@@ -7,9 +7,9 @@ import { LdoJsonldContext, LdSet } from "@ldo/ldo";
  */
 
 /**
- * SegmentLineShape Type
+ * SegmentLine Type
  */
-export interface SegmentLineShape {
+export interface SegmentLine {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**
@@ -21,9 +21,9 @@ export interface SegmentLineShape {
 }
 
 /**
- * MEIManifestationShape Type
+ * MEIManifestation Type
  */
-export interface MEIManifestationShape {
+export interface MEIManifestation {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**
@@ -70,9 +70,9 @@ export interface MEIManifestationShape {
 }
 
 /**
- * SegmentShape Type
+ * Segment Type
  */
-export interface SegmentShape {
+export interface Segment {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**
@@ -84,7 +84,7 @@ export interface SegmentShape {
   /**
    * The embodiment of this segment
    */
-  embodiment?: MEIManifestationShape;
+  embodiment?: MEIManifestation;
   /**
    * The segment line this segment belongs to
    */

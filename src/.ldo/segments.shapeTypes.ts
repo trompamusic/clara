@@ -1,11 +1,7 @@
 import { ShapeType } from "@ldo/ldo";
 import { segmentsSchema } from "./segments.schema";
 import { segmentsContext } from "./segments.context";
-import {
-  SegmentLineShape,
-  MEIManifestationShape,
-  SegmentShape,
-} from "./segments.typings";
+import { SegmentLine, MEIManifestation, Segment } from "./segments.typings";
 
 /**
  * =============================================================================
@@ -14,28 +10,27 @@ import {
  */
 
 /**
- * SegmentLineShape ShapeType
+ * SegmentLine ShapeType
  */
-export const SegmentLineShapeShapeType: ShapeType<SegmentLineShape> = {
+export const SegmentLineShapeType: ShapeType<SegmentLine> = {
   schema: segmentsSchema,
   shape: "http://www.linkedmusic.org/ontologies/segment/SegmentLineShape",
   context: segmentsContext,
 };
 
 /**
- * MEIManifestationShape ShapeType
+ * MEIManifestation ShapeType
  */
-export const MEIManifestationShapeShapeType: ShapeType<MEIManifestationShape> =
-  {
-    schema: segmentsSchema,
-    shape: "https://meld.linkedmusic.org/terms/MEIManifestationShape",
-    context: segmentsContext,
-  };
+export const MEIManifestationShapeType: ShapeType<MEIManifestation> = {
+  schema: segmentsSchema,
+  shape: "https://meld.linkedmusic.org/terms/MEIManifestationShape",
+  context: segmentsContext,
+};
 
 /**
- * SegmentShape ShapeType
+ * Segment ShapeType
  */
-export const SegmentShapeShapeType: ShapeType<SegmentShape> = {
+export const SegmentShapeType: ShapeType<Segment> = {
   schema: segmentsSchema,
   shape: "http://www.linkedmusic.org/ontologies/segment/SegmentShape",
   context: segmentsContext,

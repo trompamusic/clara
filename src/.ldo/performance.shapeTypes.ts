@@ -1,11 +1,7 @@
 import { ShapeType } from "@ldo/ldo";
 import { performanceSchema } from "./performance.schema";
 import { performanceContext } from "./performance.context";
-import {
-  PerformanceShape,
-  SignalShape,
-  IntervalShape,
-} from "./performance.typings";
+import { Performance, Signal, Interval } from "./performance.typings";
 
 /**
  * =============================================================================
@@ -14,27 +10,27 @@ import {
  */
 
 /**
- * PerformanceShape ShapeType
+ * Performance ShapeType
  */
-export const PerformanceShapeShapeType: ShapeType<PerformanceShape> = {
+export const PerformanceShapeType: ShapeType<Performance> = {
   schema: performanceSchema,
   shape: "http://purl.org/ontology/mo/PerformanceShape",
   context: performanceContext,
 };
 
 /**
- * SignalShape ShapeType
+ * Signal ShapeType
  */
-export const SignalShapeShapeType: ShapeType<SignalShape> = {
+export const SignalShapeType: ShapeType<Signal> = {
   schema: performanceSchema,
   shape: "http://purl.org/ontology/mo/SignalShape",
   context: performanceContext,
 };
 
 /**
- * IntervalShape ShapeType
+ * Interval ShapeType
  */
-export const IntervalShapeShapeType: ShapeType<IntervalShape> = {
+export const IntervalShapeType: ShapeType<Interval> = {
   schema: performanceSchema,
   shape: "http://purl.org/NET/c4dm/timeline.owl#IntervalShape",
   context: performanceContext,

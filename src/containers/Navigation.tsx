@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 import { Button } from "react-bootstrap";
 import React, { useState } from "react";
 import { useResource, useSolidAuth, useSubject } from "@ldo/solid-react";
-import { SolidProfileShapeShapeType } from "../.ldo/solidProfile.shapeTypes";
+import { SolidProfileShapeType } from "../.ldo/solidProfile.shapeTypes";
 
 const providers = {
   inrupt: "https://login.inrupt.com",
@@ -84,7 +84,7 @@ function LoginButton() {
 export default function Navigation() {
   const { session, logout } = useSolidAuth();
   const webIdResource = useResource(session.webId);
-  const profile = useSubject(SolidProfileShapeShapeType, session.webId);
+  const profile = useSubject(SolidProfileShapeType, session.webId);
 
   let loggedInName: string;
   if (webIdResource?.type === "InvalidIdentifierResource") {

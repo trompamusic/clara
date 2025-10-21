@@ -1,10 +1,10 @@
 import React, { FunctionComponent, useMemo, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useResource, useSubject, useLdo } from "@ldo/solid-react";
-import { ScoreShapeShapeType } from "../.ldo/score.shapeTypes";
+import { ScoreShapeType } from "../.ldo/score.shapeTypes";
 import {
-  PerformanceShapeShapeType,
-  SignalShapeShapeType,
+  PerformanceShapeType,
+  SignalShapeType,
 } from "../.ldo/performance.shapeTypes";
 import { Button, Table } from "react-bootstrap";
 
@@ -15,14 +15,11 @@ const PerformanceRow: FunctionComponent<{
   isDeleting: boolean;
 }> = ({ performance, onDelete, isDeleting }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const performanceData = useSubject(
-    PerformanceShapeShapeType,
-    performance.uri,
-  );
+  const performanceData = useSubject(PerformanceShapeType, performance.uri);
 
   // Get the signal data if available
   const signalUri = performanceData?.recordedAs?.["@id"];
-  const signalData = useSubject(SignalShapeShapeType, signalUri || undefined);
+  const signalData = useSubject(SignalShapeType, signalUri || undefined);
 
   // Extract audio and MIDI URLs from signal data
   const audioUrl = signalData?.availableAs?.["@id"];
@@ -111,15 +108,12 @@ const EditScore: FunctionComponent = () => {
 
   // Get the score resource and data using LDO
   const scoreResource = useResource(scoreUri || undefined);
-  const score = useSubject(ScoreShapeShapeType, scoreUri || undefined);
+  const score = useSubject(ScoreShapeType, scoreUri || undefined);
 
   // Get related performances if available
   const performancesUri = score?.related?.["@id"];
   const performancesResource = useResource(performancesUri || undefined);
-  const performances = useSubject(
-    ScoreShapeShapeType,
-    performancesUri || undefined,
-  );
+  const performances = useSubject(ScoreShapeType, performancesUri || undefined);
 
   // Fetch performances when the performances container is available
   React.useEffect(() => {

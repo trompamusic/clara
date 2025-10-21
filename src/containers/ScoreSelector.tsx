@@ -3,9 +3,15 @@ import { Col, Form, Row } from "react-bootstrap";
 import { Button } from "react-bootstrap";
 import { BiLinkExternal, BiEdit } from "react-icons/bi";
 
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useNavigate } from "react-router";
-import { useClaraScore, useClaraScoresForUser } from "../util/clara";
+import {
+  useClaraScore,
+  useClaraScoresForUser,
+  useScoresMapping,
+} from "../util/clara";
+import { useAuthentication } from "../util/hooks";
+import Api from "../util/api";
 
 import _scores from "../scores.json";
 const scores = _scores as ScoreOption[];
@@ -62,14 +68,41 @@ function SingleScore({ score }: { score: string }) {
  */
 export default function ScoreSelector() {
   const [userUrl, setUserUrl] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { webId, isAuthenticated } = useAuthentication();
 
   const { scores: userScores, isLoading: loadingScores } =
     useClaraScoresForUser();
 
-  const loadUrl = (url: string) => {
-    navigate(`/add?url=${url}`);
-  };
+  const { items: mappedScores } = useScoresMapping();
+
+  const handleAdd = useCallback(
+    async (url: string) => {
+      if (!isAuthenticated || !webId) {
+        setMessage("You must be logged in");
+        return;
+      }
+      setMessage(null);
+      setIsSubmitting(true);
+      try {
+        if (mappedScores.includes(url)) {
+          setMessage("Score already exists; not adding.");
+          setIsSubmitting(false);
+          return;
+        }
+        const data = await Api.addScore(url, webId);
+        navigate(`/addwait?task=${data.task_id}`);
+      } catch (e) {
+        setMessage("Error adding score. Please try again.");
+        setIsSubmitting(false);
+      }
+    },
+    [isAuthenticated, webId, navigate, mappedScores],
+  );
 
   return (
     <Row>
@@ -92,7 +125,15 @@ export default function ScoreSelector() {
                           href={`/add?url=${url.url}`}
                           onClick={(e) => {
                             e.preventDefault();
-                            loadUrl(url.url);
+                            setUserUrl(url.url);
+                            if (inputRef.current) {
+                              inputRef.current.scrollIntoView({
+                                behavior: "smooth",
+                                block: "center",
+                              });
+                              setTimeout(() => inputRef.current?.focus(), 300);
+                            }
+                            handleAdd(url.url);
                           }}
                         >
                           {url.name || score.name}
@@ -120,10 +161,11 @@ export default function ScoreSelector() {
         <p>or</p>
         <h3>Load an MEI URL</h3>
         <Form
+          ref={formRef}
           onSubmit={(e) => {
             e.preventDefault();
             if (userUrl && userUrl !== "") {
-              loadUrl(userUrl);
+              handleAdd(userUrl);
             }
           }}
         >
@@ -134,28 +176,22 @@ export default function ScoreSelector() {
                 placeholder="Enter URL"
                 value={userUrl}
                 onChange={(e) => setUserUrl(e.target.value)}
+                ref={inputRef}
               />
             </Col>
             <Col xs="auto">
-              <Button
-                variant="primary"
-                type="submit"
-                onClick={() => {
-                  if (userUrl && userUrl !== "") {
-                    loadUrl(userUrl);
-                  }
-                }}
-              >
-                Load
+              <Button variant="primary" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Adding..." : "Add"}
               </Button>
             </Col>
           </Row>
         </Form>
+        {message && <p>{message}</p>}
         <p>or</p>
         <h3>Load a previous score that you have performed</h3>
         <ul>
           {loadingScores && <li>Loading...</li>}
-          {userScores?.map((score) => {
+          {userScores?.map((score: any) => {
             return (
               <li key={score["@id"]}>
                 <SingleScore score={score["@id"]} />

@@ -1,7 +1,7 @@
 import { ShapeType } from "@ldo/ldo";
 import { scoreSchema } from "./score.schema";
 import { scoreContext } from "./score.context";
-import { ScoreShape, PublishedScoreShape } from "./score.typings";
+import { Score, PublishedScore } from "./score.typings";
 
 /**
  * =============================================================================
@@ -10,18 +10,18 @@ import { ScoreShape, PublishedScoreShape } from "./score.typings";
  */
 
 /**
- * ScoreShape ShapeType
+ * Score ShapeType
  */
-export const ScoreShapeShapeType: ShapeType<ScoreShape> = {
+export const ScoreShapeType: ShapeType<Score> = {
   schema: scoreSchema,
   shape: "http://purl.org/ontology/mo/ScoreShape",
   context: scoreContext,
 };
 
 /**
- * PublishedScoreShape ShapeType
+ * PublishedScore ShapeType
  */
-export const PublishedScoreShapeShapeType: ShapeType<PublishedScoreShape> = {
+export const PublishedScoreShapeType: ShapeType<PublishedScore> = {
   schema: scoreSchema,
   shape: "http://purl.org/ontology/mo/PublishedScoreShape",
   context: scoreContext,

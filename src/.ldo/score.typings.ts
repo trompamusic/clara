@@ -7,9 +7,9 @@ import { LdoJsonldContext, LdSet } from "@ldo/ldo";
  */
 
 /**
- * ScoreShape Type
+ * Score Type
  */
-export interface ScoreShape {
+export interface Score {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**
@@ -43,9 +43,9 @@ export interface ScoreShape {
 }
 
 /**
- * PublishedScoreShape Type
+ * PublishedScore Type
  */
-export interface PublishedScoreShape {
+export interface PublishedScore {
   "@id"?: string;
   "@context"?: LdoJsonldContext;
   /**

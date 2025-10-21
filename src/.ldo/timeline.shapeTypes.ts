@@ -1,12 +1,7 @@
 import { ShapeType } from "@ldo/ldo";
 import { timelineSchema } from "./timeline.schema";
 import { timelineContext } from "./timeline.context";
-import {
-  TimelineShape,
-  InstantShape,
-  AnnotationShape,
-  TargetShape,
-} from "./timeline.typings";
+import { Timeline, Instant, Annotation, Target } from "./timeline.typings";
 
 /**
  * =============================================================================
@@ -15,36 +10,36 @@ import {
  */
 
 /**
- * TimelineShape ShapeType
+ * Timeline ShapeType
  */
-export const TimelineShapeShapeType: ShapeType<TimelineShape> = {
+export const TimelineShapeType: ShapeType<Timeline> = {
   schema: timelineSchema,
   shape: "http://purl.org/NET/c4dm/timeline.owl#TimelineShape",
   context: timelineContext,
 };
 
 /**
- * InstantShape ShapeType
+ * Instant ShapeType
  */
-export const InstantShapeShapeType: ShapeType<InstantShape> = {
+export const InstantShapeType: ShapeType<Instant> = {
   schema: timelineSchema,
   shape: "http://purl.org/NET/c4dm/timeline.owl#InstantShape",
   context: timelineContext,
 };
 
 /**
- * AnnotationShape ShapeType
+ * Annotation ShapeType
  */
-export const AnnotationShapeShapeType: ShapeType<AnnotationShape> = {
+export const AnnotationShapeType: ShapeType<Annotation> = {
   schema: timelineSchema,
   shape: "http://www.w3.org/ns/oa#AnnotationShape",
   context: timelineContext,
 };
 
 /**
- * TargetShape ShapeType
+ * Target ShapeType
  */
-export const TargetShapeShapeType: ShapeType<TargetShape> = {
+export const TargetShapeType: ShapeType<Target> = {
   schema: timelineSchema,
   shape: "http://www.w3.org/ns/oa#TargetShape",
   context: timelineContext,

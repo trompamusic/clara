@@ -2,12 +2,12 @@ import { ShapeType } from "@ldo/ldo";
 import { solidProfileSchema } from "./solidProfile.schema";
 import { solidProfileContext } from "./solidProfile.context";
 import {
-  SolidProfileShape,
-  AddressShape,
-  EmailShape,
-  PhoneNumberShape,
-  TrustedAppShape,
-  RSAPublicKeyShape,
+  SolidProfile,
+  Address,
+  Email,
+  PhoneNumber,
+  TrustedApp,
+  RSAPublicKey,
 } from "./solidProfile.typings";
 
 /**
@@ -17,54 +17,54 @@ import {
  */
 
 /**
- * SolidProfileShape ShapeType
+ * SolidProfile ShapeType
  */
-export const SolidProfileShapeShapeType: ShapeType<SolidProfileShape> = {
+export const SolidProfileShapeType: ShapeType<SolidProfile> = {
   schema: solidProfileSchema,
   shape: "https://shaperepo.com/schemas/solidProfile#SolidProfileShape",
   context: solidProfileContext,
 };
 
 /**
- * AddressShape ShapeType
+ * Address ShapeType
  */
-export const AddressShapeShapeType: ShapeType<AddressShape> = {
+export const AddressShapeType: ShapeType<Address> = {
   schema: solidProfileSchema,
   shape: "https://shaperepo.com/schemas/solidProfile#AddressShape",
   context: solidProfileContext,
 };
 
 /**
- * EmailShape ShapeType
+ * Email ShapeType
  */
-export const EmailShapeShapeType: ShapeType<EmailShape> = {
+export const EmailShapeType: ShapeType<Email> = {
   schema: solidProfileSchema,
   shape: "https://shaperepo.com/schemas/solidProfile#EmailShape",
   context: solidProfileContext,
 };
 
 /**
- * PhoneNumberShape ShapeType
+ * PhoneNumber ShapeType
  */
-export const PhoneNumberShapeShapeType: ShapeType<PhoneNumberShape> = {
+export const PhoneNumberShapeType: ShapeType<PhoneNumber> = {
   schema: solidProfileSchema,
   shape: "https://shaperepo.com/schemas/solidProfile#PhoneNumberShape",
   context: solidProfileContext,
 };
 
 /**
- * TrustedAppShape ShapeType
+ * TrustedApp ShapeType
  */
-export const TrustedAppShapeShapeType: ShapeType<TrustedAppShape> = {
+export const TrustedAppShapeType: ShapeType<TrustedApp> = {
   schema: solidProfileSchema,
   shape: "https://shaperepo.com/schemas/solidProfile#TrustedAppShape",
   context: solidProfileContext,
 };
 
 /**
- * RSAPublicKeyShape ShapeType
+ * RSAPublicKey ShapeType
  */
-export const RSAPublicKeyShapeShapeType: ShapeType<RSAPublicKeyShape> = {
+export const RSAPublicKeyShapeType: ShapeType<RSAPublicKey> = {
   schema: solidProfileSchema,
   shape: "https://shaperepo.com/schemas/solidProfile#RSAPublicKeyShape",
   context: solidProfileContext,

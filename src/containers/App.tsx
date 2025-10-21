@@ -8,7 +8,6 @@ import Companion from "./companion/Companion";
 import Startup from "./Startup";
 import Perform from "./Perform";
 import ScoreSelector from "./ScoreSelector";
-import Add from "./Add";
 import AuthCallback from "./AuthCallback";
 import AddWait from "./AddWait";
 import Upload from "./Upload";
@@ -32,10 +31,6 @@ const router = createBrowserRouter([
       {
         path: "/select",
         element: <ScoreSelector />,
-      },
-      {
-        path: "/add",
-        element: <Add />,
       },
       {
         path: "/addwait",
