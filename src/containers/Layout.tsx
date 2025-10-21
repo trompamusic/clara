@@ -15,6 +15,24 @@ function LayoutContent() {
   const [routerReady, setRouterReady] = useState(false);
   const dispatch = useDispatch();
 
+  if (location.search === "?reset=true") {
+    console.log("Resetting authentication session");
+
+    const currentSession = localStorage.getItem(
+      "solidClientAuthn:currentSession",
+    );
+
+    if (currentSession) {
+      localStorage.removeItem(
+        `solidClientAuthenticationUser:${currentSession}`,
+      );
+      console.log(`Deleted user session data for: ${currentSession}`);
+    }
+
+    localStorage.removeItem("solidClientAuthn:currentSession");
+    console.log("Deleted current session key");
+  }
+
   // We use bindActionCreators to automatically dispatch actions - this is also done in the companion component
   // by wrapping the class component
   const boundActions = bindActionCreators({ setFetchFunction }, dispatch);
