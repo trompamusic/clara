@@ -41,7 +41,7 @@
     "@inrupt/solid-client": "^2.1.2",
     "@inrupt/solid-client-authn-browser": "^2.4.1",
     "@inrupt/vocab-solid-common": "^0.7.5",
-    "@ldo/ldo": "^1.0.0-alpha.33",
+    "@ldo/ldo": "^1.0.0-alpha.32",
     "@ldo/react": "^1.0.0-alpha.33",
     "@ldo/solid": "^1.0.0-alpha.1",
     "@ldo/solid-react": "^1.0.0-alpha.33",
