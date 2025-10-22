@@ -60,22 +60,12 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
 
   // Update the scoreElementRef whenever scoreComponent changes
   useEffect(() => {
-    console.debug("[selectable-score] ref effect: scoreComponent changed", {
-      hasRef: !!scoreComponent.current,
-    });
     // Update our non-DOM-provided ref when the Score component is mounted
     if (scoreComponent.current) {
       // eslint-disable-next-line react/no-find-dom-node
       const domNode = ReactDOM.findDOMNode(scoreComponent.current);
       if (domNode && domNode instanceof Element) {
         scoreElementRef.current = domNode;
-        console.debug("[selectable-score] ref effect: dom node set", {
-          nodeName: domNode.nodeName,
-        });
-      } else {
-        console.debug(
-          "[selectable-score] ref effect: dom node not found or not Element",
-        );
       }
     }
   }, [scoreComponent.current]);
@@ -86,47 +76,25 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
       try {
         observerRef.current.observe(target, { childList: true });
         observerAttachedRef.current = true;
-        console.debug("[selectable-score] observer attached (attachObserver)");
       } catch (e) {
-        console.debug("[selectable-score] observer attach failed", e);
+        console.error("Observer attach failed", e);
       }
-    } else {
-      console.debug(
-        "[selectable-score] attachObserver: missing target or observer",
-        {
-          hasTarget: !!target,
-          hasObserver: !!observerRef.current,
-        },
-      );
     }
   }, []);
 
   // Memoize enableSelector to avoid recreation on every render
   const enableSelector = useCallback(() => {
-    console.debug("[selectable-score] enableSelector: start", {
-      hasSVG: !!score.SVG,
-      svgKeys: score.SVG ? Object.keys(score.SVG).length : 0,
-      selectorString,
-      selectionArea,
-    });
     // Check if score.SVG is defined and has keys
     if (!score.SVG || !Object.keys(score.SVG).length) {
-      console.log("Enable selector called before MEI has loaded!");
+      console.error("Enable selector called before MEI has loaded!");
       return; // no MEI loaded yet
     }
 
     if (selector) {
       try {
         selector.stop();
-        console.debug(
-          "[selectable-score] enableSelector: previous selector stopped",
-        );
       } catch (e) {
         // ignore errors during teardown
-        console.debug(
-          "[selectable-score] enableSelector: error stopping previous selector",
-          e,
-        );
       }
     }
 
@@ -135,10 +103,6 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
     const selectables = Array.from(
       document.querySelectorAll(selectorString),
     ) as any;
-    console.debug("[selectable-score] enableSelector: resolved DOM", {
-      hasArea: !!areaEl,
-      selectablesCount: selectables ? selectables.length : 0,
-    });
     if (selectorString.length && areaEl && selectables.length > 0) {
       newSelector = new DragSelect({
         selectables,
@@ -154,13 +118,6 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
           }
         },
       } as any);
-      console.debug(
-        "[selectable-score] enableSelector: new DragSelect created",
-      );
-    } else {
-      console.debug(
-        "[selectable-score] enableSelector: skipped creation due to missing area/selectables",
-      );
     }
 
     // undefined if no selector string specified, otherwise a new DragSelect
@@ -169,7 +126,6 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
 
   // Create memoized callbacks to avoid unnecessary re-renders
   const handleScoreUpdate = useCallback(() => {
-    console.log("selectable-score: handleScoreUpdate");
     enableSelector();
     if (typeof onScoreUpdate === "function") {
       // eslint-disable-next-line react/no-find-dom-node
@@ -178,29 +134,20 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
         : null;
       const svg =
         domNode instanceof Element ? domNode.querySelector("svg") : null;
-      console.debug("[selectable-score] handleScoreUpdate: svg resolved", {
-        hasDomNode: !!domNode,
-        hasSvg: svg instanceof SVGElement,
-      });
       if (svg instanceof SVGElement) onScoreUpdate(svg);
     }
   }, [onScoreUpdate, enableSelector]);
 
   // Set up the observer on component mount
   useEffect(() => {
-    console.debug("[selectable-score] mount: setting up MutationObserver");
     observerRef.current = new MutationObserver(handleScoreUpdate);
     observerAttachedRef.current = false;
     attachObserver();
 
     return () => {
       // Clean up the observer on unmount
-      console.debug(
-        "[selectable-score] unmount: cleaning up observer and selector",
-      );
       if (observerRef.current) {
         observerRef.current.disconnect();
-        console.debug("[selectable-score] unmount: observer disconnected");
       }
       observerAttachedRef.current = false;
 
@@ -208,13 +155,8 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
       if (selector) {
         try {
           selector.stop();
-          console.debug("[selectable-score] unmount: selector stopped");
         } catch (e) {
           // ignore errors during teardown
-          console.debug(
-            "[selectable-score] unmount: error stopping selector",
-            e,
-          );
         }
       }
     };
@@ -223,9 +165,6 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
   const fetchAnnotationContainer = useCallback(() => {
     if (!annotationContainerUri) return;
 
-    console.debug("[selectable-score] fetchAnnotationContainer: start", {
-      annotationContainerUri,
-    });
     fetch(annotationContainerUri, {
       mode: "cors",
       headers: { Accept: "application/ld+json" },
@@ -245,19 +184,10 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
 
           setAnnotationContainerContentToRetrieve(contentUris);
           fetchAnnotationContainerContent(contentUris);
-          console.debug(
-            "[selectable-score] fetchAnnotationContainer: contains",
-            {
-              count: contentUris.length,
-            },
-          );
         } else {
           if (onReceiveAnnotationContainerContent) {
             onReceiveAnnotationContainerContent({});
           }
-          console.debug(
-            "[selectable-score] fetchAnnotationContainer: no contents in container",
-          );
         }
       })
       .catch((err) => console.log("Error: ", err));
@@ -265,12 +195,6 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
 
   const fetchAnnotationContainerContent = useCallback(
     (contentUris: string[] = annotationContainerContentToRetrieve) => {
-      console.debug(
-        "[selectable-score] fetchAnnotationContainerContent: start",
-        {
-          count: contentUris.length,
-        },
-      );
       Promise.all(
         contentUris.map((uri) =>
           fetch(uri, {
@@ -301,12 +225,6 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
               if (onReceiveAnnotationContainerContent) {
                 onReceiveAnnotationContainerContent(content);
               }
-              console.debug(
-                "[selectable-score] fetchAnnotationContainerContent: delivered",
-                {
-                  delivered: content.length,
-                },
-              );
             })
             .catch((err) =>
               console.error("Error extracting response json: ", err),
@@ -319,11 +237,6 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
 
   // ComponentDidMount equivalent
   useEffect(() => {
-    console.debug("[selectable-score] effect: componentDidMount equivalent", {
-      hasAnnotationContainerUri: !!annotationContainerUri,
-      toggleAnnotationRetrieval,
-      hasOnReceive: !!onReceiveAnnotationContainerContent,
-    });
     // handle fetching of annotation container contents
     if (annotationContainerUri && toggleAnnotationRetrieval) {
       if (onReceiveAnnotationContainerContent) {
@@ -348,9 +261,6 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
         // update annotation container flag toggled on, clear state and refetch
         setAnnotationContainerContentToRetrieve([]);
         fetchAnnotationContainer();
-        console.debug(
-          "[selectable-score] effect: toggleAnnotationRetrieval -> refetched",
-        );
       } else {
         console.error(
           "Specified annotation container URI without onReceiveAnnotationContainerContent callback",
@@ -366,17 +276,10 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
 
   // Handle score component loading
   useEffect(() => {
-    console.debug("[selectable-score] effect: score component loading check", {
-      scoreComponentLoaded,
-      hasScoreElementRef: !!scoreElementRef.current,
-    });
     if (!scoreComponentLoaded && scoreElementRef.current) {
       const svgElement = scoreElementRef.current.querySelector("svg");
       if (svgElement) {
         setScoreComponentLoaded(true);
-        console.debug(
-          "[selectable-score] effect: svg found, marking loaded and invoking onScoreReady",
-        );
 
         if (typeof onScoreReady === "function" && score.vrvTk) {
           onScoreReady(svgElement as SVGElement, score.vrvTk);
@@ -398,10 +301,6 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
   // Handle selector string changes
   useEffect(() => {
     if (props.selectorString && props.selectorString !== selectorString) {
-      console.debug("[selectable-score] effect: selectorString changed", {
-        from: selectorString,
-        to: props.selectorString,
-      });
       setSelectorString(props.selectorString || defaultSelectorString);
       enableSelector();
     }
@@ -410,10 +309,6 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
   // Handle selection area changes
   useEffect(() => {
     if (props.selectionArea && props.selectionArea !== selectionArea) {
-      console.debug("[selectable-score] effect: selectionArea changed", {
-        from: selectionArea,
-        to: props.selectionArea,
-      });
       setSelectionArea(props.selectionArea);
     }
   }, [props.selectionArea, selectionArea]);
@@ -425,10 +320,6 @@ const SelectableScore: React.FC<SelectableScoreProps> = (props) => {
       JSON.stringify(vrvOptions) !== JSON.stringify(props.vrvOptions)
     ) {
       console.log("Options have changed, updating score");
-      console.debug("[selectable-score] effect: vrvOptions changed", {
-        from: vrvOptions,
-        to: props.vrvOptions,
-      });
       setVrvOptions(props.vrvOptions || defaultVrvOptions);
       scoreSetOptions(uri, props.vrvOptions);
       // Ensure observer is attached and trigger one update so parents get notified
