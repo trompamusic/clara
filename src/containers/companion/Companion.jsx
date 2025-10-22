@@ -436,7 +436,8 @@ class Companion extends Component {
     }
     if (prevState.showConfidence !== this.state.showConfidence) {
       this.createInstantBoundingRects(); // showConfidence preference changed; redraw boxes
-      this.refs.showConfidenceToggle.checked = this.state.showConfidence;
+      // TODO: This ref has dissapared
+      // this.refs.showConfidenceToggle.checked = this.state.showConfidence;
     }
     if (
       this.state.performances.length &&
