@@ -36,21 +36,6 @@ class FeatureVis extends Component {
       zoomBoxTimeline: null,
     };
     this.zoomBoxDisplayTimer = null;
-    this.setInstantsOnPage = this.setInstantsOnPage.bind(this);
-    this.setInstantsByScoretime = this.setInstantsByScoretime.bind(this);
-    this.setNoteElementsByNoteId = this.setNoteElementsByNoteId.bind(this);
-    this.calculateQStampForInstant = this.calculateQStampForInstant.bind(this);
-    this.noteElementsForInstant = this.noteElementsForInstant.bind(this);
-    this.calculateAvgQstampFromNoteIds =
-      this.calculateAvgQstampFromNoteIds.bind(this);
-    this.handleClick = this.handleClick.bind(this);
-    this.handleClickSeekToInstant = this.handleClickSeekToInstant.bind(this);
-    this.makePoint = this.makePoint.bind(this);
-    this.makeRect = this.makeRect.bind(this);
-    this.makeLine = this.makeLine.bind(this);
-    this.makePolygon = this.makePolygon.bind(this);
-    this.handleMouseEnter = this.handleMouseEnter.bind(this);
-    this.handleMouseLeave = this.handleMouseLeave.bind(this);
   }
 
   componentDidMount() {
@@ -151,7 +136,7 @@ class FeatureVis extends Component {
     }
   }
 
-  calculateAvgQstampFromNoteIds(noteIds) {
+  calculateAvgQstampFromNoteIds = (noteIds) => {
     return (
       noteIds.reduce((sumQ, noteId) => {
         if (
@@ -169,9 +154,9 @@ class FeatureVis extends Component {
         return (sumQ += this.state.timemapByNoteId[noteId].qstamp);
       }, 0) / noteIds.length
     );
-  }
+  };
 
-  setInstantsByScoretime() {
+  setInstantsByScoretime = () => {
     let instantsByScoretime = {};
     // for each timeline we need to visualise:
     this.props.timelinesToVis.forEach((tl) => {
@@ -199,9 +184,9 @@ class FeatureVis extends Component {
       instantsByScoretime: instantsByScoretime,
       instantsByScoretimeLastModified: new Date().valueOf(),
     });
-  }
+  };
 
-  setNoteElementsByNoteId() {
+  setNoteElementsByNoteId = () => {
     let noteElementsByNoteId = {};
     Array.from(this.props.notesOnPage).forEach((note) => {
       noteElementsByNoteId[note.getAttribute("id")] = note;
@@ -210,9 +195,9 @@ class FeatureVis extends Component {
       // now set instants on page
       this.setInstantsOnPage();
     });
-  }
+  };
 
-  noteElementsForInstant(inst) {
+  noteElementsForInstant = (inst) => {
     let noteElements = this.props
       .ensureArray(inst["http://purl.org/vocab/frbr/core#embodimentOf"])
       // filter out inserted notes (as by definition they don't have corresponding MEI elements)
@@ -231,9 +216,9 @@ class FeatureVis extends Component {
       return note;
     });
     return noteElements;
-  }
+  };
 
-  setInstantsOnPage() {
+  setInstantsOnPage = () => {
     if (Object.keys(this.props.instantsByNoteId).length) {
       let instantsOnPage = {};
       // for each timeline we need to visualise:
@@ -282,9 +267,9 @@ class FeatureVis extends Component {
         this.setInstantsByScoretime();
       });
     }
-  }
+  };
 
-  handleMouseEnter(e, qstamp, tl) {
+  handleMouseEnter = (e, qstamp, tl) => {
     const clientRect = e.getBoundingClientRect();
     if (typeof e !== "undefined" && !e.classList.contains("inpainted")) {
       this.setState({
@@ -295,17 +280,17 @@ class FeatureVis extends Component {
         zoomBoxTimeline: tl,
       });
     }
-  }
+  };
 
-  handleMouseLeave(e) {
+  handleMouseLeave = (e) => {
     if (typeof e !== "undefined" && !e.classList.contains("inpainted")) {
       this.setState({
         zoomBoxVisibility: "hidden",
       });
     }
-  }
+  };
 
-  calculateQStampForInstant(inst) {
+  calculateQStampForInstant = (inst) => {
     // qstamp == time in quarter notes (as per verovio timemap
     // as multiple notes (with potentially different qstamps) could share a performed
     // instant, calculate an (average) qstamp per instant here
@@ -316,9 +301,9 @@ class FeatureVis extends Component {
       return (q += qstamp);
     }, 0);
     return sumQ / noteElements.length;
-  }
+  };
 
-  handleClick(qstamp, tl) {
+  handleClick = (qstamp, tl) => {
     // seek to earliest instant on the clicked timeline at the clicked scoretime
     if (
       tl in this.state.instantsByScoretime &&
@@ -326,14 +311,14 @@ class FeatureVis extends Component {
     ) {
       this.props.seekToInstant(this.state.instantsByScoretime[tl][qstamp][0]);
     }
-  }
+  };
 
-  handleClickSeekToInstant(atTime, tl) {
+  handleClickSeekToInstant = (atTime, tl) => {
     // seek to this instant on the clicked timeline
     if (tl in this.state.instantsByScoretime) {
       this.props.seekToInstant(atTime);
     }
-  }
+  };
 
   render() {
     return (
@@ -584,7 +569,7 @@ class FeatureVis extends Component {
     );
   }
 
-  makeRect(
+  makeRect = (
     className,
     qstamp,
     tl,
@@ -595,7 +580,7 @@ class FeatureVis extends Component {
     key,
     titleString,
     clickHandler = () => this.handleClick(qstamp, tl),
-  ) {
+  ) => {
     // return SVG for a "point" (e.g. ellipse) on the visualisation
     return (
       <rect
@@ -612,9 +597,9 @@ class FeatureVis extends Component {
         <title>{titleString}</title>
       </rect>
     );
-  }
+  };
 
-  makePoint(
+  makePoint = (
     className,
     qstamp,
     tl,
@@ -625,7 +610,7 @@ class FeatureVis extends Component {
     key,
     titleString,
     colour = "",
-  ) {
+  ) => {
     // return SVG for a "point" (e.g. ellipse) on the visualisation
     return (
       <ellipse
@@ -655,9 +640,9 @@ class FeatureVis extends Component {
         {/*<title>{titleString}</title>*/}
       </ellipse>
     );
-  }
+  };
 
-  makeLine(className, qstamp, tl, x1, y1, x2, y2, key, titleString) {
+  makeLine = (className, qstamp, tl, x1, y1, x2, y2, key, titleString) => {
     // return SVG for a line segment on the visualisation
     return (
       <line
@@ -673,15 +658,15 @@ class FeatureVis extends Component {
         <title>{titleString}</title>
       </line>
     );
-  }
+  };
 
-  makePolygon(className, tl, points, key, titleString) {
+  makePolygon = (className, tl, points, key, titleString) => {
     return (
       <polygon className={className} points={points} key={key}>
         <title>{titleString}</title>
       </polygon>
     );
-  }
+  };
 }
 
 function mapStateToProps({ score }) {

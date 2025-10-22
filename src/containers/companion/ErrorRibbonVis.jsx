@@ -18,11 +18,6 @@ export default class ErrorRibbonVis extends Component {
       svgElementsWrapper: <div id="errorRibbonLoading" />,
     };
     this.errorRibbonSvg = React.createRef();
-    this.contextualiseInsertedNotes =
-      this.contextualiseInsertedNotes.bind(this);
-    this.averageScoretime = this.averageScoretime.bind(this);
-    this.determineInsertedNoteYPosition =
-      this.determineInsertedNoteYPosition.bind(this);
   }
 
   componentDidMount() {
@@ -43,7 +38,7 @@ export default class ErrorRibbonVis extends Component {
     }
   }
 
-  averageScoretime(noteURIs) {
+  averageScoretime = (noteURIs) => {
     // given a list of note elements, calculate their average scoretime
     const noteIds = noteURIs.map((n) => n.substr(n.indexOf("#") + 1));
     const knownNotes = noteIds.filter((n) =>
@@ -62,7 +57,7 @@ export default class ErrorRibbonVis extends Component {
         noteIds,
       );
     }
-  }
+  };
 
   pitchToNum(pitchName) {
     let nameToNum;
@@ -159,7 +154,7 @@ export default class ErrorRibbonVis extends Component {
   }
   */
 
-  determineInsertedNoteYPosition(inserted, clef) {
+  determineInsertedNoteYPosition = (inserted, clef) => {
     if (!("shape" in clef.dataset)) {
       console.error(
         "Clef metadata not available. Does your Verovio support svgAdditionalAttribute?",
@@ -228,8 +223,8 @@ export default class ErrorRibbonVis extends Component {
     //     console.log("Wasn't able to determine coords for line ", lines[0]);
     //     return null;
     //   }
-  }
-  contextualiseInsertedNotes() {
+  };
+  contextualiseInsertedNotes = () => {
     // For inserted notes, we have a performance time but no score time.
     // In order to place them in our ribbon we need to approximate a score time.
     // To do this, look for neighbouring "correctly performed" notes for hints.
@@ -247,7 +242,7 @@ export default class ErrorRibbonVis extends Component {
         this.renderSvg,
       );
     };
-  }
+  };
 
   renderSvg() {
     if (!this.state.loading && Object.keys(this.props.timemapByNoteId).length) {

@@ -12,7 +12,6 @@ export default class DynamicsVis extends Component {
       height: this.props.height || "120",
       pointsPerTimeline: {},
     };
-    this.setPointsPerTimeline = this.setPointsPerTimeline.bind(this);
     this.dynamicsSvg = React.createRef();
   }
 
@@ -60,7 +59,7 @@ export default class DynamicsVis extends Component {
     }
   }
 
-  setPointsPerTimeline() {
+  setPointsPerTimeline = () => {
     let pointsPerTimeline = {};
     // for each timeline
     this.props.timelinesToVis.forEach((tl) => {
@@ -188,7 +187,7 @@ export default class DynamicsVis extends Component {
       });
     });
     this.setState({ pointsPerTimeline });
-  }
+  };
 
   render() {
     let svgElements = [];
@@ -386,13 +385,13 @@ export default class DynamicsVis extends Component {
         });
         // now connect the points!
         /*        minLines = minPoints.map((p, ix) => {
-          if(ix < minPoints.length-1) { 
+          if(ix < minPoints.length-1) {
             let from = p[0].staffPoint.props;
             let to = minPoints[ix+1][0].staffPoint.props;
-            if(to["data-qstamp"] - from["data-qstamp"] <= permissibleQstampGap) { 
+            if(to["data-qstamp"] - from["data-qstamp"] <= permissibleQstampGap) {
               return this.props.makeLine("dynamicsConnector " + from.className,
-                from["data-qstamp"], 
-                from.tl, from.cx, from.cy, to.cx, to.cy, 
+                from["data-qstamp"],
+                from.tl, from.cx, from.cy, to.cx, to.cy,
                 "min---" + p[0].staffPoint.key + "---" + minPoints[ix+1][0].key,
                 "qstamp from: " + from["data-qstamp"] + " qstamp to: " + to["data-qstamp"]
               );
@@ -486,7 +485,7 @@ export default class DynamicsVis extends Component {
           }),
         ];
         /*points = [
-          ...minPoints.map((p) => p.staffPoint), 
+          ...minPoints.map((p) => p.staffPoint),
           ...maxPoints.map((p) => p.staffPoint)
         ];*/
 
@@ -578,9 +577,9 @@ export default class DynamicsVis extends Component {
           </svg>
         </div>
         {/* Code to draw legend - maybe no longer required?
-        { this.props.displayDynamicsPerStaff.size 
-          ? <span id="dynamicsLegend">Staffs on page: 
-              { [...new Set(Object.values(this.props.staffmap).sort())].map( (n) => 
+        { this.props.displayDynamicsPerStaff.size
+          ? <span id="dynamicsLegend">Staffs on page:
+              { [...new Set(Object.values(this.props.staffmap).sort())].map( (n) =>
                 <><span className={"staff" + n}>&nbsp;</span>{n}</>)
               }
              </span>

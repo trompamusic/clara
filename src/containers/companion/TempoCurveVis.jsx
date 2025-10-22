@@ -11,7 +11,6 @@ export default class TempoCurveVis extends Component {
       height: this.props.height || "120",
       pointsPerTimeline: {},
     };
-    this.setPointsPerTimeline = this.setPointsPerTimeline.bind(this);
     this.tempoCurveSvg = React.createRef();
   }
 
@@ -53,7 +52,7 @@ export default class TempoCurveVis extends Component {
     }
   }
 
-  setPointsPerTimeline() {
+  setPointsPerTimeline = () => {
     let pointsPerTimeline = {};
     this.props.timelinesToVis.forEach((tl) => {
       let scoretimeArray = Object.keys(this.props.instantsByScoretime[tl]).sort(
@@ -133,7 +132,7 @@ export default class TempoCurveVis extends Component {
       pointsPerTimeline[tl] = pointsForThisTl;
     });
     this.setState({ pointsPerTimeline });
-  }
+  };
 
   render() {
     if (
