@@ -8,7 +8,7 @@ import { useNavigate } from "react-router";
 import {
   useClaraScore,
   useClaraScoresForUser,
-  useScoresMapping,
+  useScoreList,
 } from "../util/clara";
 import { useAuthentication } from "../util/hooks";
 import Api from "../util/api";
@@ -32,7 +32,18 @@ function SingleScore({ score }: { score: string }) {
   const { scoreData, isLoading } = useClaraScore(score);
   const navigate = useNavigate();
   const url = score;
-  return !isLoading && scoreData ? (
+
+  if (isLoading) {
+    return <span>Loading...</span>;
+  }
+
+  // If not loading but no scoreData, it means the item is not a Score type
+  // Return null to render nothing
+  if (!scoreData) {
+    return null;
+  }
+
+  return (
     <>
       <a
         href={`/perform?score=${url}`}
@@ -41,7 +52,7 @@ function SingleScore({ score }: { score: string }) {
           navigate(`/perform?score=${url}`);
         }}
       >
-        {scoreData?.title}
+        {scoreData.title}
       </a>
       &nbsp;&nbsp;
       <small>
@@ -58,8 +69,33 @@ function SingleScore({ score }: { score: string }) {
         </a>
       </small>
     </>
-  ) : (
-    <span>Loading...</span>
+  );
+}
+
+/*
+Show a SingleScore, but only if the scoreData is a valid Score type
+If the scoreData is not an mo:Score (useClaraScore returns null)
+then return null and render nothing, otherwise render the SingleScore component
+*/
+function ScoreListItem({ score }: { score: string }) {
+  const { scoreData, isLoading } = useClaraScore(score);
+
+  // If loading, show loading state in an li
+  if (isLoading) {
+    return <li>Loading...</li>;
+  }
+
+  // If not loading but no scoreData, it means the item is not a Score type
+  // Return null to skip rendering the li entirely
+  if (!scoreData) {
+    return null;
+  }
+
+  // Only render the li if we have valid score data
+  return (
+    <li>
+      <SingleScore score={score} />
+    </li>
   );
 }
 
@@ -78,7 +114,7 @@ export default function ScoreSelector() {
   const { scores: userScores, isLoading: loadingScores } =
     useClaraScoresForUser();
 
-  const { items: mappedScores } = useScoresMapping();
+  const { items: mappedScores } = useScoreList();
 
   const handleAdd = useCallback(
     async (url: string) => {
@@ -191,13 +227,9 @@ export default function ScoreSelector() {
         <h3>Load a previous score that you have performed</h3>
         <ul>
           {loadingScores && <li>Loading...</li>}
-          {userScores?.map((score: any) => {
-            return (
-              <li key={score["@id"]}>
-                <SingleScore score={score["@id"]} />
-              </li>
-            );
-          })}
+          {userScores?.map((score: any) => (
+            <ScoreListItem key={score["@id"]} score={score["@id"]} />
+          ))}
           {!loadingScores && userScores?.size === 0 && (
             <li>No scores yet... Load one above</li>
           )}

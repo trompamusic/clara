@@ -47,9 +47,36 @@ export const useClaraScore = (scoreUrl: string | undefined) => {
   const scoreResource = useResource(scoreUrl);
   const scoreData = useSubject(ScoreShapeType, scoreUrl);
 
+  // Verify that the scoreData is actually a Score type (mo:Score)
+  // If it's not, return null for scoreData so the component can render nothing
+  const verifiedScoreData = useMemo(() => {
+    if (!scoreData) return null;
+
+    // Check if it has the type property and that it includes mo:Score
+    if (scoreData.type && scoreData.type.size > 0) {
+      let isScore = false;
+
+      scoreData.type.forEach((typeObj) => {
+        const typeId = typeObj?.["@id"];
+        // Check if it's mo:Score (either "Score" in compact form or full IRI)
+        // TODO: Ideally we want to expand this out to always be a URL instead of a compact form
+        if (
+          typeId === "Score" ||
+          typeId === "http://purl.org/ontology/mo/Score"
+        ) {
+          isScore = true;
+        }
+      });
+
+      return isScore ? scoreData : null;
+    }
+
+    return null;
+  }, [scoreData]);
+
   return {
     scoreResource,
-    scoreData,
+    scoreData: verifiedScoreData,
     isLoading:
       scoreResource && "isReading" in scoreResource
         ? scoreResource.isReading()
@@ -62,21 +89,25 @@ export const useClaraScore = (scoreUrl: string | undefined) => {
 };
 
 /**
- * Read the schema.org ItemList of external scores at `scores/scores.ttl`.
+ * Read the schema.org ItemList of external scores at top-level `scores-list`.
+ * returns items: a list of external score URLs
+ * returns resource: the resource object
+ * returns isLoading: true if the resource is still loading
+ * returns error: the error message if the resource fails to load
  */
-export const useScoresMapping = () => {
+export const useScoreList = () => {
   const { claraContainer } = useClaraContainer();
 
   const mappingUri =
     claraContainer && claraContainer.type === "SolidContainer"
-      ? claraContainer.child("scores/scores.ttl").uri
+      ? claraContainer.child("scores-list").uri
       : undefined;
 
   const resource = useResource(mappingUri);
   const mapping = useSubject(ScoresItemListShapeType, mappingUri);
   const items = useMemo(() => {
     const val: unknown = mapping?.itemListElement as unknown;
-    // LDO collections are often LdSet (a Set). Handle Set, array, and string.
+    // LDO collections are often LdSet (a Set). Handle Set, array of IRIs, or single IRI.
     if (
       val &&
       typeof val === "object" &&
@@ -84,18 +115,21 @@ export const useScoresMapping = () => {
       "size" in (val as any)
     ) {
       const out: string[] = [];
-      (val as Set<unknown>).forEach((v) => {
-        if (typeof v === "string") out.push(v);
+      (val as Set<any>).forEach((v) => {
+        if (v && typeof v === "object" && "@id" in v)
+          out.push((v as any)["@id"]);
       });
       return out;
     }
     if (Array.isArray(val)) {
-      return (val as unknown[]).filter(
-        (v): v is string => typeof v === "string",
-      );
+      return (val as any[])
+        .map((v) =>
+          v && typeof v === "object" && "@id" in v ? (v as any)["@id"] : null,
+        )
+        .filter((s): s is string => typeof s === "string");
     }
-    if (typeof val === "string") {
-      return [val];
+    if (val && typeof val === "object" && "@id" in (val as any)) {
+      return [(val as any)["@id"] as string];
     }
     return [] as string[];
   }, [mapping]);

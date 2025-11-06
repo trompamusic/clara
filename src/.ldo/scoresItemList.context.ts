@@ -19,14 +19,14 @@ export const scoresItemListContext: LdoJsonldContext = {
       },
       itemListElement: {
         "@id": "https://schema.org/itemListElement",
-        "@type": "http://www.w3.org/2001/XMLSchema#string",
+        "@type": "@id",
         "@isCollection": true,
       },
     },
   },
   itemListElement: {
     "@id": "https://schema.org/itemListElement",
-    "@type": "http://www.w3.org/2001/XMLSchema#string",
+    "@type": "@id",
     "@isCollection": true,
   },
 };

@@ -15,5 +15,5 @@ export interface ScoresItemList {
   type: LdSet<{
     "@id": "ItemList";
   }>;
-  itemListElement?: LdSet<string>;
+  itemListElement?: LdSet<{ "@id": string }>;
 }

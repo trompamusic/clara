@@ -3,7 +3,7 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 
 schema:ScoresItemListShape {
   a [ schema:ItemList ] ;
-  schema:itemListElement xsd:string * ;
+  schema:itemListElement IRI * ;
 }
 
 
