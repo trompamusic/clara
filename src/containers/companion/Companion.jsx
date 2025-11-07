@@ -861,6 +861,7 @@ class Companion extends Component {
         //&& this.state.currentScore in this.props.score.pageState) {
         featureVisElement = (
           <FeatureVis
+            uri={this.props.uri}
             performedElements={this.state.performedElements}
             performanceErrors={this.state.performanceErrors}
             notesOnPage={this.state.notesOnPage}

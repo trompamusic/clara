@@ -5,6 +5,11 @@ import TempoCurveVis from "./TempoCurveVis";
 import ErrorRibbonVis from "./ErrorRibbonVis";
 import DynamicsVis from "./DynamicsVis";
 import ZoomBox from "./ZoomBox";
+import FeatureVisControls from "./FeatureVisControls";
+import {
+  readFeatureVisPrefs,
+  writeFeatureVisPrefs,
+} from "./featureVisPreferences";
 
 class FeatureVis extends Component {
   constructor(props) {
@@ -34,6 +39,7 @@ class FeatureVis extends Component {
       zoomBoxVisibility: "hidden",
       zoomBoxScoretime: null,
       zoomBoxTimeline: null,
+      controlsLoaded: false,
     };
     this.zoomBoxDisplayTimer = null;
   }
@@ -134,7 +140,67 @@ class FeatureVis extends Component {
         ),
       });
     }
+    // Load persisted controls once staff information is available
+    if (
+      !this.state.controlsLoaded &&
+      (Object.keys(this.state.staffmap).length ||
+        this.state.stafflayertuples.size)
+    ) {
+      this.loadControlsFromStorage();
+      this.setState({ controlsLoaded: true });
+    }
+    // If the bound URI changes, reload preferences for the new key
+    if (prevProps.uri !== this.props.uri) {
+      this.setState({ controlsLoaded: false }, () => {
+        if (
+          Object.keys(this.state.staffmap).length ||
+          this.state.stafflayertuples.size
+        ) {
+          this.loadControlsFromStorage();
+          this.setState({ controlsLoaded: true });
+        }
+      });
+    }
   }
+
+  getStorageKey = () => {
+    return this.props.uri ? `at.ac.mdw.trompa:${this.props.uri}` : null;
+  };
+
+  persistControls = () => {
+    writeFeatureVisPrefs(this.props.uri, {
+      displayTempoCurves: this.state.displayTempoCurves,
+      displayErrorRibbon: this.state.displayErrorRibbon,
+      displayDynamicsSummary: this.state.displayDynamicsSummary,
+      displayDynamicsPerStaff: Array.from(this.state.displayDynamicsPerStaff),
+      displayDynamicsPerStaffLayer: Array.from(
+        this.state.displayDynamicsPerStaffLayer,
+      ),
+    });
+  };
+
+  loadControlsFromStorage = () => {
+    const availableStaff = new Set(Object.values(this.state.staffmap));
+    const availableTuples = new Set(this.state.stafflayertuples);
+    const loaded = readFeatureVisPrefs(
+      this.props.uri,
+      availableStaff,
+      availableTuples,
+    );
+    if (!loaded) return;
+    this.setState(
+      {
+        displayTempoCurves: loaded.displayTempoCurves,
+        displayErrorRibbon: loaded.displayErrorRibbon,
+        displayDynamicsSummary: loaded.displayDynamicsSummary,
+        displayDynamicsPerStaff: new Set(loaded.displayDynamicsPerStaff),
+        displayDynamicsPerStaffLayer: new Set(
+          loaded.displayDynamicsPerStaffLayer,
+        ),
+      },
+      this.persistControls,
+    );
+  };
 
   calculateAvgQstampFromNoteIds = (noteIds) => {
     return (
@@ -342,129 +408,81 @@ class FeatureVis extends Component {
           width="300"
           height="300"
         />
-        <div id="featureVisControls">
-          Features to visualise:
-          <input
-            type="checkbox"
-            defaultChecked={this.state.displayTempoCurves}
-            onChange={() => {
-              this.setState({
-                displayTempoCurves: !this.state.displayTempoCurves,
-              });
-            }}
-          />{" "}
-          Tempo curves
-          <input
-            type="checkbox"
-            defaultChecked={this.state.displayErrorRibbon}
-            onChange={() => {
-              this.setState({
-                displayErrorRibbon: !this.state.displayErrorRibbon,
-              });
-            }}
-          />{" "}
-          Error visualisation
-          <input
-            type="checkbox"
-            defaultChecked={this.state.displayDynamicsSummary}
-            onChange={() => {
-              this.setState({
-                displayDynamicsSummary: !this.state.displayDynamicsSummary,
-              });
-            }}
-          />{" "}
-          Max dynamics (summary) &nbsp;
-          <div id="dynamicsPerStaffControls">
-            Dynamics per staff:
-            {[...new Set(Object.values(this.state.staffmap).sort())].map(
-              (n) => (
-                <span key={"dynamicsPerStaffCheckboxWrapper" + n}>
-                  <input
-                    type="checkbox"
-                    checked={this.state.displayDynamicsPerStaff.has(n)}
-                    key={"dynamicsPerStaffCheckbox" + n}
-                    onChange={() => {
-                      const updated = new Set(
-                        this.state.displayDynamicsPerStaff,
-                      );
-                      updated.has(n) ? updated.delete(n) : updated.add(n);
-                      this.setState({ displayDynamicsPerStaff: updated });
-                    }}
-                  />
-                  {n}
-                </span>
-              ),
-            )}
-            <span
-              className="selectDynamicsAggregate"
-              id="selectAllDynamics"
-              onClick={() =>
-                this.setState({
-                  displayDynamicsPerStaff: new Set(
-                    Object.values(this.state.staffmap),
-                  ),
-                })
-              }
-            >
-              All
-            </span>
-            <span
-              className="selectDynamicsAggregate"
-              id="selectNoDynamics"
-              onClick={() =>
-                this.setState({
-                  displayDynamicsPerStaff: new Set(),
-                })
-              }
-            >
-              None
-            </span>
-          </div>
-          <div id="dynamicsPerStaffLayerControls">
-            Detailed dynamics per staff and layer:
-            {[...this.state.stafflayertuples].sort().map((n) => (
-              <span key={"dynamicsPerStaffLayerCheckboxWrapper" + n}>
-                <input
-                  type="checkbox"
-                  checked={this.state.displayDynamicsPerStaffLayer.has(n)}
-                  key={"dynamicsPerStaffLayerCheckbox" + n}
-                  onChange={() => {
-                    const updated = new Set(
-                      this.state.displayDynamicsPerStaffLayer,
-                    );
-                    updated.has(n) ? updated.delete(n) : updated.add(n);
-                    this.setState({ displayDynamicsPerStaffLayer: updated });
-                  }}
-                />
-                {n}
-              </span>
-            ))}
-            <span
-              className="selectDynamicsAggregate"
-              id="selectAllStaffLayerDynamics"
-              onClick={() =>
-                this.setState({
-                  displayDynamicsPerStaffLayer: new Set(
-                    this.state.stafflayertuples,
-                  ),
-                })
-              }
-            >
-              All
-            </span>
-            <span
-              className="selectDynamicsAggregate"
-              id="selectNoStaffLayerDynamics"
-              onClick={() =>
-                this.setState({
-                  displayDynamicsPerStaffLayer: new Set(),
-                })
-              }
-            >
-              None
-            </span>
-          </div>
-        </div>
+        <FeatureVisControls
+          displayTempoCurves={this.state.displayTempoCurves}
+          displayErrorRibbon={this.state.displayErrorRibbon}
+          displayDynamicsSummary={this.state.displayDynamicsSummary}
+          displayDynamicsPerStaff={this.state.displayDynamicsPerStaff}
+          displayDynamicsPerStaffLayer={this.state.displayDynamicsPerStaffLayer}
+          staffmap={this.state.staffmap}
+          stafflayertuples={this.state.stafflayertuples}
+          onToggleTempoCurves={() =>
+            this.setState(
+              { displayTempoCurves: !this.state.displayTempoCurves },
+              this.persistControls,
+            )
+          }
+          onToggleErrorRibbon={() =>
+            this.setState(
+              { displayErrorRibbon: !this.state.displayErrorRibbon },
+              this.persistControls,
+            )
+          }
+          onToggleDynamicsSummary={() =>
+            this.setState(
+              { displayDynamicsSummary: !this.state.displayDynamicsSummary },
+              this.persistControls,
+            )
+          }
+          onTogglePerStaff={(n) => {
+            const updated = new Set(this.state.displayDynamicsPerStaff);
+            updated.has(n) ? updated.delete(n) : updated.add(n);
+            this.setState(
+              { displayDynamicsPerStaff: updated },
+              this.persistControls,
+            );
+          }}
+          onSelectAllPerStaff={() =>
+            this.setState(
+              {
+                displayDynamicsPerStaff: new Set(
+                  Object.values(this.state.staffmap),
+                ),
+              },
+              this.persistControls,
+            )
+          }
+          onSelectNonePerStaff={() =>
+            this.setState(
+              { displayDynamicsPerStaff: new Set() },
+              this.persistControls,
+            )
+          }
+          onTogglePerStaffLayer={(n) => {
+            const updated = new Set(this.state.displayDynamicsPerStaffLayer);
+            updated.has(n) ? updated.delete(n) : updated.add(n);
+            this.setState(
+              { displayDynamicsPerStaffLayer: updated },
+              this.persistControls,
+            );
+          }}
+          onSelectAllPerStaffLayer={() =>
+            this.setState(
+              {
+                displayDynamicsPerStaffLayer: new Set(
+                  this.state.stafflayertuples,
+                ),
+              },
+              this.persistControls,
+            )
+          }
+          onSelectNonePerStaffLayer={() =>
+            this.setState(
+              { displayDynamicsPerStaffLayer: new Set() },
+              this.persistControls,
+            )
+          }
+        />
         <div
           className={this.state.displayTempoCurves ? "" : "removedFromDisplay"}
         >
