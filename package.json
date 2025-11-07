@@ -61,7 +61,7 @@
     "events": "^3.3.0",
     "html-midi-player": "^1.5.0",
     "http-proxy-middleware": "^3.0.3",
-    "meld-clients-core": "alastair/meld-clients-core#new-solid-auth-tooling",
+    "meld-clients-core": "oerc-music/meld-clients-core#new-solid-auth-tooling",
     "midimessage": "^1.0.5",
     "process": "^0.11.10",
     "prop-types": "^15.8.1",
