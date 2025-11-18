@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import ReactDOM from "react-dom";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
+import ReactPlayer from "react-player";
 
 import SelectableScore from "../../selectable-score/selectable-score";
 import NextPageButton from "../../selectable-score/next-page-button";
@@ -718,13 +719,7 @@ class Companion extends Component {
         this.tick(this.state.selectedVideo, nDur);
         console.log("attempting to seek to ", Math.floor(nDur));
         if (this.player.current) {
-          if (this.player.current.playing) {
-            this.player.current.stop();
-            this.player.current.currentTime = Math.floor(nDur);
-            this.player.current.start();
-          } else {
-            this.player.current.currentTime = Math.floor(nDur);
-          }
+          this.player.current.seekTo(Math.floor(nDur));
         }
         // reset note velocities display for all notes after this one
         const notesOnPage = document.querySelectorAll(".note");
@@ -831,7 +826,7 @@ class Companion extends Component {
           this.tick(this.state.selectedVideo, nDur);
           console.log(this.player);
           if (this.player.current) {
-            this.player.current.currentTime = Math.floor(nDur);
+            this.player.current.seekTo(Math.floor(nDur));
           }
         };
       }
@@ -1134,13 +1129,30 @@ class Companion extends Component {
             )}
           </div>
           <div className="videoWrapper">
-            <MidiPlayer
-              ref={this.player}
-              url={this.state.selectedVideo}
-              onNote={(note) => {
-                this.tick(this.state.selectedVideo, note.endTime);
-              }}
-            />
+            {this.state.selectedVideo && (
+              <ReactPlayer
+                playing
+                ref={this.player}
+                url={this.state.selectedVideo}
+                progressInterval={this.state.progressInterval} // update rate in milliseconds
+                controls={true}
+                width="100%"
+                height="100%"
+                onProgress={(p) => {
+                  this.tick(this.state.selectedVideo, p["playedSeconds"]);
+                }}
+                onReady={() => {
+                  if (this.state.seekTo) {
+                    console.log(
+                      "Render loop onReady: seeking to ",
+                      this.state.seekTo,
+                    );
+                    this.player.current.seekTo(Math.floor(this.state.seekTo));
+                    this.setState({ seekTo: "" });
+                  }
+                }}
+              />
+            )}
           </div>
         </div>
       );
@@ -1184,7 +1196,7 @@ class Companion extends Component {
           ),
         );
         if (this.player.current) {
-          this.player.current.currentTime = Math.floor(startTime);
+          this.player.current.seekTo(Math.floor(startTime));
         }
         this.setState({ currentSegment: selected[0] });
       }
@@ -1211,7 +1223,7 @@ class Companion extends Component {
       // The performance is mo:recorded_as an mo:Signal, the signal is mo:derived_from the midi file
       const selectedVideo =
         selectedPerformance["http://purl.org/ontology/mo/recorded_as"][
-          "http://purl.org/ontology/mo/derived_from"
+          "http://purl.org/ontology/mo/available_as"
         ]["@id"];
       let dur = instant["http://purl.org/NET/c4dm/timeline.owl#at"];
       dur = parseFloat(dur.substr(1, dur.length - 2));
@@ -1227,7 +1239,7 @@ class Companion extends Component {
       this.setState({ selectedVideo, selectedPerformance, seekTo }, () => {
         this.props.registerClock(selectedVideo);
         if (this.player.current) {
-          this.player.current.currentTime = seekTo;
+          this.player.current.seekTo(seekTo);
         }
       });
     }
@@ -1243,7 +1255,7 @@ class Companion extends Component {
     });
     const selectedVideo =
       selected[0]["http://purl.org/ontology/mo/recorded_as"][
-        "http://purl.org/ontology/mo/derived_from"
+        "http://purl.org/ontology/mo/available_as"
       ]["@id"];
     const selectedPerformance = selected[0];
     this.props.registerClock(selectedVideo);

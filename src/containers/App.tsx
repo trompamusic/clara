@@ -15,8 +15,8 @@ import UploadWait from "./UploadWait";
 import EditScore from "./EditScore";
 
 const publicPerformanceCollection =
-  "https://clara.solidcommunity.net/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld";
-const publicUserProfile = "https://clara.solidcommunity.net/profile/card#me";
+  "https://storage.inrupt.com/8e7d2ff0-be9c-4430-95b8-5a0370bf2942/clara.trompamusic.folder/performanceContainer/SchumannRenditions.jsonld";
+const publicUserProfile = "https://id.inrupt.com/clara";
 
 const router = createBrowserRouter([
   {
@@ -53,7 +53,7 @@ const router = createBrowserRouter([
         element: (
           <Companion
             uri={publicPerformanceCollection}
-            userPOD={`https://clara.solidcommunity.net/`}
+            userPOD={`https://storage.inrupt.com/8e7d2ff0-be9c-4430-95b8-5a0370bf2942/`}
             userProfile={publicUserProfile}
             demo
           />
