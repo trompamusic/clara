@@ -105,6 +105,7 @@ class Companion extends Component {
     this.player = React.createRef();
     this.featureVis = React.createRef();
     this.scoreComponent = React.createRef();
+    this.initialPerformanceAppliedId = "";
   }
 
   UNSAFE_componentWillMount() {
@@ -289,6 +290,7 @@ class Companion extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
+    this.applyInitialPerformanceSelection();
     if (
       !this.state.scoreComponentLoadingStarted &&
       this.scoreComponent.current
@@ -569,10 +571,20 @@ class Companion extends Component {
   };
   createInstantBoundingRects = () => {
     // draw bounding rectangles for the note(s) on this page representing each instance
+    if (
+      !this.state.selectedPerformance ||
+      !this.scoreComponent.current ||
+      !this.state.instantsByNoteId
+    ) {
+      return;
+    }
     let notesOnPagePerInstant = {};
     const boundingBoxesWrapper = document.getElementById(
       "instantBoundingBoxes",
     );
+    if (!boundingBoxesWrapper) {
+      return;
+    }
     // clear previous bounding boxes
     while (boundingBoxesWrapper.firstChild) {
       boundingBoxesWrapper.removeChild(boundingBoxesWrapper.firstChild);
@@ -587,17 +599,20 @@ class Companion extends Component {
     const selectedTimeline = this.ensureArray(
       selectedInstant[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"],
     )[0]["@id"];
+    const instantsByNote = this.state.instantsByNoteId[selectedTimeline];
+    if (!instantsByNote) {
+      return;
+    }
     console.log("Selected timeline: ", selectedTimeline);
     const notes = ReactDOM.findDOMNode(
       this.scoreComponent.current,
     ).querySelectorAll(".note");
     Array.prototype.map.call(notes, (n) => {
       // associate notes on this page with their instant duration
-      if (
-        n.getAttribute("id") in this.state.instantsByNoteId[selectedTimeline]
-      ) {
+      const noteIdAttr = n.getAttribute("id");
+      if (noteIdAttr && noteIdAttr in instantsByNote) {
         let nDur =
-          this.state.instantsByNoteId[selectedTimeline][n.getAttribute("id")][
+          instantsByNote[noteIdAttr][
             "http://purl.org/NET/c4dm/timeline.owl#at"
           ];
         nDur =
@@ -670,7 +685,7 @@ class Companion extends Component {
           "background: rgba(0,0,0," +
           parseFloat(
             1 -
-              this.state.instantsByNoteId[selectedTimeline][noteId][
+              instantsByNote[noteId][
                 "https://terms.trompamusic.eu/maps#confidence"
               ] *
                 0.01,
@@ -737,9 +752,7 @@ class Companion extends Component {
         });
       };
       let nDur =
-        this.state.instantsByNoteId[selectedTimeline][noteId][
-          "http://purl.org/NET/c4dm/timeline.owl#at"
-        ];
+        instantsByNote[noteId]["http://purl.org/NET/c4dm/timeline.owl#at"];
       nDur = nDur.substr(1, nDur.length - 2);
       if (parseInt(nDur) === -1) {
         console.log("Deleted note detected: ", noteId);
@@ -1250,14 +1263,16 @@ class Companion extends Component {
     if (perfId === "none") {
       return;
     }
-    const selected = this.state.performances.filter((perf) => {
-      return perf["@id"] === perfId;
-    });
+    const selected = this.findPerformanceByIdentifier(perfId);
+    if (!selected) {
+      console.warn("Unable to locate performance", perfId);
+      return;
+    }
     const selectedVideo =
-      selected[0]["http://purl.org/ontology/mo/recorded_as"][
+      selected["http://purl.org/ontology/mo/recorded_as"][
         "http://purl.org/ontology/mo/derived_from"
       ]["@id"];
-    const selectedPerformance = selected[0];
+    const selectedPerformance = selected;
     this.props.registerClock(selectedVideo);
     let newState = { selectedVideo, selectedPerformance };
     if ("@id" in this.state.currentSegment) {
@@ -1281,6 +1296,62 @@ class Companion extends Component {
       n.style.stroke = "";
     }); // reset note velocities
     this.setState(newState);
+  };
+
+  applyInitialPerformanceSelection = () => {
+    const initialPerformanceId = this.props.selectedPerformance;
+    const timelineIds = Object.keys(this.state.instantsByNoteId || {});
+    if (
+      !initialPerformanceId ||
+      this.state.loading ||
+      !this.state.performances.length ||
+      !timelineIds.length ||
+      this.initialPerformanceAppliedId === initialPerformanceId
+    ) {
+      return;
+    }
+
+    const matchingPerformance =
+      this.findPerformanceByIdentifier(initialPerformanceId);
+    if (!matchingPerformance) {
+      return;
+    }
+
+    const performances =
+      this.ensureArray(
+        matchingPerformance["http://purl.org/ontology/mo/recorded_as"],
+      ) || [];
+    const matchingTimeline = performances
+      .map((signal) =>
+        this.ensureArray(signal["http://purl.org/ontology/mo/time"]),
+      )
+      .flat()
+      .map((instant) =>
+        this.ensureArray(
+          instant["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"],
+        ),
+      )
+      .flat()
+      .map((timeline) => timeline && timeline["@id"])
+      .find((id) => id && timelineIds.includes(id));
+
+    if (!matchingTimeline) {
+      return;
+    }
+
+    this.initialPerformanceAppliedId = initialPerformanceId;
+    this.handlePerformanceSelected(matchingPerformance["@id"]);
+  };
+
+  findPerformanceByIdentifier = (identifier) => {
+    if (!identifier) {
+      return undefined;
+    }
+    const trimmedIdentifier = identifier.trim();
+    return this.state.performances.find((perf) => {
+      const perfUri = perf["@id"];
+      return perfUri ? perfUri === trimmedIdentifier : false;
+    });
   };
 
   findInstantToSeekTo = (

@@ -35,6 +35,7 @@ export default function Perform() {
     webId,
   } = useAuthentication();
   const score = searchParams.get("score");
+  const performance = searchParams.get("performance");
   const {
     mainContainerUri,
     isLoading: containerLoading,
@@ -71,6 +72,7 @@ export default function Perform() {
           userPOD={mainContainerUri}
           userProfile={webId!}
           fetch={fetch}
+          selectedPerformance={performance || undefined}
         />
       </div>
     );

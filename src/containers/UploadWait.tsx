@@ -22,7 +22,21 @@ export default function UploadWait() {
 
   useEffect(() => {
     if (data && data.status === "ok") {
-      window.open(`/perform?score=${score}`, "_self");
+      const params = new URLSearchParams();
+      if (score) {
+        params.set("score", score);
+      }
+      const performanceParam =
+        typeof data.performance === "string"
+          ? data.performance
+          : data.performance?.uri;
+      if (performanceParam) {
+        params.set("performance", performanceParam);
+      }
+      const targetUrl = params.toString()
+        ? `/perform?${params.toString()}`
+        : "/perform";
+      window.open(targetUrl, "_self");
     } else if (data) {
       setError(data.error);
     } else if (queryError) {
