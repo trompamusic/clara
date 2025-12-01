@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLdo, useResource, useSolidAuth } from "@ldo/solid-react";
 import { ContainerUri } from "@ldo/solid";
 import { CLARA_CONTAINER_NAME } from "../config";
+import { SolidProfileShapeType } from "../.ldo/solidProfile.shapeTypes";
 
 /**
  * Hook to get the authentication state and handle if the library is still checking authentication
@@ -51,7 +52,7 @@ export function useInterval(callback: () => any, delay: number) {
  */
 export function useMainContainer() {
   const { session } = useSolidAuth();
-  const { getResource } = useLdo();
+  const { getResource, dataset } = useLdo();
   const [mainContainerUri, setMainContainerUri] = useState<
     ContainerUri | undefined
   >();
@@ -69,28 +70,50 @@ export function useMainContainer() {
         setIsLoading(true);
         setError(null);
 
-        // Get the WebId resource
         const webIdResource = getResource(session.webId!);
-
-        // Check if the resource is valid
         if (webIdResource.type === "InvalidIdentifierResource") {
           setError("Invalid WebId resource");
           setIsLoading(false);
           return;
         }
 
-        // Get the root container associated with that WebId
-        const rootContainerResult = await webIdResource.getRootContainer();
-
-        if (rootContainerResult.isError) {
+        const readProfileResult = await webIdResource.readIfUnfetched();
+        if (readProfileResult.isError) {
           setError(
-            `Failed to get root container: ${rootContainerResult.message}`,
+            `Failed to read WebId profile: ${readProfileResult.message}`,
           );
           setIsLoading(false);
           return;
         }
 
-        setMainContainerUri(rootContainerResult.uri);
+        const profile = dataset
+          .usingType(SolidProfileShapeType)
+          .fromSubject(session.webId!);
+
+        const storageUris: ContainerUri[] = [];
+        profile?.storage?.forEach((storageNode) => {
+          if (storageNode?.["@id"]) {
+            storageUris.push(storageNode["@id"] as ContainerUri);
+          }
+        });
+
+        let resolvedUri: ContainerUri | undefined =
+          storageUris.length > 0 ? storageUris[0] : undefined;
+
+        if (!resolvedUri) {
+          const rootContainerResult = await webIdResource.getRootContainer();
+          if (rootContainerResult.isError) {
+            setError(
+              `Failed to get root container: ${rootContainerResult.message}`,
+            );
+            setIsLoading(false);
+            return;
+          }
+          resolvedUri = rootContainerResult.uri;
+        }
+
+        console.debug("Resolved main container URI:", resolvedUri);
+        setMainContainerUri(resolvedUri);
         setIsLoading(false);
       } catch (err) {
         setError(
@@ -101,7 +124,7 @@ export function useMainContainer() {
     };
 
     setupMainContainer();
-  }, [session.webId, getResource]);
+  }, [session.webId, getResource, dataset]);
 
   // Use the main container URI to get the resource
   const mainContainer = useResource(mainContainerUri);
