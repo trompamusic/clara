@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom";
+import PropTypes, { InferProps } from "prop-types";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import ReactPlayer from "react-player";
@@ -50,6 +51,8 @@ const vrvOptionsFeatureVis = {
 };
 
 class Companion extends Component {
+  /** @type {CompanionProps} */
+  props;
   constructor(props) {
     super(props);
     this.state = {
@@ -102,7 +105,6 @@ class Companion extends Component {
     this.player = React.createRef();
     this.featureVis = React.createRef();
     this.scoreComponent = React.createRef();
-    // this.solidClient = new SolidClient(this.props.session);
   }
 
   UNSAFE_componentWillMount() {
@@ -1796,6 +1798,56 @@ class Companion extends Component {
   };
 }
 
+// PropTypes documentation:
+// - score: Redux state from score reducer
+//   - score.MEI: Record<string, string> - Map of score URIs to MEI data
+//   - score.pageState: Record<string, {currentPage: number, pageCount: number, currentOptions?: any}> - Map of score URIs to page state
+//   - score.latestRenderedPageNum: number - Latest page number that has been rendered
+// - graph: Redux state from graph reducer
+//   - graph.graph: Array - Array of graph nodes
+//   - graph.objectives: Array - Array of traversal objectives
+//   - graph.outcomes: Array - Array of traversal outcomes (indexed: 0=performances, 1=segments, 2=instants, 3=annotations, 4=scores)
+//   - graph.allObjectivesApplied: boolean - Whether all traversal objectives have been applied
+// - traversalPool: Redux state from traversalPool reducer
+//   - traversalPool.running: number - Number of currently running traversals
+//   - traversalPool.pool: Record<string, any> - Map of traversal URIs to their parameters
+//   - traversalPool.graphDocs: Array<string> - Array of graph document URIs
+const companionOwnPropTypes = {
+  uri: PropTypes.string.isRequired,
+  userPOD: PropTypes.string,
+  userProfile: PropTypes.string,
+  fetch: PropTypes.func,
+  selectedPerformance: PropTypes.string,
+  annotationContainerUri: PropTypes.string,
+  demo: PropTypes.bool,
+};
+
+const companionInjectedPropTypes = {
+  score: PropTypes.object.isRequired,
+  graph: PropTypes.object.isRequired,
+  traversalPool: PropTypes.object.isRequired,
+  fetchScore: PropTypes.func.isRequired,
+  traverse: PropTypes.func.isRequired,
+  registerTraversal: PropTypes.func.isRequired,
+  setTraversalObjectives: PropTypes.func.isRequired,
+  checkTraversalObjectives: PropTypes.func.isRequired,
+  scoreNextPageStatic: PropTypes.func.isRequired,
+  scorePrevPageStatic: PropTypes.func.isRequired,
+  scorePageToComponentTarget: PropTypes.func.isRequired,
+  registerClock: PropTypes.func.isRequired,
+  tickTimedResource: PropTypes.func.isRequired,
+};
+
+const companionPropTypes = {
+  ...companionOwnPropTypes,
+  ...companionInjectedPropTypes,
+};
+
+/** @typedef {InferProps<typeof companionPropTypes>} CompanionProps */
+/** @typedef {InferProps<typeof companionOwnPropTypes>} CompanionOwnProps */
+
+Companion.propTypes = companionPropTypes;
+
 function mapStateToProps({ score, graph, traversalPool }) {
   return { score, graph, traversalPool };
 }
@@ -1818,6 +1870,13 @@ function mapDispatchToProps(dispatch) {
   );
 }
 
-export default connect(mapStateToProps, mapDispatchToProps, false, {
+const ConnectedCompanion = connect(mapStateToProps, mapDispatchToProps, false, {
   forwardRef: true,
 })(Companion);
+
+const CompanionComponent =
+  /** @type {import("react").ComponentType<CompanionOwnProps>} */ (
+    ConnectedCompanion
+  );
+
+export default CompanionComponent;
