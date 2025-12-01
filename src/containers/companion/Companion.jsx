@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 import PropTypes, { InferProps } from "prop-types";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
-import ReactPlayer from "react-player";
 
 import SelectableScore from "../../selectable-score/selectable-score";
 import NextPageButton from "../../selectable-score/next-page-button";
@@ -26,6 +25,7 @@ import {
 
 import FeatureVis from "./FeatureVis";
 import { MidiPlayer } from "./MidiPlayer";
+import AuthenticatedMediaPlayer from "./AuthenticatedMediaPlayer";
 
 const vrvOptionsPageView = {
   scale: 45,
@@ -1132,19 +1132,16 @@ class Companion extends Component {
           </div>
           <div className="videoWrapper">
             {this.state.selectedVideo && (
-              <ReactPlayer
-                playing
-                ref={this.player}
-                url={this.state.selectedVideo}
-                progressInterval={this.state.progressInterval} // update rate in milliseconds
-                controls={true}
-                width="100%"
-                height="100%"
+              <AuthenticatedMediaPlayer
+                src={this.state.selectedVideo}
+                demo={!!this.props.demo}
+                fetchFn={this.props.fetch}
+                progressInterval={this.state.progressInterval}
                 onProgress={(p) => {
                   this.tick(this.state.selectedVideo, p["playedSeconds"]);
                 }}
                 onReady={() => {
-                  if (this.state.seekTo) {
+                  if (this.state.seekTo && this.player.current) {
                     console.log(
                       "Render loop onReady: seeking to ",
                       this.state.seekTo,
@@ -1153,6 +1150,7 @@ class Companion extends Component {
                     this.setState({ seekTo: "" });
                   }
                 }}
+                playerRef={this.player}
               />
             )}
           </div>
