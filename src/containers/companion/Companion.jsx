@@ -26,6 +26,10 @@ import {
 import FeatureVis from "./FeatureVis";
 import { MidiPlayer } from "./MidiPlayer";
 import AuthenticatedMediaPlayer from "./AuthenticatedMediaPlayer";
+import {
+  readFeatureVisModePreference,
+  writeFeatureVisModePreference,
+} from "./featureVisPreferences";
 
 const vrvOptionsPageView = {
   scale: 45,
@@ -106,6 +110,7 @@ class Companion extends Component {
     this.featureVis = React.createRef();
     this.scoreComponent = React.createRef();
     this.initialPerformanceAppliedId = "";
+    this.featureVisPreferenceAppliedForUri = null;
   }
 
   UNSAFE_componentWillMount() {
@@ -157,6 +162,42 @@ class Companion extends Component {
           : vrvOptionsPageView,
     });
   }
+
+  isGraphReady = () => {
+    const timelineIds = Object.keys(this.state.instantsByNoteId || {});
+    return (
+      !this.state.loading &&
+      this.state.performances.length > 0 &&
+      timelineIds.length > 0
+    );
+  };
+
+  persistFeatureVisMode = (mode) => {
+    writeFeatureVisModePreference(this.props.uri, mode);
+    if (this.props.uri) {
+      this.featureVisPreferenceAppliedForUri = this.props.uri;
+    }
+  };
+
+  applyFeatureVisModePreference = () => {
+    if (!this.isGraphReady()) {
+      return;
+    }
+    const { uri } = this.props;
+    if (!uri || this.featureVisPreferenceAppliedForUri === uri) {
+      return;
+    }
+    const savedMode = readFeatureVisModePreference(uri);
+    if (savedMode && savedMode !== this.state.mode) {
+      if (savedMode === "featureVis") {
+        this.setModeFeatureVis();
+      } else {
+        this.setModePageView();
+      }
+      return;
+    }
+    this.featureVisPreferenceAppliedForUri = uri;
+  };
 
   submitCircleAnnotation = () => {
     // const anno = {
@@ -290,7 +331,11 @@ class Companion extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
+    if (prevProps.uri !== this.props.uri) {
+      this.featureVisPreferenceAppliedForUri = null;
+    }
     this.applyInitialPerformanceSelection();
+    this.applyFeatureVisModePreference();
     if (
       !this.state.scoreComponentLoadingStarted &&
       this.scoreComponent.current
@@ -459,6 +504,7 @@ class Companion extends Component {
   }
 
   setModeFeatureVis = () => {
+    this.persistFeatureVisMode("featureVis");
     this.setState({
       mode: "featureVis",
       vrvOptions: vrvOptionsFeatureVis,
@@ -468,6 +514,7 @@ class Companion extends Component {
   };
 
   setModePageView = () => {
+    this.persistFeatureVisMode("pageView");
     this.setState({
       mode: "pageView",
       vrvOptions: vrvOptionsPageView,
@@ -1300,16 +1347,14 @@ class Companion extends Component {
 
   applyInitialPerformanceSelection = () => {
     const initialPerformanceId = this.props.selectedPerformance;
-    const timelineIds = Object.keys(this.state.instantsByNoteId || {});
     if (
       !initialPerformanceId ||
-      this.state.loading ||
-      !this.state.performances.length ||
-      !timelineIds.length ||
+      !this.isGraphReady() ||
       this.initialPerformanceAppliedId === initialPerformanceId
     ) {
       return;
     }
+    const timelineIds = Object.keys(this.state.instantsByNoteId || {});
 
     const matchingPerformance =
       this.findPerformanceByIdentifier(initialPerformanceId);
