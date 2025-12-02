@@ -10,6 +10,7 @@ export default function UploadWait() {
 
   const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+  const [midiUrl, setMidiUrl] = useState<string | null>(null);
   const task = searchParams.get("task");
   const score = searchParams.get("score");
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ export default function UploadWait() {
 
   useEffect(() => {
     if (data && data.status === "ok") {
+      setError(null);
+      setMidiUrl(null);
       const params = new URLSearchParams();
       if (score) {
         params.set("score", score);
@@ -39,8 +42,10 @@ export default function UploadWait() {
       window.open(targetUrl, "_self");
     } else if (data) {
       setError(data.error);
+      setMidiUrl(data.midi_url ?? null);
     } else if (queryError) {
-      setError(queryError);
+      setError(String(queryError));
+      setMidiUrl(null);
     }
   }, [data, queryError, score]);
 
@@ -48,6 +53,12 @@ export default function UploadWait() {
     return (
       <div>
         <p>Error when processing performance: {error}</p>
+        {midiUrl && (
+          <p>
+            Sorry, the process failed but you can download your uploaded MIDI{" "}
+            <a href={midiUrl}>here</a>.
+          </p>
+        )}
         <p>
           <a
             href={`/perform?score=${score}`}
