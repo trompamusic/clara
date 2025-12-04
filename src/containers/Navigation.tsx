@@ -25,7 +25,7 @@ function LoginButton() {
   const [showIdpInput, setShowIdpInput] = useState(false);
   const { login } = useSolidAuth();
   const loginOptions = {
-    clientId: process.env.REACT_APP_CLIENT_ID_DOCUMENT_URL,
+    // clientId: process.env.REACT_APP_CLIENT_ID_DOCUMENT_URL,
     redirectUrl: window.location.origin,
   };
 
