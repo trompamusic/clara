@@ -60,7 +60,6 @@ class Companion extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selection: [],
       performances: [],
       segments: [],
       instants: [],
@@ -102,10 +101,6 @@ class Companion extends Component {
       toggleAnnotationRetrieval: true, // set to true when annotation update required
       highlights: [], // circles drawn to respond to highlight annotations
       highlightsOnPage: [], // ... those with at least one target on current page
-      selectorString: "", // forwarded to SelectableScore
-      circleButtonActive: false,
-      deleteAnnoButtonActive: false,
-      onSelect: () => console.error("onSelect with no selection handler"),
     };
     this.player = React.createRef();
     this.featureVis = React.createRef();
@@ -208,36 +203,6 @@ class Companion extends Component {
       return;
     }
     this.featureVisPreferenceAppliedForUri = uri;
-  };
-
-  submitCircleAnnotation = () => {
-    // const anno = {
-    //   "@context": "http://www.w3.org/ns/anno.jsonld",
-    //   "target": this.state.selection.map( (elem) => this.state.currentScore + "#" + elem.getAttribute("id") ),
-    //   "motivation": "highlighting"
-    // }
-    // let submitHandlerArgs = "submitHandlerArgs" in this.props ? this.props.submitHandlerArgs : {};
-    // this.solidClient.saveAnnotation(anno, new URL(this.props.annotationContainerUri).pathname)
-    //     .then((resp) => this.handleResponse(resp))
-    //     .catch((err) => `Couldn't save annotation: ${err}`);
-    this.setState({ circleButtonActive: false, selection: [] });
-  };
-
-  deleteAnnotations = () => {
-    if (
-      window.confirm(
-        "Do you really wish to permanently erase " +
-          this.state.selection.length +
-          " annotations?",
-      )
-    ) {
-      // this.state.selection.map((s) => {
-      //   this.solidClient.deleteAnnotation(s.dataset.uri)
-      //     .then(() => s.parentNode.removeChild(s))
-      //     .catch((e) => console.error("Couldn't delete annotation: ", s, e))
-      // })
-    }
-    this.setState({ deleteAnnoButtonActive: false, selection: [] });
   };
 
   deleteSelectedPerformance = () => {
@@ -902,11 +867,6 @@ class Companion extends Component {
     });
   };
 
-  handleSelectionChange = (selection) => {
-    this.setState({ selection });
-    this.state.onSelect();
-  };
-
   render() {
     if (this.state.loading) {
       return <div id="wrapper">Loading, please wait</div>;
@@ -1011,9 +971,9 @@ class Companion extends Component {
               uri={this.state.currentScore}
               key={`${this.state.currentScore}:${this.state.mode}`}
               vrvOptions={this.state.vrvOptions}
-              selectorString={this.state.selectorString}
+              selectorString=""
               selectionArea="#scoreSelectionArea"
-              onSelectionChange={this.handleSelectionChange}
+              onSelectionChange={() => {}}
               onScoreUpdate={this.handleDOMChangeObserved}
               annotationContainerUri={this.props.annotationContainerUri}
               onReceiveAnnotationContainerContent={
@@ -1123,68 +1083,6 @@ class Companion extends Component {
               ) : (
                 <span />
               )}
-              {"demo" in this.props ? (
-                <div className="annoButtons">
-                  <button id="circleButton" disabled>
-                    Circle
-                  </button>
-                </div>
-              ) : (
-                <div className="annoButtons">
-                  <button
-                    id="circleButton"
-                    className={this.state.circleButtonActive ? "active" : ""}
-                    onClick={() => {
-                      console.log("CLICK!", this.state.circleButtonActive);
-                      this.setState({
-                        selectorString: !this.state.circleButtonActive
-                          ? ".note, .dir, .dynam"
-                          : "",
-                        onSelect: !this.state.circleButtonActive
-                          ? this.submitCircleAnnotation
-                          : () =>
-                              console.error(
-                                "onSelect with no selection handler",
-                              ),
-                        circleButtonActive: !this.state.circleButtonActive,
-                        deleteAnnoButtonActive: false,
-                      });
-                    }}
-                  >
-                    {" "}
-                    Circle{" "}
-                  </button>
-                  <button
-                    id="deleteAnnoButton"
-                    className={
-                      this.state.deleteAnnoButtonActive ? "active" : ""
-                    }
-                    onClick={() => {
-                      console.log("CLICK!", this.state.deleteAnnoButtonActive);
-                      this.setState({
-                        selectorString: !this.state.deleteAnnoButtonActive
-                          ? ".scoreAnnotation"
-                          : "",
-                        onSelect: !this.state.deleteAnnoButtonActive
-                          ? this.deleteAnnotations
-                          : () =>
-                              console.error(
-                                "onSelect with no selection handler",
-                              ),
-                        deleteAnnoButtonActive:
-                          !this.state.deleteAnnoButtonActive,
-                        circleButtonActive: false,
-                      });
-                    }}
-                  >
-                    {" "}
-                    Delete annotations{" "}
-                  </button>
-                </div>
-              )}
-              {"demo" in this.props
-                ? "Score annotation not supported in demo version"
-                : ""}
             </span>
             {this.state.selectedPerformance ? (
               <div id="currentPerformanceLabel">
