@@ -956,8 +956,9 @@ class Companion extends Component {
         pageControlsWrapper = (
           <div
             id="pageControlsWrapper"
-            ref="pageControlsWrapper"
-            className={this.state.mode + " following"}
+            className={`${this.state.mode} ${
+              this.state.scoreFollowing ? "following" : ""
+            }`.trim()}
           >
             {!this.state.scoreFollowing &&
             this.props.score.pageState[this.state.currentScore].currentPage >

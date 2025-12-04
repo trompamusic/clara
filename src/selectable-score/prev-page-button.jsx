@@ -1,35 +1,79 @@
-import React, { Component } from "react";
+import React from "react";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { scorePrevPageStatic } from "meld-clients-core/lib/actions/index";
 
-class PrevPageButton extends Component {
-  constructor(props) {
-    super(props);
-    this.prevPage = this.prevPage.bind(this);
+const PrevPageButton = ({
+  uri,
+  currentPage,
+  pageCount,
+  pageState,
+  mei,
+  buttonContent = "",
+  scorePrevPageStatic: dispatchPrevPage,
+}) => {
+  const handleClick = () => {
+    console.log("[PrevPageButton] click", {
+      uri,
+      currentPage,
+      pageCount,
+      pageState,
+      hasMei: !!mei,
+    });
+    if (typeof currentPage !== "number") {
+      console.warn("[PrevPageButton] Missing currentPage for", uri);
+      return;
+    }
+    if (!mei) {
+      console.warn("[PrevPageButton] Missing MEI data for", uri);
+      return;
+    }
+    dispatchPrevPage(uri, currentPage, mei);
+  };
+
+  if (
+    pageState &&
+    typeof pageState.currentPage === "number" &&
+    pageState.currentPage <= 1
+  ) {
+    console.debug("[PrevPageButton] disabled - first page", {
+      uri,
+      pageState,
+    });
   }
 
-  prevPage() {
-    this.props.scorePrevPageStatic(
-      this.props.uri,
-      this.props.score.pageState[this.props.uri].currentPage,
-      this.props.score.MEI[this.props.uri],
-    );
-  }
+  return (
+    <div
+      className="selectable-score-prevPageButton"
+      role="button"
+      onClick={handleClick}
+    >
+      {buttonContent}
+    </div>
+  );
+};
 
-  render() {
-    const buttonContent =
-      "buttonContent" in this.props ? this.props.buttonContent : "";
-    return (
-      <div className="selectable-score-prevPageButton" onClick={this.prevPage}>
-        {buttonContent}
-      </div>
-    );
-  }
-}
+function mapStateToProps(state, ownProps) {
+  const score = state.score || {};
+  const pageState = score.pageState || {};
+  const meiMap = score.MEI || {};
+  const currentScoreState =
+    ownProps.uri && pageState[ownProps.uri]
+      ? pageState[ownProps.uri]
+      : undefined;
 
-function mapStateToProps({ score }) {
-  return { score };
+  return {
+    currentPage:
+      currentScoreState && typeof currentScoreState.currentPage === "number"
+        ? currentScoreState.currentPage
+        : undefined,
+    pageCount:
+      currentScoreState && typeof currentScoreState.pageCount === "number"
+        ? currentScoreState.pageCount
+        : undefined,
+    pageState: currentScoreState,
+    mei: ownProps.uri ? meiMap[ownProps.uri] : undefined,
+  };
 }
 
 function mapDispatchToProps(dispatch) {

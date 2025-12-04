@@ -208,6 +208,9 @@ button.active {
 
 #instantBoundingBoxes {
   position: absolute;
+  border: 1px dashed rgba(255, 102, 0, 0.4);
+  background: rgba(255, 102, 0, 0.05);
+  pointer-events: none;
 }
 
 .currentPerformanceLabel button{
@@ -264,13 +267,15 @@ button.active {
   color:white;
 }
 
-#pageControlsWrapper #prev, #pageControlsWrapper #next {
-  margin-top:.1em;
-  cursor:pointer;
+#pageControlsWrapper .selectable-score-prevPageButton,
+#pageControlsWrapper .selectable-score-nextPageButton {
+  margin-top: .1em;
+  cursor: pointer;
 }
 
-#pageControlsWrapper.following #prev, #pageControlsWrapper.following #next {
- cursor:default;
+#pageControlsWrapper.following .selectable-score-prevPageButton,
+#pageControlsWrapper.following .selectable-score-nextPageButton {
+  cursor: default;
 }
 
 #selectWrapper {
@@ -607,8 +612,6 @@ line.dynamicsConnector.active{
   border-radius: 12px;
   font-size: 0.8em;
 }
-
-
 
 
 

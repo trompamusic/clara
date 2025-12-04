@@ -1,35 +1,81 @@
-import React, { Component } from "react";
+import React from "react";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
 import { scoreNextPageStatic } from "meld-clients-core/lib/actions/index";
 
-class NextPageButton extends Component {
-  constructor(props) {
-    super(props);
-    this.nextPage = this.nextPage.bind(this);
+const NextPageButton = ({
+  uri,
+  currentPage,
+  pageCount,
+  pageState,
+  mei,
+  buttonContent = "",
+  scoreNextPageStatic: dispatchNextPage,
+}) => {
+  const handleClick = () => {
+    console.log("[NextPageButton] click", {
+      uri,
+      currentPage,
+      pageCount,
+      pageState,
+      hasMei: !!mei,
+    });
+    if (typeof currentPage !== "number") {
+      console.warn("[NextPageButton] Missing currentPage for", uri);
+      return;
+    }
+    if (!mei) {
+      console.warn("[NextPageButton] Missing MEI data for", uri);
+      return;
+    }
+    dispatchNextPage(uri, currentPage, mei);
+  };
+
+  if (
+    pageState &&
+    typeof pageState.currentPage === "number" &&
+    typeof pageCount === "number" &&
+    pageState.currentPage >= pageCount
+  ) {
+    console.debug("[NextPageButton] disabled - last page", {
+      uri,
+      pageState,
+      pageCount,
+    });
   }
 
-  nextPage() {
-    this.props.scoreNextPageStatic(
-      this.props.uri,
-      this.props.score.pageState[this.props.uri].currentPage,
-      this.props.score.MEI[this.props.uri],
-    );
-  }
+  return (
+    <div
+      className="selectable-score-nextPageButton"
+      role="button"
+      onClick={handleClick}
+    >
+      {buttonContent}
+    </div>
+  );
+};
 
-  render() {
-    let buttonContent =
-      "buttonContent" in this.props ? this.props.buttonContent : "";
-    return (
-      <div className="selectable-score-nextPageButton" onClick={this.nextPage}>
-        {buttonContent}
-      </div>
-    );
-  }
-}
+function mapStateToProps(state, ownProps) {
+  const score = state.score || {};
+  const pageState = score.pageState || {};
+  const meiMap = score.MEI || {};
+  const currentScoreState =
+    ownProps.uri && pageState[ownProps.uri]
+      ? pageState[ownProps.uri]
+      : undefined;
 
-function mapStateToProps({ score }) {
-  return { score };
+  return {
+    currentPage:
+      currentScoreState && typeof currentScoreState.currentPage === "number"
+        ? currentScoreState.currentPage
+        : undefined,
+    pageCount:
+      currentScoreState && typeof currentScoreState.pageCount === "number"
+        ? currentScoreState.pageCount
+        : undefined,
+    pageState: currentScoreState,
+    mei: ownProps.uri ? meiMap[ownProps.uri] : undefined,
+  };
 }
 
 function mapDispatchToProps(dispatch) {
