@@ -27,20 +27,39 @@ function LinkToUpload({ uri }: { uri: string }) {
  *  - Load the Clara interface, using the score that we downloaded to the user's pod
  */
 export default function Perform() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { session, fetch } = useSolidAuth();
   const {
     isAuthenticated,
     isLoading: authLoading,
     webId,
   } = useAuthentication();
-  const score = searchParams.get("score");
-  const performance = searchParams.get("performance");
   const {
     mainContainerUri,
     isLoading: containerLoading,
     error,
   } = useMainContainer();
+  const score = searchParams.get("score");
+  const performance = searchParams.get("performance");
+  const handlePerformanceSelected = React.useCallback(
+    (performanceId?: string) => {
+      const nextParams = new URLSearchParams(searchParams);
+      const currentPerformance = nextParams.get("performance");
+      if (performanceId) {
+        if (performanceId === currentPerformance) {
+          return;
+        }
+        nextParams.set("performance", performanceId);
+      } else {
+        if (!currentPerformance) {
+          return;
+        }
+        nextParams.delete("performance");
+      }
+      setSearchParams(nextParams);
+    },
+    [searchParams, setSearchParams],
+  );
 
   if (authLoading) {
     return <p>Checking authentication...</p>;
@@ -73,6 +92,7 @@ export default function Perform() {
           userProfile={webId!}
           fetch={fetch}
           selectedPerformance={performance || undefined}
+          onPerformanceSelected={handlePerformanceSelected}
         />
       </div>
     );

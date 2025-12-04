@@ -70,6 +70,7 @@ class Companion extends Component {
       barlinesOnPage: [],
       selectedVideo: "",
       selectedPerformance: "",
+      performanceSelectionCleared: false,
       lastMediaTick: 0,
       previouslyActive: [],
       currentlyActiveNoteIds: [],
@@ -183,8 +184,18 @@ class Companion extends Component {
     if (!this.isGraphReady()) {
       return;
     }
-    const { uri } = this.props;
-    if (!uri || this.featureVisPreferenceAppliedForUri === uri) {
+    const { uri, selectedPerformance } = this.props;
+    if (
+      !uri ||
+      !selectedPerformance ||
+      this.featureVisPreferenceAppliedForUri === uri
+    ) {
+      return;
+    }
+    const selectedPerformanceId =
+      this.state.selectedPerformance && this.state.selectedPerformance["@id"];
+    if (selectedPerformanceId !== selectedPerformance) {
+      // Wait until the requested performance has been selected via traversal
       return;
     }
     const savedMode = readFeatureVisModePreference(uri);
@@ -331,7 +342,10 @@ class Companion extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevProps.uri !== this.props.uri) {
+    if (
+      prevProps.uri !== this.props.uri ||
+      prevProps.selectedPerformance !== this.props.selectedPerformance
+    ) {
       this.featureVisPreferenceAppliedForUri = null;
     }
     this.applyInitialPerformanceSelection();
@@ -488,13 +502,6 @@ class Companion extends Component {
       this.createInstantBoundingRects(); // showConfidence preference changed; redraw boxes
       // TODO: This ref has dissapared
       // this.refs.showConfidenceToggle.checked = this.state.showConfidence;
-    }
-    if (
-      this.state.performances.length &&
-      prevState.scoreFollowing !== this.state.scoreFollowing
-    ) {
-      this.refs.pageControlsWrapper.classList.toggle("following");
-      this.refs.scoreFollowingToggle.checked = this.state.scoreFollowing;
     }
   }
 
@@ -1001,7 +1008,7 @@ class Companion extends Component {
           <div ref={this.scoreComponent} id="scoreSelectionArea">
             <SelectableScore
               uri={this.state.currentScore}
-              key={this.state.currentScore}
+              key={`${this.state.currentScore}:${this.state.mode}`}
               vrvOptions={this.state.vrvOptions}
               selectorString={this.state.selectorString}
               selectionArea="#scoreSelectionArea"
@@ -1016,6 +1023,14 @@ class Companion extends Component {
           </div>
         );
       }
+
+      const selectedPerformanceId =
+        this.state.selectedPerformance && this.state.selectedPerformance["@id"];
+      const performanceSelectValue = selectedPerformanceId
+        ? selectedPerformanceId
+        : this.state.performanceSelectionCleared
+          ? "none"
+          : "placeholder";
 
       return (
         <div id="wrapper">
@@ -1041,11 +1056,13 @@ class Companion extends Component {
             </select>
             <select
               name="perfSelect"
-              defaultValue="none"
-              value={this.state.selectedPerformance["@id"]}
+              value={performanceSelectValue}
               onChange={(e) => this.handlePerformanceSelected(e.target.value)}
             >
-              <option value="none">Select a rendition...</option>
+              <option value="placeholder" disabled>
+                Select a rendition...
+              </option>
+              <option value="none">-- None --</option>
               {this.state.performances
                 .sort((a, b) =>
                   a["http://www.w3.org/2000/01/rdf-schema#label"].localeCompare(
@@ -1063,13 +1080,12 @@ class Companion extends Component {
             &nbsp;
             <span>
               {this.state.performances.length &&
-              this.state.selectedPerformance !== "" ? (
+              this.state.selectedPerformance ? (
                 <span>
                   <span id="scoreFollowToggle">
                     <input
                       id="controlAutomaticPageTurning"
                       type="checkbox"
-                      ref="scoreFollowingToggle"
                       checked={this.state.scoreFollowing}
                       onChange={() => {
                         this.setState({
@@ -1296,18 +1312,51 @@ class Companion extends Component {
         n.style.fill = "";
         n.style.stroke = "";
       }); // reset note velocities
-      this.setState({ selectedVideo, selectedPerformance, seekTo }, () => {
-        this.props.registerClock(selectedVideo);
-        if (this.player.current) {
-          this.player.current.seekTo(seekTo);
-        }
-      });
+      this.setState(
+        {
+          selectedVideo,
+          selectedPerformance,
+          seekTo,
+          performanceSelectionCleared: false,
+        },
+        () => {
+          this.props.registerClock(selectedVideo);
+          if (this.player.current) {
+            this.player.current.seekTo(seekTo);
+          }
+        },
+      );
     }
   };
 
-  handlePerformanceSelected = (perfId) => {
+  handlePerformanceSelected = (perfId, options = {}) => {
+    const { notifyParent = true } = options;
     console.log("Rendition selected: ", perfId);
-    if (perfId === "none") {
+    if (perfId === "placeholder") {
+      return;
+    }
+    if (!perfId || perfId === "none") {
+      document.querySelectorAll(".note").forEach((n) => {
+        n.style.fill = "";
+        n.style.stroke = "";
+      });
+      this.setState(
+        {
+          selectedPerformance: "",
+          selectedVideo: "",
+          seekTo: "",
+          performanceSelectionCleared: true,
+        },
+        () => {
+          this.initialPerformanceAppliedId = "";
+          if (this.state.mode !== "pageView") {
+            this.setModePageView();
+          }
+          if (notifyParent && this.props.onPerformanceSelected) {
+            this.props.onPerformanceSelected(undefined);
+          }
+        },
+      );
       return;
     }
     const selected = this.findPerformanceByIdentifier(perfId);
@@ -1321,7 +1370,11 @@ class Companion extends Component {
       ]["@id"];
     const selectedPerformance = selected;
     this.props.registerClock(selectedVideo);
-    let newState = { selectedVideo, selectedPerformance };
+    let newState = {
+      selectedVideo,
+      selectedPerformance,
+      performanceSelectionCleared: false,
+    };
     if ("@id" in this.state.currentSegment) {
       // set up a jump to the currently selected segment in this performance
       const timelineSegment = this.findInstantToSeekTo(
@@ -1342,7 +1395,11 @@ class Companion extends Component {
       n.style.fill = "";
       n.style.stroke = "";
     }); // reset note velocities
-    this.setState(newState);
+    this.setState(newState, () => {
+      if (notifyParent && this.props.onPerformanceSelected) {
+        this.props.onPerformanceSelected(selected["@id"]);
+      }
+    });
   };
 
   applyInitialPerformanceSelection = () => {
@@ -1385,7 +1442,9 @@ class Companion extends Component {
     }
 
     this.initialPerformanceAppliedId = initialPerformanceId;
-    this.handlePerformanceSelected(matchingPerformance["@id"]);
+    this.handlePerformanceSelected(matchingPerformance["@id"], {
+      notifyParent: false,
+    });
   };
 
   findPerformanceByIdentifier = (identifier) => {
@@ -1932,6 +1991,7 @@ const companionOwnPropTypes = {
   userProfile: PropTypes.string,
   fetch: PropTypes.func,
   selectedPerformance: PropTypes.string,
+  onPerformanceSelected: PropTypes.func,
   annotationContainerUri: PropTypes.string,
   demo: PropTypes.bool,
 };
