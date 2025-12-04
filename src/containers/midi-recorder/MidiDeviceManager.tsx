@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { WebMidi, Input, MessageEvent } from "webmidi";
+import { WebMidi, Input, MessageEvent, PortEvent } from "webmidi";
 import { Card, Form, Button, Alert, Spinner } from "react-bootstrap";
 
 interface MidiDeviceManagerProps {
@@ -8,6 +8,18 @@ interface MidiDeviceManagerProps {
   selectedDevice: Input | null;
   recordingStatus?: React.ReactNode;
 }
+
+const getUniqueInputsById = (inputs: Input[]): Input[] => {
+  const map = new Map<string, Input>();
+  inputs.forEach((input) => {
+    const key =
+      input.id ||
+      `${input.manufacturer || "unknown"}-${input.name || "unknown"}`;
+    map.set(key, input);
+  });
+
+  return Array.from(map.values());
+};
 
 const MidiDeviceManager: React.FC<MidiDeviceManagerProps> = ({
   onDeviceSelect,
@@ -22,84 +34,91 @@ const MidiDeviceManager: React.FC<MidiDeviceManagerProps> = ({
   >(null);
 
   const didInit = useRef(false);
+  const selectedDeviceRef = useRef<Input | null>(null);
 
-  // Initialize MIDI
   useEffect(() => {
+    selectedDeviceRef.current = selectedDevice;
+  }, [selectedDevice]);
+
+  const initializeMidi = useCallback(async () => {
     if (didInit.current) return;
 
-    const initializeMidi = async () => {
-      // First check if browser supports WebMIDI
-      if (!("requestMIDIAccess" in navigator)) {
-        console.warn("Browser does not support WebMIDI");
-        setMidiSupported(false);
-        setMidiPermission(null);
-        return;
+    if (!("requestMIDIAccess" in navigator)) {
+      console.warn("Browser does not support WebMIDI");
+      setMidiSupported(false);
+      setMidiPermission(null);
+      return;
+    }
+
+    didInit.current = true;
+
+    setMidiSupported(true);
+    setMidiPermission("pending");
+
+    try {
+      await WebMidi.enable();
+
+      setMidiPermission("granted");
+
+      WebMidi.inputs.forEach((input) => {
+        console.log("input", input);
+      });
+
+      const inputs = getUniqueInputsById(WebMidi.inputs);
+      setMidiInputs(inputs);
+
+      if (inputs.length === 1) {
+        onDeviceSelect(inputs[0]);
       }
 
-      // Browser supports WebMIDI, set supported to true
-      setMidiSupported(true);
-      setMidiPermission("pending");
-
-      try {
-        await WebMidi.enable();
-
-        // User granted permission
-        setMidiPermission("granted");
-
-        const inputs: Input[] = [];
-
-        // Get all available inputs
-        WebMidi.inputs.forEach((input) => {
-          console.log("input", input);
-
-          inputs.push(input);
-        });
-
-        setMidiInputs(inputs);
-
-        // Auto-select the first device if only one is available
-        if (inputs.length === 1) {
-          onDeviceSelect(inputs[0]);
-        }
-
-        // Listen for device connection/disconnection
-        WebMidi.addListener("connected", (event) => {
-          if (event.port.type === "input") {
-            const input = event.port as Input;
-            setMidiInputs((prev) => {
-              const newInputs = [...prev, input];
-              // Auto-select if this is the first device
-              if (prev.length === 0) {
-                onDeviceSelect(input);
-              }
-              return newInputs;
-            });
-          }
-        });
-
-        WebMidi.addListener("disconnected", (event) => {
-          if (event.port.type === "input") {
-            const disconnectedInput = event.port as Input;
-            setMidiInputs((prev) =>
-              prev.filter((input) => input.id !== event.port.id),
-            );
-
-            // If the selected device was disconnected, clear selection
-            if (selectedDevice && selectedDevice.id === disconnectedInput.id) {
-              onDeviceSelect(null);
+      const handleConnected = (event: PortEvent) => {
+        if (event.port.type === "input") {
+          const input = event.port as Input;
+          setMidiInputs((prev) => {
+            const exists = prev.some((existing) => existing.id === input.id);
+            if (exists) {
+              return prev.map((existing) =>
+                existing.id === input.id ? input : existing,
+              );
             }
+
+            const updated = [...prev, input];
+            if (updated.length === 1) {
+              onDeviceSelect(input);
+            }
+            return updated;
+          });
+        }
+      };
+
+      const handleDisconnected = (event: PortEvent) => {
+        if (event.port.type === "input") {
+          const disconnectedInput = event.port as Input;
+          setMidiInputs((prev) =>
+            prev.filter((input) => input.id !== event.port.id),
+          );
+
+          if (
+            selectedDeviceRef.current &&
+            selectedDeviceRef.current.id === disconnectedInput.id
+          ) {
+            onDeviceSelect(null);
           }
-        });
+        }
+      };
 
-        didInit.current = true;
-      } catch (err) {
-        console.error("Failed to initialize MIDI:", err);
-        setMidiPermission("denied");
-      }
-    };
+      WebMidi.addListener("connected", handleConnected);
+      WebMidi.addListener("disconnected", handleDisconnected);
+    } catch (err) {
+      console.error("Failed to initialize MIDI:", err);
+      setMidiPermission("denied");
+      didInit.current = false;
+    }
+  }, [onDeviceSelect]);
 
+  useEffect(() => {
     initializeMidi();
-  }, [onDeviceSelect, selectedDevice]);
+  }, [initializeMidi]);
 
   // Manage MIDI event listeners when selected device changes
   useEffect(() => {
@@ -120,33 +139,13 @@ const MidiDeviceManager: React.FC<MidiDeviceManagerProps> = ({
 
   // Retry MIDI access
   const retryMidiAccess = useCallback(() => {
+    WebMidi.removeListener("connected");
+    WebMidi.removeListener("disconnected");
     didInit.current = false;
-    setMidiPermission("pending");
     setMidiInputs([]);
-
-    const initializeMidi = async () => {
-      try {
-        await WebMidi.enable();
-
-        setMidiPermission("granted");
-
-        const inputs: Input[] = [];
-
-        // Get all available inputs
-        WebMidi.inputs.forEach((input) => {
-          inputs.push(input);
-        });
-
-        setMidiInputs(inputs);
-        didInit.current = true;
-      } catch (err) {
-        console.error("Failed to initialize MIDI:", err);
-        setMidiPermission("denied");
-      }
-    };
-
+    setMidiPermission("pending");
     initializeMidi();
-  }, []);
+  }, [initializeMidi]);
 
   // Cleanup on unmount
   useEffect(() => {
