@@ -1195,10 +1195,12 @@ class Companion extends Component {
       );
     } else {
       const selectedPerformance = performances[0];
-      // The performance is mo:recorded_as an mo:Signal, the signal is mo:derived_from the midi file
+      // The performance is mo:recorded_as an mo:Signal
+      // The signal is mo:available_as an mp3 is
+      // The MIDI file is mo:derived_from of the signal
       const selectedVideo =
         selectedPerformance["http://purl.org/ontology/mo/recorded_as"][
-          "http://purl.org/ontology/mo/derived_from"
+          "http://purl.org/ontology/mo/available_as"
         ]["@id"];
       let dur = instant["http://purl.org/NET/c4dm/timeline.owl#at"];
       dur = parseFloat(dur.substr(1, dur.length - 2));
@@ -1265,7 +1267,7 @@ class Companion extends Component {
     }
     const selectedVideo =
       selected["http://purl.org/ontology/mo/recorded_as"][
-        "http://purl.org/ontology/mo/derived_from"
+        "http://purl.org/ontology/mo/available_as"
       ]["@id"];
     const selectedPerformance = selected;
     this.props.registerClock(selectedVideo);
