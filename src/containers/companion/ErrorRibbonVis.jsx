@@ -102,58 +102,6 @@ export default class ErrorRibbonVis extends Component {
     return nameToNum;
   }
 
-  /* // from Werner's notes
-  pitchToNum(pitchName) {
-    let nameToNum;
-    switch(pitchName) {
-      case "C":
-        nameToNum = 0;
-        break;
-      case "Cs":
-      case "Db":
-        nameToNum = 1;
-        break;
-      case "D":
-        nameToNum = 2;
-        break;
-      case "Ds":
-      case "Eb":
-        nameToNum = 3;
-        break;
-      case "E":
-        nameToNum = 4;
-        break;
-      case "F":
-        nameToNum = 5;
-        break;
-      case "F#":
-      case "Gb":
-        nameToNum = 6;
-        break;
-      case "G":
-        nameToNum = 7;
-        break;
-      case "Gs":
-      case "Ab":
-        nameToNum = 8;
-        break;
-      case "A":
-        nameToNum = 9;
-        break;
-      case "As":
-      case "Bb":
-        nameToNum = 10;
-        break;
-      case "B":
-        nameToNum = 11;
-        break;
-      default:
-        console.error("pitchToNum called with unrecognised pitch name:", pitchName)
-    }
-    return nameToNum;
-  }
-  */
-
   determineInsertedNoteYPosition = (inserted, clef) => {
     if (!("shape" in clef.dataset)) {
       console.error(
@@ -247,19 +195,9 @@ export default class ErrorRibbonVis extends Component {
   renderSvg() {
     if (!this.state.loading && Object.keys(this.props.timemapByNoteId).length) {
       let svgElements = [];
-      let inpaintElements = [];
       let notesOnPageForDebug = [];
       let deletedNoteIndicators = [];
       let insertedNoteIndicators = [];
-      // set up positioning for inpaint SVG
-      const scoreComponentBoundingRect =
-        this.props.scoreComponent.current.getBoundingClientRect();
-      const inpaintSvgStyle = {
-        position: "absolute",
-        top: scoreComponentBoundingRect.top + window.scrollY + "px",
-        left: scoreComponentBoundingRect.left + window.scrollX + "px",
-        height: scoreComponentBoundingRect.height,
-      };
       // generate barlines
       Array.from(this.props.barlinesOnPage).forEach((bl, ix) => {
         const absolute = convertCoords(bl);
@@ -457,88 +395,6 @@ export default class ErrorRibbonVis extends Component {
                     );
                     return "";
                   } else {
-                    if (tl === this.props.currentTimeline) {
-                      // for debug purposes
-                      Array.from(this.props.notesOnPage).forEach((n, ix) => {
-                        notesOnPageForDebug = [
-                          notesOnPageForDebug,
-                          this.props.makePoint(
-                            className + " debug " + n.getAttribute("id"),
-                            "NONE",
-                            tl,
-                            n.querySelector(".notehead").getBoundingClientRect()
-                              .x,
-                            n.querySelector(".notehead").getBoundingClientRect()
-                              .y -
-                              scoreComponentBoundingRect.top -
-                              50,
-                            10,
-                            10,
-                            "debug-" + ix,
-                            "debug note inpaint " + tl,
-                          ),
-                        ];
-                      });
-
-                      // determine closest clef for purposes of inpainting error:
-                      const clef = closestClef(
-                        contextNoteElements[0].getAttribute("id"),
-                      );
-                      if (clef) {
-                        const insertedNoteY =
-                          this.determineInsertedNoteYPosition(inserted, clef);
-                        //const contextNoteCoords = convertCoords(contextNoteElements[0].querySelector(".notehead"));
-                        const contextNoteAverageX =
-                          contextNoteElements
-                            .map(
-                              (ctx) =>
-                                ctx
-                                  .querySelector(".notehead")
-                                  .getBoundingClientRect().x,
-                            )
-                            .reduce((a, b) => a + b) /
-                          contextNoteElements.length;
-
-                        if (insertedNoteY) {
-                          console.log("ADDING", inserted);
-                          inpaintElements = [
-                            ...inpaintElements,
-                            this.props.makePoint(
-                              className +
-                                " inpainted " +
-                                this.props
-                                  .ensureArray(
-                                    Object.values(inserted)[0][
-                                      "http://purl.org/vocab/frbr/core#embodimentOf"
-                                    ],
-                                  )[0]
-                                  [
-                                    "@id"
-                                  ].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
-                              closestPredecessorScoretime.qstamp,
-                              tl,
-                              contextNoteAverageX,
-                              insertedNoteY - scoreComponentBoundingRect.top,
-                              3,
-                              3,
-                              "inpainted-" +
-                                inserted[scoretimeOfInsertedOnPage]["@id"] +
-                                "-" +
-                                ix,
-                              this.props
-                                .ensureArray(
-                                  Object.values(inserted)[0][
-                                    "http://purl.org/vocab/frbr/core#embodimentOf"
-                                  ],
-                                )[0]
-                                [
-                                  "@id"
-                                ].replace("https://terms.trompamusic.eu/maps#inserted_", ""),
-                            ),
-                          ];
-                        }
-                      }
-                    }
                     const xPos =
                       contextNoteElementXPositions.reduce(
                         (sum, x) => sum + x,
@@ -589,18 +445,6 @@ export default class ErrorRibbonVis extends Component {
               ref={this.errorRibbonSvg}
             >
               {svgElements}
-            </svg>
-            <svg
-              id="errorInpaint"
-              xmlns="http://www.w3.org/2000/svg"
-              xmlnsXlink="http://www.w3.org/1999/xlink"
-              width={this.state.width}
-              height={this.state.height}
-              transform="translate(0, 50)"
-              style={inpaintSvgStyle}
-              ref={this.errorInpaintSvg}
-            >
-              {inpaintElements}
             </svg>
           </div>
         ),
