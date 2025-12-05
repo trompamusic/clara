@@ -923,7 +923,7 @@ class Companion extends Component {
                 playing={this.state.isPlaying}
                 onPlay={this.handlePlayerPlay}
                 onPause={this.handlePlayerPause}
-                progressInterval={this.state.progressInterval}
+                progressInterval={1} // in milliseconds
                 onProgress={(p) => {
                   this.tick(this.state.selectedVideo, p["playedSeconds"]);
                 }}
