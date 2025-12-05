@@ -88,6 +88,7 @@ class Companion extends Component {
       maxMappedVelocity: 255, // max opacity (when note played at largest expected velocity)
       minExpectedVel: 0, // guesstimate as to a note played at pianissimo (unit: midi velocity)
       maxExpectedVel: 110, // guesstimate as to a note played at fortissimo (unit: midi velocity)
+      isPlaying: false,
       mode: "pageView", // currently either pageView (portrait style) or featureVis (flattened single-system with visualisation)
       featureVisPageNum: 0, // guards against race conditions between Vrv score and featureVis svg
       latestObservedPageNum: 0,
@@ -569,6 +570,7 @@ class Companion extends Component {
               "https://meld.linkedmusic.org/terms/offset"
             ],
           );
+        this.setState({ isPlaying: true });
         this.tick(this.state.selectedVideo, nDur);
         if (this.player.current) {
           this.player.current.seekTo(Math.floor(nDur));
@@ -918,6 +920,9 @@ class Companion extends Component {
                 src={this.state.selectedVideo}
                 demo={!!this.props.demo}
                 fetchFn={this.props.fetch}
+                playing={this.state.isPlaying}
+                onPlay={this.handlePlayerPlay}
+                onPause={this.handlePlayerPause}
                 progressInterval={this.state.progressInterval}
                 onProgress={(p) => {
                   this.tick(this.state.selectedVideo, p["playedSeconds"]);
@@ -1026,6 +1031,7 @@ class Companion extends Component {
           selectedPerformance,
           seekTo,
           performanceSelectionCleared: false,
+          isPlaying: false,
         },
         () => {
           this.props.registerClock(selectedVideo);
@@ -1054,6 +1060,7 @@ class Companion extends Component {
           selectedVideo: "",
           seekTo: "",
           performanceSelectionCleared: true,
+          isPlaying: false,
         },
         () => {
           this.initialPerformanceAppliedId = "";
@@ -1082,6 +1089,7 @@ class Companion extends Component {
       selectedVideo,
       selectedPerformance,
       performanceSelectionCleared: false,
+      isPlaying: false,
     };
     if ("@id" in this.state.currentSegment) {
       // set up a jump to the currently selected segment in this performance
@@ -1414,6 +1422,18 @@ class Companion extends Component {
         }
       });
       this.setState(newState);
+    }
+  };
+
+  handlePlayerPlay = () => {
+    if (!this.state.isPlaying) {
+      this.setState({ isPlaying: true });
+    }
+  };
+
+  handlePlayerPause = () => {
+    if (this.state.isPlaying) {
+      this.setState({ isPlaying: false });
     }
   };
 

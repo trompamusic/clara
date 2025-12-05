@@ -16,6 +16,9 @@ interface AuthenticatedMediaPlayerProps {
   onProgress?: ReactPlayerProps["onProgress"];
   onReady?: ReactPlayerProps["onReady"];
   playerRef?: ReactPlayerProps["ref"];
+  playing?: boolean;
+  onPlay?: ReactPlayerProps["onPlay"];
+  onPause?: ReactPlayerProps["onPause"];
 }
 
 const AuthenticatedMediaPlayer: React.FC<AuthenticatedMediaPlayerProps> = ({
@@ -26,6 +29,9 @@ const AuthenticatedMediaPlayer: React.FC<AuthenticatedMediaPlayerProps> = ({
   onProgress,
   onReady,
   playerRef,
+  playing = false,
+  onPlay,
+  onPause,
 }) => {
   const [resolvedUrl, setResolvedUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -146,7 +152,7 @@ const AuthenticatedMediaPlayer: React.FC<AuthenticatedMediaPlayerProps> = ({
         </div>
       )}
       <ReactPlayer
-        playing
+        playing={playing}
         ref={playerRef}
         url={resolvedUrl || undefined}
         progressInterval={progressInterval}
@@ -155,6 +161,8 @@ const AuthenticatedMediaPlayer: React.FC<AuthenticatedMediaPlayerProps> = ({
         height="100%"
         onProgress={onProgress}
         onReady={onReady}
+        onPlay={onPlay}
+        onPause={onPause}
       />
     </div>
   );
