@@ -38,6 +38,7 @@ const WebMidiRecorder: React.FC<{
     isUploading: false,
     error: null,
   });
+  const [noteEventCount, setNoteEventCount] = useState(0);
 
   // Refs
   const timerRef = useRef<NodeJS.Timeout>();
@@ -94,30 +95,50 @@ const WebMidiRecorder: React.FC<{
       if (!selectedDevice) return;
 
       const dataArray = Array.from(mes.data);
-      const status = dataArray[0] as number;
+      const status = (dataArray[0] as number) ?? 0;
+      const velocity = (dataArray[2] as number) ?? 0;
+      const isNoteOn = status >= 0x90 && status <= 0x9f && velocity > 0;
+      const isNoteOff =
+        (status >= 0x80 && status <= 0x8f) ||
+        (status >= 0x90 && status <= 0x9f && velocity === 0);
+      const isNoteEvent = isNoteOn || isNoteOff;
+      const now = Date.now();
+      let noteEventRecorded = false;
 
-      // Check if this is a note on or note off event on any channel
-      const isNoteOn = status >= 0x90 && status <= 0x9f;
-      const isNoteOff = status >= 0x80 && status <= 0x8f;
+      setRecordingState((prev) => {
+        if (!prev.isRecording && !isNoteOn) {
+          return prev;
+        }
 
-      if (!isNoteOn && !isNoteOff) return;
+        if (!prev.isRecording && isNoteOn) {
+          noteEventRecorded = true;
+          return {
+            ...prev,
+            isRecording: true,
+            startTime: now,
+            elapsedTime: 0,
+            events: [...prev.events, { data: mes.data, timeStamp: now }],
+          };
+        }
 
-      // Set recording start time if this is the first note
-      if (!recordingState.isRecording) {
-        setRecordingState((prev) => ({
-          ...prev,
-          startTime: Date.now(),
-          elapsedTime: 0, // Reset elapsed time for new recording
-        }));
+        if (prev.isRecording) {
+          if (isNoteEvent) {
+            noteEventRecorded = true;
+          }
+          return {
+            ...prev,
+            events: [...prev.events, { data: mes.data, timeStamp: now }],
+          };
+        }
+
+        return prev;
+      });
+
+      if (noteEventRecorded) {
+        setNoteEventCount((prev) => prev + 1);
       }
-
-      setRecordingState((prev) => ({
-        ...prev,
-        events: [...prev.events, { data: mes.data, timeStamp: Date.now() }],
-        isRecording: true,
-      }));
     },
-    [selectedDevice, recordingState.isRecording],
+    [selectedDevice],
   );
 
   // Update elapsed time while recording
@@ -235,19 +256,15 @@ const WebMidiRecorder: React.FC<{
 
   // Handle MIDI events timeout - this should only detect when recording stops, not submit
   useEffect(() => {
-    if (recordingState.events.length === 0) {
+    if (noteEventCount === 0) {
       return;
     }
 
-    // Clear existing timer
     if (timerRef.current) {
       clearTimeout(timerRef.current);
     }
 
-    // Set new timer - this only detects when recording stops, doesn't submit
     timerRef.current = setTimeout(() => {
-      // Just mark recording as stopped, don't submit yet
-      // Keep the elapsed time so the countdown can start
       setRecordingState((prev) => ({
         ...prev,
         isRecording: false,
@@ -256,11 +273,10 @@ const WebMidiRecorder: React.FC<{
       }));
     }, MIDI_TIMEOUT);
 
-    // Cleanup timer on unmount or when midiEvents change
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [recordingState.events]);
+  }, [noteEventCount]);
 
   // Manual upload handler
   const handleManualUpload = useCallback(

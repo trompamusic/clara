@@ -124,15 +124,9 @@ const MidiDeviceManager: React.FC<MidiDeviceManagerProps> = ({
   useEffect(() => {
     if (!selectedDevice) return;
 
-    // Add listeners to selected device
-    selectedDevice.addListener("noteon", onMidiMessage);
-    selectedDevice.addListener("noteoff", onMidiMessage);
     selectedDevice.addListener("midimessage", onMidiMessage);
 
-    // Cleanup function to remove listeners
     return () => {
-      selectedDevice.removeListener("noteon", onMidiMessage);
-      selectedDevice.removeListener("noteoff", onMidiMessage);
       selectedDevice.removeListener("midimessage", onMidiMessage);
     };
   }, [selectedDevice, onMidiMessage]);
