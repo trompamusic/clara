@@ -82,7 +82,6 @@ class Companion extends Component {
       traversalThreshold: 10, // max parallel traversal threads,
       loading: true, // flip when traversals are completed
       scoreFollowing: true, // if true, page automatically with playback
-      showConfidence: false, // if true, visualise MAPS confidence per instant
       showVelocities: true, // if true, visualise note velocities
       showInsertedDeleted: true, // if true, visualise note insertions and deletions
       minMappedVelocity: 0, // minimum opacity (when note played at smallest expected velocity
@@ -271,9 +270,6 @@ class Companion extends Component {
         },
         () => {
           this.determineHighlightsOnPage();
-          if (this.state.selectedPerformance) {
-            this.createInstantBoundingRects();
-          }
         },
       );
     }
@@ -444,7 +440,6 @@ class Companion extends Component {
       prevProps.score.latestRenderedPageNum !==
         this.props.score.latestRenderedPageNum // page flipped while performance selected
     ) {
-      this.createInstantBoundingRects();
       this.highlightDeletedNotes();
     }
 
@@ -455,18 +450,12 @@ class Companion extends Component {
     ) {
       // performance has been changed; reassign click handlers
       //      this.assignClickHandlersToNotes();
-      this.createInstantBoundingRects();
       this.highlightDeletedNotes();
       this.setState({
         notesOnPage: ReactDOM.findDOMNode(
           this.scoreComponent.current,
         ).querySelectorAll(".note"),
       });
-    }
-    if (prevState.showConfidence !== this.state.showConfidence) {
-      this.createInstantBoundingRects(); // showConfidence preference changed; redraw boxes
-      // TODO: This ref has dissapared
-      // this.refs.showConfidenceToggle.checked = this.state.showConfidence;
     }
   }
 
@@ -520,11 +509,6 @@ class Companion extends Component {
               this.props.score.pageState[this.state.currentScore].currentPage,
               this.props.score.MEI[this.state.currentScore],
             );
-          }
-          break;
-        case 67: // 'c'  => "confidence"
-          if (this.state.selectedPerformance) {
-            this.setState({ showConfidence: !this.state.showConfidence });
           }
           break;
         case 70: // 'f'  => "follow"
@@ -588,27 +572,15 @@ class Companion extends Component {
       }
     }
   };
-  createInstantBoundingRects = () => {
-    // draw bounding rectangles for the note(s) on this page representing each instance
+  getInstantBoundingRectElements = () => {
+    // build React elements for the note bounding rectangles based on current DOM
     if (
       !this.state.selectedPerformance ||
       !this.scoreComponent.current ||
       !this.state.instantsByNoteId
     ) {
-      return;
+      return [];
     }
-    let notesOnPagePerInstant = {};
-    const boundingBoxesWrapper = document.getElementById(
-      "instantBoundingBoxes",
-    );
-    if (!boundingBoxesWrapper) {
-      return;
-    }
-    // clear previous bounding boxes
-    while (boundingBoxesWrapper.firstChild) {
-      boundingBoxesWrapper.removeChild(boundingBoxesWrapper.firstChild);
-    }
-    console.log("Selected performance: ", this.state.selectedPerformance);
     const selectedSignal = this.ensureArray(
       this.state.selectedPerformance["http://purl.org/ontology/mo/recorded_as"],
     );
@@ -620,131 +592,91 @@ class Companion extends Component {
     )[0]["@id"];
     const instantsByNote = this.state.instantsByNoteId[selectedTimeline];
     if (!instantsByNote) {
-      return;
+      return [];
     }
-    console.log("Selected timeline: ", selectedTimeline);
-    const notes = ReactDOM.findDOMNode(
-      this.scoreComponent.current,
-    ).querySelectorAll(".note");
-    Array.prototype.map.call(notes, (n) => {
-      // associate notes on this page with their instant duration
-      const noteIdAttr = n.getAttribute("id");
-      if (noteIdAttr && noteIdAttr in instantsByNote) {
-        let nDur =
-          instantsByNote[noteIdAttr][
-            "http://purl.org/NET/c4dm/timeline.owl#at"
-          ];
-        nDur =
-          parseFloat(nDur.substr(1, nDur.length - 2)) +
-          parseFloat(
-            this.state.selectedPerformance[
-              "https://meld.linkedmusic.org/terms/offset"
-            ],
-          );
-        if (nDur in notesOnPagePerInstant) {
-          notesOnPagePerInstant[nDur].push(n);
-        } else {
-          notesOnPagePerInstant[nDur] = [n];
+    const scoreNode = ReactDOM.findDOMNode(this.scoreComponent.current);
+    if (!scoreNode) {
+      return [];
+    }
+    const notesOnPagePerInstant = {};
+    // Associate notes on this page with their instant duration (including offset)
+    Array.prototype.forEach.call(
+      scoreNode.querySelectorAll(".note"),
+      (noteEl) => {
+        const noteIdAttr = noteEl.getAttribute("id");
+        if (noteIdAttr && noteIdAttr in instantsByNote) {
+          let nDur =
+            instantsByNote[noteIdAttr][
+              "http://purl.org/NET/c4dm/timeline.owl#at"
+            ];
+          nDur =
+            parseFloat(nDur.substr(1, nDur.length - 2)) +
+            parseFloat(
+              this.state.selectedPerformance[
+                "https://meld.linkedmusic.org/terms/offset"
+              ],
+            );
+          if (nDur in notesOnPagePerInstant) {
+            notesOnPagePerInstant[nDur].push(noteEl);
+          } else {
+            notesOnPagePerInstant[nDur] = [noteEl];
+          }
         }
-      }
-    });
-    Object.keys(notesOnPagePerInstant).forEach((i) => {
-      // for each instant, figure out the minimal bounding box that contains all its notes
+      },
+    );
+
+    // FeatureVis renders another SVG; when it's present we nudge overlays to line up
+    const nudgeForFeatureVis =
+      this.featureVis.current &&
+      ReactDOM.findDOMNode(this.featureVis.current) &&
+      ReactDOM.findDOMNode(this.featureVis.current).matches("svg");
+
+    const elements = [];
+
+    // For each instant, figure out the minimal bounding box that contains all its notes
+    Object.keys(notesOnPagePerInstant).forEach((instantKey) => {
       let boxLeft = 10000;
       let boxTop = 10000;
       let boxRight = 0;
       let boxBottom = 0;
       let noteId;
 
-      // if we have feature visualisation (featureVis) rendered on page, need to nudge notes down
-      let nudgeForFeatureVis = false;
-      if (
-        this.featureVis.current &&
-        ReactDOM.findDOMNode(this.featureVis.current).matches("svg")
-      ) {
-        nudgeForFeatureVis = true;
-      }
-
-      notesOnPagePerInstant[i].forEach((n) => {
-        // to contain all notes, we want to minimise left and top,
-        // and maximise right and bottom
+      notesOnPagePerInstant[instantKey].forEach((n) => {
         const boundRect = this.convertCoords(n);
+        // To contain all notes, minimise left/top and maximise right/bottom
         boxLeft = boundRect.x < boxLeft ? boundRect.x : boxLeft;
         boxTop = boundRect.y < boxTop ? boundRect.y : boxTop;
         boxRight = boundRect.x2 > boxRight ? boundRect.x2 : boxRight;
         boxBottom = boundRect.y2 > boxBottom ? boundRect.y2 : boxBottom;
-        // remember a note ID for indexing into instantsByNoteId (to retrieve confidence) further below
-        noteId = n.getAttribute("id");
+        noteId = n.getAttribute("id"); // keep one note id for metadata lookups
       });
-      // now draw the containing elements:
-      // confidenceBoundDiv -- visualisation of confidence -- background behind notes
-      // clickableBoundDiv -- transparent click catcher for interaction -- foreground infront of notes
-      const confidenceBoundDiv = document.createElement("div");
-      const clickableBoundDiv = document.createElement("div");
-      confidenceBoundDiv.setAttribute("id", "conf-" + i);
-      confidenceBoundDiv.classList.add("confidenceBoundedInstant");
-      if (nudgeForFeatureVis) {
-        confidenceBoundDiv.classList.add("featureVis");
+
+      if (!noteId) {
+        return;
       }
-      confidenceBoundDiv.setAttribute(
-        "style",
-        "position:absolute;" +
-          "left:" +
-          Math.floor(boxLeft) +
-          "px;" +
-          "top:" +
-          Math.floor(boxTop) +
-          "px;" +
-          "width:" +
-          Math.ceil(boxRight - boxLeft) +
-          "px;" +
-          "height:" +
-          Math.ceil(boxBottom - boxTop) +
-          "px;" +
-          "background: rgba(0,0,0," +
-          parseFloat(
-            1 -
-              instantsByNote[noteId][
-                "https://terms.trompamusic.eu/maps#confidence"
-              ] *
-                0.01,
-          ) +
-          ");" +
-          "z-index: -2;",
-      );
-      clickableBoundDiv.setAttribute("id", "conf-" + i);
-      clickableBoundDiv.classList.add("clickableBoundedInstant");
-      if (nudgeForFeatureVis) {
-        clickableBoundDiv.classList.add("featureVis");
-      }
-      clickableBoundDiv.setAttribute(
-        "style",
-        "position:absolute;" +
-          "left:" +
-          Math.floor(boxLeft) +
-          "px;" +
-          "top:" +
-          Math.floor(boxTop) +
-          "px;" +
-          "width:" +
-          Math.ceil(boxRight - boxLeft) +
-          "px;" +
-          "height:" +
-          Math.ceil(boxBottom - boxTop) +
-          "px;" +
-          "background: rgba(0,0,0,0);" +
-          "z-index: 1;",
-      );
-      clickableBoundDiv.onclick = (e) => {
+
+      const nDurRaw =
+        instantsByNote[noteId]["http://purl.org/NET/c4dm/timeline.owl#at"];
+      const nDurValue = nDurRaw.substr(1, nDurRaw.length - 2);
+      const isDeleted = parseInt(nDurValue) === -1;
+
+      const sharedStyle = {
+        position: "absolute",
+        left: Math.floor(boxLeft),
+        top: Math.floor(boxTop),
+        width: Math.ceil(boxRight - boxLeft),
+        height: Math.ceil(boxBottom - boxTop),
+      };
+
+      const handleClick = () => {
+        if (isDeleted) {
+          // This is a deleted (unperformed) note; nothing to seek
+          return;
+        }
         let nDur =
           this.state.instantsByNoteId[selectedTimeline][noteId][
             "http://purl.org/NET/c4dm/timeline.owl#at"
           ];
-        if (parseInt(nDur.substr(1, nDur.length - 2)) === -1) {
-          // this is a deleted (i.e. unperformed) note; thus we can't seek to it!
-          return;
-        }
-        console.log("On bounding box click, attempting to  seek to: ", nDur);
         nDur =
           parseFloat(nDur.substr(1, nDur.length - 2)) +
           parseFloat(
@@ -753,11 +685,10 @@ class Companion extends Component {
             ],
           );
         this.tick(this.state.selectedVideo, nDur);
-        console.log("attempting to seek to ", Math.floor(nDur));
         if (this.player.current) {
           this.player.current.seekTo(Math.floor(nDur));
         }
-        // reset note velocities display for all notes after this one
+        // Reset note velocities display for notes after this instant so they redraw when played
         const notesOnPage = document.querySelectorAll(".note");
         const thisNote = document.querySelector("#" + noteId);
         const noteIndex = Array.prototype.indexOf.call(notesOnPage, thisNote);
@@ -770,40 +701,34 @@ class Companion extends Component {
           n.style.stroke = "";
         });
       };
-      let nDur =
-        instantsByNote[noteId]["http://purl.org/NET/c4dm/timeline.owl#at"];
-      nDur = nDur.substr(1, nDur.length - 2);
-      if (parseInt(nDur) === -1) {
-        console.log("Deleted note detected: ", noteId);
-        clickableBoundDiv.setAttribute(
-          "title",
-          "This note was not sounded during the selected performance",
-        );
-      } else {
-        clickableBoundDiv.setAttribute(
-          "title",
-          "time: " +
-            nDur.substr(1, nDur.length - 2) +
-            " velocity: " +
-            parseFloat(
-              this.state.instantsByNoteId[selectedTimeline][noteId][
-                "https://terms.trompamusic.eu/maps#velocity"
-              ],
-            ) +
-            " confidence: " +
-            parseFloat(
-              this.state.instantsByNoteId[selectedTimeline][noteId][
-                "https://terms.trompamusic.eu/maps#confidence"
-              ],
-            ),
-        );
-      }
-      // only add confidence visualisation if user wants us to
-      if (this.state.showConfidence) {
-        boundingBoxesWrapper.appendChild(confidenceBoundDiv);
-      }
-      boundingBoxesWrapper.appendChild(clickableBoundDiv);
+
+      const title = isDeleted
+        ? "This note was not sounded during the selected performance"
+        : `time: ${nDurValue} velocity: ${parseFloat(
+            this.state.instantsByNoteId[selectedTimeline][noteId][
+              "https://terms.trompamusic.eu/maps#velocity"
+            ],
+          )}`;
+
+      elements.push(
+        <div
+          key={`conf-${instantKey}-clickable`}
+          id={`conf-${instantKey}`}
+          className={`clickableBoundedInstant${
+            nudgeForFeatureVis ? " featureVis" : ""
+          }`}
+          title={title}
+          style={{
+            ...sharedStyle,
+            background: "rgba(0,0,0,0)",
+            zIndex: 1,
+          }}
+          onClick={handleClick}
+        />,
+      );
     });
+
+    return elements;
   };
   // https://stackoverflow.com/questions/26049488/how-to-get-absolute-coordinates-of-object-inside-a-g-group
   convertCoords = (elem) => {
@@ -996,7 +921,9 @@ class Companion extends Component {
       return (
         <div id="wrapper">
           {featureVisElement}
-          <div id="instantBoundingBoxes" />
+          <div id="instantBoundingBoxes">
+            {this.getInstantBoundingRectElements()}
+          </div>
           {currentScore}
           {pageControlsWrapper}
           <div id="selectWrapper">
@@ -1508,7 +1435,6 @@ class Companion extends Component {
           ) {
             // oops! wrong note played (according to MAPS at least)
             // visualise this by CSS animation on the (most recent) measure
-            // (only if we are showing alignment confidence)
             if (this.state.previouslyActive.length) {
               this.state.previouslyActive[0]
                 .closest(".measure")

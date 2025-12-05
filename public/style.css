@@ -208,9 +208,6 @@ button.active {
 
 #instantBoundingBoxes {
   position: absolute;
-  border: 1px dashed rgba(255, 102, 0, 0.4);
-  background: rgba(255, 102, 0, 0.05);
-  pointer-events: none;
 }
 
 .currentPerformanceLabel button{
