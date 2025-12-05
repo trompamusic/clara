@@ -97,9 +97,6 @@ class Companion extends Component {
       performedElements: {},
       performanceErrors: {},
       latestScoreUpdateTimestamp: 0,
-      toggleAnnotationRetrieval: true, // set to true when annotation update required
-      highlights: [], // circles drawn to respond to highlight annotations
-      highlightsOnPage: [], // ... those with at least one target on current page
     };
     this.player = React.createRef();
     this.featureVis = React.createRef();
@@ -237,23 +234,6 @@ class Companion extends Component {
     }
   };
 
-  determineHighlightsOnPage = () => {
-    if (this.scoreComponent.current) {
-      const highlightsOnPage = this.state.highlights.filter((hl) => {
-        const targetsOnPage = this.ensureArray(hl.target).filter((t) => {
-          const frag = t.substr(t.lastIndexOf("#"));
-          return (
-            ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(
-              frag,
-            ) !== null
-          );
-        });
-        return targetsOnPage.length > 0;
-      });
-      this.setState({ highlightsOnPage });
-    }
-  };
-
   handleDOMChangeObserved = () => {
     if (this.scoreComponent.current) {
       this.setState(
@@ -268,38 +248,9 @@ class Companion extends Component {
           ).querySelectorAll(".barLineAttr"),
           latestScoreUpdateTimestamp: Date.now(),
         },
-        () => {
-          this.determineHighlightsOnPage();
-        },
+        () => {},
       );
     }
-  };
-
-  handleReceiveAnnotationContainerContent = (content) => {
-    console.log("Received annotation container content: ", content);
-    const myHighlights = this.ensureArray(content).filter((anno) => {
-      // filter out any annotations that don't concern the current score
-      let forMe = [];
-      if (this.ensureArray(anno["motivation"]).includes("highlighting")) {
-        forMe = this.ensureArray(anno["target"]).filter((t) => {
-          console.log("Comparing", t, this.state.currentScore);
-          return t.startsWith(this.state.currentScore);
-        });
-      }
-      return forMe.length > 0;
-    });
-    console.log("Setting highlights: ", myHighlights);
-    this.setState(
-      { toggleAnnotationRetrieval: false, highlights: myHighlights },
-      () => {
-        this.determineHighlightsOnPage();
-      },
-    );
-  };
-
-  handleResponse = (res) => {
-    // POST completed, retrieve the container content
-    this.setState({ toggleAnnotationRetrieval: true });
   };
 
   componentDidUpdate(prevProps, prevState) {
@@ -328,72 +279,6 @@ class Companion extends Component {
         this.setState({
           observingScore: true,
           scoreComponentLoadingStarted: true,
-        });
-      }
-    }
-
-    if (
-      this.scoreComponent.current &&
-      JSON.stringify(prevState.highlightsOnPage) !==
-        JSON.stringify(this.state.highlightsOnPage)
-    ) {
-      let scorepane = ReactDOM.findDOMNode(
-        this.scoreComponent.current,
-      ).querySelector(".scorepane");
-      let annopane = scorepane.querySelector(".annotations");
-      let scoreSvg = scorepane.querySelector(".score svg");
-      annopane.innerHTML = ""; // clear previously rendered highlights
-      // create a new, empty anno pane
-      if (this.state.highlightsOnPage.length) {
-        const annoSvg = document.createElementNS(
-          "http://www.w3.org/2000/svg",
-          "svg",
-        );
-        annoSvg.setAttribute("width", scoreSvg.getAttribute("width"));
-        annoSvg.setAttribute("height", scoreSvg.getAttribute("height"));
-        annoSvg.setAttribute("id", "highlightAnnotationsSvg");
-        annoSvg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-        annoSvg.setAttribute("xmlnsXlink", "http://www.w3.org/1999/xlink");
-        this.state.highlightsOnPage.forEach((hl) => {
-          const bboxes = this.ensureArray(hl.target)
-            .filter((t) => {
-              const el = scorepane.querySelector(t.substr(t.lastIndexOf("#")));
-              // filter out any targets not currently on page
-              return el !== null;
-            })
-            .map((t) => {
-              const el = scorepane.querySelector(t.substr(t.lastIndexOf("#")));
-              return this.convertCoords(el);
-            });
-          // determine enveloping bbox
-          const minX = Math.min(...bboxes.map((b) => b.x));
-          const minY = Math.min(...bboxes.map((b) => b.y));
-          const maxX2 = Math.max(...bboxes.map((b) => b.x2));
-          const maxY2 = Math.max(...bboxes.map((b) => b.y2));
-          const ellipse = document.createElementNS(
-            "http://www.w3.org/2000/svg",
-            "ellipse",
-          );
-          ellipse.setAttribute("cx", (minX + maxX2) / 2);
-          ellipse.setAttribute("cy", (minY + maxY2) / 2);
-
-          // Add padding so we don't circle too tightly -- but not too much!
-          const paddedRx = Math.min((maxX2 - minX) / 1.6, maxX2 - minX + 20);
-          const paddedRy = Math.min((maxY2 - minY) / 1.3, maxY2 - minY + 20);
-
-          ellipse.addEventListener(
-            "click",
-            (t) => console.log("I was clicked: ", t),
-            true,
-          );
-
-          ellipse.setAttribute("rx", paddedRx);
-          ellipse.setAttribute("ry", paddedRy);
-          ellipse.dataset.uri = hl["@id"];
-          ellipse.classList.add("highlightEllipse");
-          ellipse.classList.add("scoreAnnotation");
-          annoSvg.appendChild(ellipse);
-          annopane.appendChild(annoSvg);
         });
       }
     }
@@ -900,11 +785,6 @@ class Companion extends Component {
               selectionArea="#scoreSelectionArea"
               onSelectionChange={() => {}}
               onScoreUpdate={this.handleDOMChangeObserved}
-              annotationContainerUri={this.props.annotationContainerUri}
-              onReceiveAnnotationContainerContent={
-                this.handleReceiveAnnotationContainerContent
-              }
-              toggleAnnotationRetrieval={this.state.toggleAnnotationRetrieval}
             />
           </div>
         );
@@ -1819,7 +1699,6 @@ const companionOwnPropTypes = {
   fetch: PropTypes.func,
   selectedPerformance: PropTypes.string,
   onPerformanceSelected: PropTypes.func,
-  annotationContainerUri: PropTypes.string,
   demo: PropTypes.bool,
 };
 
