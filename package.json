@@ -8,7 +8,8 @@
     "build": "react-app-rewired build",
     "build-dev": "babel src --out-dir lib --source-maps inline",
     "build:ldo": "ldo build --input src/.shapes --output src/.ldo",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "meld:install-local": "bash scripts/install-local-meld.sh"
   },
   "proxy": "http://localhost:8000",
   "author": "David M. Weigl, IWK, University of Music and Performing Arts Vienna",
