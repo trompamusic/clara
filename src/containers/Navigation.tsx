@@ -86,6 +86,11 @@ export default function Navigation() {
   const webIdResource = useResource(session.webId);
   const profile = useSubject(SolidProfileShapeType, session.webId);
 
+  const logOutAndRedirectHome = () => {
+    logout();
+    window.open("/", "_self");
+  };
+
   let loggedInName: string;
   if (webIdResource?.type === "InvalidIdentifierResource") {
     loggedInName = session.webId || "Unknown";
@@ -121,7 +126,7 @@ export default function Navigation() {
           {session.isLoggedIn ? (
             <>
               <Navbar.Text>Logged in: {loggedInName}</Navbar.Text>&emsp;
-              <Button onClick={() => logout()}>Log out</Button>
+              <Button onClick={logOutAndRedirectHome}>Log out</Button>
             </>
           ) : (
             <LoginButton />
