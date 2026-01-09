@@ -511,6 +511,9 @@ class FeatureVis extends Component {
             noteElementsForInstant={this.noteElementsForInstant}
             makePoint={this.makePoint}
             makeLine={this.makeLine}
+            instantsByNoteId={this.props.instantsByNoteId}
+            timemapByNoteId={this.state.timemapByNoteId}
+            ensureArray={this.props.ensureArray}
           />
         </div>
         <div

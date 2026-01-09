@@ -3,6 +3,13 @@ import ReactDOM from "react-dom";
 
 const defaultY = 80; // for edge-case of only-one-note-on-page
 
+// Standard metronome markings (BPM values)
+const STANDARD_METRONOME_MARKINGS = [
+  40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 63, 66, 69, 72, 76, 80, 84, 88,
+  92, 96, 100, 104, 108, 112, 116, 120, 126, 132, 138, 144, 152, 160, 168, 176,
+  184, 200, 208,
+];
+
 export default class TempoCurveVis extends Component {
   constructor(props) {
     super(props);
@@ -10,12 +17,15 @@ export default class TempoCurveVis extends Component {
       width: this.props.width || "1280",
       height: this.props.height || "120",
       pointsPerTimeline: {},
+      tempoRange: null, // { min: number, max: number, displayMin: number, displayMax: number }
+      selectedMetronomeMarkings: [],
     };
     this.tempoCurveSvg = React.createRef();
   }
 
   componentDidMount() {
     console.log("tempo mounted with props ", this.props);
+    this.calculateGlobalTempoRange();
   }
   componentDidUpdate(prevProps) {
     if (
@@ -50,7 +60,268 @@ export default class TempoCurveVis extends Component {
       // recalculate points per timeline
       this.setPointsPerTimeline();
     }
+    // Recalculate global tempo range if instantsByNoteId or timemapByNoteId changed
+    if (
+      prevProps.instantsByNoteId !== this.props.instantsByNoteId ||
+      prevProps.timemapByNoteId !== this.props.timemapByNoteId
+    ) {
+      this.calculateGlobalTempoRange();
+    }
   }
+
+  // Calculate global min/max tempo from entire performance (all timelines)
+  calculateGlobalTempoRange = () => {
+    if (
+      !this.props.instantsByNoteId ||
+      !this.props.timemapByNoteId ||
+      Object.keys(this.props.instantsByNoteId).length === 0
+    ) {
+      return;
+    }
+
+    const allTempos = [];
+
+    // Process all timelines
+    this.props.timelinesToVis.forEach((tl) => {
+      if (!this.props.instantsByNoteId[tl]) {
+        return;
+      }
+
+      // Get all instants for this timeline
+      const allInstants = Object.values(this.props.instantsByNoteId[tl])
+        .flat()
+        .filter((inst) => {
+          // Filter out invalid instants (duration -1)
+          return (
+            inst &&
+            parseFloat(
+              inst["http://purl.org/NET/c4dm/timeline.owl#at"].replace(
+                /[PS]/g,
+                "",
+              ),
+            ) > -1
+          );
+        })
+        .sort((a, b) => {
+          // Sort by performance time
+          return (
+            parseFloat(
+              a["http://purl.org/NET/c4dm/timeline.owl#at"].replace(
+                /[PS]/g,
+                "",
+              ),
+            ) -
+            parseFloat(
+              b["http://purl.org/NET/c4dm/timeline.owl#at"].replace(
+                /[PS]/g,
+                "",
+              ),
+            )
+          );
+        });
+
+      // Helper to get average qstamp for an instant from instantsByNoteId
+      const getQstampForInstant = (inst) => {
+        const ensureArray =
+          this.props.ensureArray ||
+          ((val) => (Array.isArray(val) ? val : val ? [val] : []));
+        const embodiments = ensureArray(
+          inst["http://purl.org/vocab/frbr/core#embodimentOf"],
+        );
+        const qstamps = embodiments
+          .map((emb) => {
+            const noteId = emb["@id"].substr(emb["@id"].lastIndexOf("#") + 1);
+            return this.props.timemapByNoteId[noteId]?.qstamp;
+          })
+          .filter((q) => q !== undefined);
+
+        if (qstamps.length === 0) return null;
+        return qstamps.reduce((sum, q) => sum + q, 0) / qstamps.length;
+      };
+
+      // Calculate tempo (iii) between consecutive instants
+      for (let i = 1; i < allInstants.length; i++) {
+        const prevInst = allInstants[i - 1];
+        const thisInst = allInstants[i];
+
+        const prevT = parseFloat(
+          prevInst["http://purl.org/NET/c4dm/timeline.owl#at"].replace(
+            /[PS]/g,
+            "",
+          ),
+        );
+        const thisT = parseFloat(
+          thisInst["http://purl.org/NET/c4dm/timeline.owl#at"].replace(
+            /[PS]/g,
+            "",
+          ),
+        );
+
+        const deltaT = thisT - prevT;
+        if (deltaT <= 0) continue; // Skip invalid intervals
+
+        const prevQ = getQstampForInstant(prevInst);
+        const thisQ = getQstampForInstant(thisInst);
+
+        if (prevQ === null || thisQ === null) continue;
+
+        const deltaQ = thisQ - prevQ;
+        if (deltaQ <= 0) continue; // Skip invalid intervals
+
+        // Calculate inter-instant-interval (iii)
+        const iii = deltaQ / deltaT;
+        const bpm = iii * 60; // Convert to BPM
+
+        if (isFinite(bpm) && bpm > 0 && bpm < 1000) {
+          // Reasonable BPM range
+          allTempos.push(bpm);
+        }
+      }
+    });
+
+    if (allTempos.length === 0) {
+      // Fallback to default range
+      this.setState({
+        tempoRange: {
+          min: 40,
+          max: 200,
+          displayMin: 40,
+          displayMax: 200,
+        },
+        selectedMetronomeMarkings: [40, 60, 80, 100, 120, 140, 160, 180, 200],
+      });
+      return;
+    }
+
+    // Sort tempos and find min/max
+    allTempos.sort((a, b) => a - b);
+    const minTempo = allTempos[0];
+    const maxTempo = allTempos[allTempos.length - 1];
+
+    // Use 10%-90% range
+    const percentile10Index = Math.floor(allTempos.length * 0.1);
+    const percentile90Index = Math.min(
+      Math.floor(allTempos.length * 0.9),
+      allTempos.length - 1,
+    );
+    const percentile10 = allTempos[percentile10Index];
+    const percentile90 = allTempos[percentile90Index];
+
+    const displayMin = Math.max(percentile10, minTempo * 0.5); // Don't go too far below
+    const displayMax = Math.min(percentile90, maxTempo * 1.5); // Don't go too far above
+
+    // Select appropriate metronome markings
+    const selectedMarkings = this.selectMetronomeMarkings(
+      displayMin,
+      displayMax,
+    );
+
+    this.setState(
+      {
+        tempoRange: {
+          min: minTempo,
+          max: maxTempo,
+          displayMin: displayMin,
+          displayMax: displayMax,
+        },
+        selectedMetronomeMarkings: selectedMarkings,
+      },
+      () => {
+        // Recalculate points when tempo range changes
+        if (Object.keys(this.props.instantsByScoretime || {}).length > 0) {
+          this.setPointsPerTimeline();
+        }
+      },
+    );
+  };
+
+  // Select appropriate metronome markings within the display range
+  // Ensures minimum pixel spacing between labels to avoid overlap
+  selectMetronomeMarkings = (minBpm, maxBpm) => {
+    const height = parseInt(this.state.height, 10) || 120;
+    const minPixelSpacing = 12; // Minimum pixels between labels
+
+    // Helper to convert BPM to y position for this range
+    const bpmToYLocal = (bpm) => {
+      const range = maxBpm - minBpm;
+      if (range <= 0) return height / 2;
+      const normalized = (bpm - minBpm) / range;
+      return Math.max(0, Math.min(1, normalized)) * height;
+    };
+
+    // Filter markings within range
+    const inRange = STANDARD_METRONOME_MARKINGS.filter(
+      (marking) => marking >= minBpm * 0.9 && marking <= maxBpm * 1.1,
+    );
+
+    if (inRange.length === 0) {
+      // If no standard markings in range, use min and max rounded to nearest 10
+      return [Math.round(minBpm / 10) * 10, Math.round(maxBpm / 10) * 10];
+    }
+
+    // Select markings ensuring minimum pixel spacing
+    const selected = [];
+    let lastY = -Infinity;
+
+    for (const marking of inRange) {
+      const y = bpmToYLocal(marking);
+      if (y - lastY >= minPixelSpacing) {
+        selected.push(marking);
+        lastY = y;
+      }
+    }
+
+    // Always try to include the last marking if there's room
+    const lastMarking = inRange[inRange.length - 1];
+    if (selected[selected.length - 1] !== lastMarking) {
+      const lastSelectedY = bpmToYLocal(selected[selected.length - 1]);
+      const lastMarkingY = bpmToYLocal(lastMarking);
+      if (lastMarkingY - lastSelectedY >= minPixelSpacing) {
+        selected.push(lastMarking);
+      }
+    }
+
+    return selected;
+  };
+
+  // Convert BPM to y position using dynamic scale
+  bpmToY = (bpm) => {
+    if (!this.state.tempoRange) {
+      // Fallback to old scale
+      return (bpm * 50) / 60;
+    }
+
+    const { displayMin, displayMax } = this.state.tempoRange;
+    const range = displayMax - displayMin;
+    if (range <= 0) {
+      return this.state.height / 2;
+    }
+
+    // Map BPM to y position (0 to height)
+    // Higher BPM = higher y position
+    const normalized = (bpm - displayMin) / range;
+    // Clamp to [0, 1]
+    const clamped = Math.max(0, Math.min(1, normalized));
+    return clamped * this.state.height;
+  };
+
+  // Convert y position to BPM using dynamic scale
+  yToBpm = (y) => {
+    if (!this.state.tempoRange) {
+      // Fallback to old scale
+      return (y / 50) * 60;
+    }
+
+    const { displayMin, displayMax } = this.state.tempoRange;
+    const range = displayMax - displayMin;
+    if (range <= 0) {
+      return displayMin;
+    }
+
+    const normalized = y / this.state.height;
+    const clamped = Math.max(0, Math.min(1, normalized));
+    return displayMin + clamped * range;
+  };
 
   setPointsPerTimeline = () => {
     let pointsPerTimeline = {};
@@ -114,7 +385,9 @@ export default class TempoCurveVis extends Component {
 
           // calculate inter-instant-interval (change in score time per change in performed time)
           const iii = deltaQ / deltaT;
-          yPos = iii * 50; // TODO come up with a sensible mapping
+          // Convert iii to BPM and then to y position using dynamic scale
+          const bpm = iii * 60;
+          yPos = this.bpmToY(bpm);
         }
         // if our point is on the current timeline and before or equal to the current qstamp, we are "active"
         const isActive =
@@ -158,18 +431,22 @@ export default class TempoCurveVis extends Component {
         );
       });
 
-      // generate bpm markers
-      const bpmMarkersToDraw = [20, 40, 60, 80, 100, 120, 140];
+      // generate bpm markers using selected metronome markings
+      const bpmMarkersToDraw =
+        this.state.selectedMetronomeMarkings.length > 0
+          ? this.state.selectedMetronomeMarkings
+          : [40, 60, 80, 100, 120, 140]; // Fallback
       bpmMarkersToDraw.forEach((bpm, ix) => {
+        const yPos = this.bpmToY(bpm);
         svgElements.push(
           this.props.makeLine(
             "bpmMarker", // className
             null, // qstamp - bpmMarker doesn't need one!
             null, // timeline - bpmMarker doesn't need one!
             "0",
-            Math.round((bpm * 50) / 60),
+            Math.round(yPos),
             this.state.width,
-            Math.round((bpm * 50) / 60), // x1, y1, x2, y2
+            Math.round(yPos), // x1, y1, x2, y2
             "bpm-" + bpm, // reactKey
             bpm + " b.p.m.", // title string
           ),
@@ -179,13 +456,12 @@ export default class TempoCurveVis extends Component {
             key={bpm + "label"}
             style={{ fontSize: 8, fill: "darkgrey" }}
             // black magic transform... (to compensate for flipped svg coord system)
+            // -2 * yPos aligns with line, -4 shifts text slightly above
             transform={
-              "scale(1, -1) translate(0, -" +
-              Math.round(bpm * 0.7 + bpm - 0.9 * ix) +
-              ")"
+              "scale(1, -1) translate(0, " + (-2 * Math.round(yPos) - 4) + ")"
             }
             x="0"
-            y={Math.round((bpm * 50) / 60)}
+            y={Math.round(yPos)}
             className="bpmLabel"
           >
             {bpm + " b.p.m."}
@@ -196,13 +472,12 @@ export default class TempoCurveVis extends Component {
             key={bpm + "label2"}
             style={{ fontSize: 8, fill: "darkgrey" }}
             // black magic transform... (to compensate for flipped svg coord system)
+            // -2 * yPos aligns with line, -4 shifts text slightly above
             transform={
-              "scale(1, -1) translate(0, -" +
-              Math.round(bpm * 0.7 + bpm - 0.9 * ix) +
-              ")"
+              "scale(1, -1) translate(0, " + (-2 * Math.round(yPos) - 4) + ")"
             }
             x={this.state.width - 40}
-            y={Math.round((bpm * 50) / 60)}
+            y={Math.round(yPos)}
             className="bpmLabel"
           >
             {bpm + " b.p.m."}
@@ -246,8 +521,17 @@ export default class TempoCurveVis extends Component {
             // at the first point:
             // no line to previous (because no previous)
             // "steal" Y position from 2nd point (because no iii at first point)
-            // UNLESS (edge-case!) it's the only note on page, in which case just invent a tempo (defaultY)
-            let stolenY = tlPoints.length === 1 ? defaultY : tlPoints[ix + 1].y;
+            // UNLESS (edge-case!) it's the only note on page, in which case use middle of range
+            let stolenY =
+              tlPoints.length === 1
+                ? this.state.tempoRange
+                  ? this.bpmToY(
+                      (this.state.tempoRange.displayMin +
+                        this.state.tempoRange.displayMax) /
+                        2,
+                    )
+                  : defaultY
+                : tlPoints[ix + 1].y;
             points.push(
               this.props.makePoint(
                 className,
@@ -293,7 +577,7 @@ export default class TempoCurveVis extends Component {
                   " qstamp: " +
                   pt.qstamp +
                   " b.p.m.: " +
-                  ((pt.y / 50) * 60).toFixed(2), // titleString
+                  this.yToBpm(pt.y).toFixed(2), // titleString
               ),
             );
           } else {
@@ -313,7 +597,7 @@ export default class TempoCurveVis extends Component {
                   " qstamp: " +
                   pt.qstamp +
                   " b.p.m.: " +
-                  ((pt.y / 50) * 60).toFixed(2), // titleString
+                  this.yToBpm(pt.y).toFixed(2), // titleString
               ),
             );
             points.push(
@@ -331,7 +615,7 @@ export default class TempoCurveVis extends Component {
                   " qstamp: " +
                   pt.qstamp +
                   " b.p.m.: " +
-                  ((pt.y / 50) * 60).toFixed(2), // titleString
+                  this.yToBpm(pt.y).toFixed(2), // titleString
               ),
             );
           }
