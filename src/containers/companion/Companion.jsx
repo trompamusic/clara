@@ -98,6 +98,7 @@ class Companion extends Component {
       performedElements: {},
       performanceErrors: {},
       latestScoreUpdateTimestamp: 0,
+      pendingNavigateToNote: null, // note ID to navigate to after mode switch
     };
     this.player = React.createRef();
     this.featureVis = React.createRef();
@@ -237,6 +238,7 @@ class Companion extends Component {
 
   handleDOMChangeObserved = () => {
     if (this.scoreComponent.current) {
+      const pendingNote = this.state.pendingNavigateToNote;
       this.setState(
         {
           observingScore: false,
@@ -248,8 +250,22 @@ class Companion extends Component {
             this.scoreComponent.current,
           ).querySelectorAll(".barLineAttr"),
           latestScoreUpdateTimestamp: Date.now(),
+          pendingNavigateToNote: null,
         },
-        () => {},
+        () => {
+          // After mode switch, navigate to the page containing the target note
+          if (
+            pendingNote &&
+            this.state.currentScore &&
+            this.props.score.MEI[this.state.currentScore]
+          ) {
+            this.props.scorePageToComponentTarget(
+              `#${pendingNote}`,
+              this.state.currentScore,
+              this.props.score.MEI[this.state.currentScore],
+            );
+          }
+        },
       );
     }
   };
@@ -350,23 +366,40 @@ class Companion extends Component {
     document.removeEventListener("keydown", this.monitorKeys);
   }
 
+  getTargetNoteForModeSwitch = () => {
+    // Determine which note to focus on after mode switch:
+    // - If playing with active notes, follow the currently sounding note
+    // - Otherwise, follow the first note visible on the current page
+    if (this.state.isPlaying && this.state.currentlyActiveNoteIds.length > 0) {
+      return this.state.currentlyActiveNoteIds[0];
+    }
+    if (this.state.notesOnPage && this.state.notesOnPage.length > 0) {
+      return this.state.notesOnPage[0].getAttribute("id");
+    }
+    return null;
+  };
+
   setModeFeatureVis = () => {
+    const targetNote = this.getTargetNoteForModeSwitch();
     this.persistFeatureVisMode("featureVis");
     this.setState({
       mode: "featureVis",
       vrvOptions: vrvOptionsFeatureVis,
       scoreComponentLoadingStarted: false,
       scoreComponentLoaded: false,
+      pendingNavigateToNote: targetNote,
     });
   };
 
   setModePageView = () => {
+    const targetNote = this.getTargetNoteForModeSwitch();
     this.persistFeatureVisMode("pageView");
     this.setState({
       mode: "pageView",
       vrvOptions: vrvOptionsPageView,
       scoreComponentLoadingStarted: false,
       scoreComponentLoaded: false,
+      pendingNavigateToNote: targetNote,
     });
   };
 
