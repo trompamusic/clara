@@ -903,12 +903,14 @@ class Companion extends Component {
                     ]
                   }
                 </strong>
-                <button
-                  className="delete"
-                  onClick={() => this.deleteSelectedPerformance()}
-                >
-                  Delete performance
-                </button>
+                {!this.props.demo && (
+                  <button
+                    className="delete"
+                    onClick={() => this.deleteSelectedPerformance()}
+                  >
+                    Delete performance
+                  </button>
+                )}
               </div>
             ) : (
               <div />
