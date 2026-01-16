@@ -11,9 +11,10 @@ import { Button, Table } from "react-bootstrap";
 // Performance row component to handle useSubject properly
 const PerformanceRow: FunctionComponent<{
   performance: { uri: string; id: string };
+  scoreUri: string;
   onDelete: (uri: string, signalUri?: string) => Promise<void>;
   isDeleting: boolean;
-}> = ({ performance, onDelete, isDeleting }) => {
+}> = ({ performance, scoreUri, onDelete, isDeleting }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const performanceData = useSubject(PerformanceShapeType, performance.uri);
 
@@ -28,7 +29,9 @@ const PerformanceRow: FunctionComponent<{
   return (
     <tr>
       <td>
-        <a href={performance.uri} target="_blank" rel="noopener noreferrer">
+        <a
+          href={`/perform?score=${encodeURIComponent(scoreUri)}&performance=${encodeURIComponent(performance.uri)}`}
+        >
           {performance.id}
         </a>
       </td>
@@ -510,6 +513,7 @@ const EditScore: FunctionComponent = () => {
                         <PerformanceRow
                           key={performance.uri}
                           performance={performance}
+                          scoreUri={scoreUri!}
                           onDelete={handleDeletePerformance}
                           isDeleting={deletingPerformance === performance.uri}
                         />
