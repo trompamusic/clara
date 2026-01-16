@@ -26,13 +26,13 @@ export default class ErrorRibbonVis extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    // if(//Object.keys(prevProps.timemapByNoteId) < Object.keys(this.props.timemapByNoteId) ||
-    //"instantsByScoretimeLastModified" in prevProps &&
-    // prevProps.instantsByScoretimeLastModified !== this.props.instantsByScoretimeLastModified) {
-    // initial load, or page has flipped. (Re-)calculate inserted note contexts.
+    // Trigger on page flip (latestScoreUpdateTimestamp changes)
+    // or on initial data load (instantsByScoretimeLastModified becomes available)
     if (
       prevProps.latestScoreUpdateTimestamp !==
-      this.props.latestScoreUpdateTimestamp
+        this.props.latestScoreUpdateTimestamp ||
+      prevProps.instantsByScoretimeLastModified !==
+        this.props.instantsByScoretimeLastModified
     ) {
       this.setState({ loading: true }, this.contextualiseInsertedNotes);
     }
