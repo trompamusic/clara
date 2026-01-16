@@ -29,15 +29,4 @@ in trompa-align to configure this. Once you have a URL, put it in the `.env` fil
 
 This application currently requires Node 18 to run. Don't run with a newer version, it might not work.
 
-### Using local meld-clients-core builds
-
-When iterating on `meld-clients-core`, prefer using the packed tarball instead of `npm link`:
-
-1. In `../meld-clients-core`, run `npm run pack-dev` to build the library and create `meld-clients-core-<version>.tgz`.
-2. From this repository, run `npm run meld:install-local` to install the newest tarball (or pass the path explicitly if your repositories are in different locations). The helper uses `npm install --no-save`, so neither `package.json` nor the lockfile is modified.
-
-If the helper cannot find `meld-clients-core` next to this repo, run `npm run meld:install-local -- /absolute/path/to/meld-clients-core-<version>.tgz`.
-
-Running a normal `npm install` will reinstall whatever version is declared in `package.json`, restoring the baseline dependency tree if needed.
-
 ## Production deployment
