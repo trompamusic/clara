@@ -300,9 +300,7 @@ export default class TempoCurveVis extends Component {
     // Map BPM to y position (0 to height)
     // Higher BPM = higher y position
     const normalized = (bpm - displayMin) / range;
-    // Clamp to [0, 1]
-    const clamped = Math.max(0, Math.min(1, normalized));
-    return clamped * this.state.height;
+    return normalized * this.state.height;
   };
 
   // Convert y position to BPM using dynamic scale
@@ -319,8 +317,7 @@ export default class TempoCurveVis extends Component {
     }
 
     const normalized = y / this.state.height;
-    const clamped = Math.max(0, Math.min(1, normalized));
-    return displayMin + clamped * range;
+    return displayMin + normalized * range;
   };
 
   setPointsPerTimeline = () => {
@@ -332,7 +329,9 @@ export default class TempoCurveVis extends Component {
         },
       );
       // for each instant on this page ...
-      let pointsForThisTl = scoretimeArray.map((qstamp, ix) => {
+      let pointsForThisTl = [];
+      let hadInvalidGap = false;
+      scoretimeArray.forEach((qstamp, ix) => {
         // xpos should be average x position for note elements at this qstamp
         let noteElementsAtQstamp = [];
         this.props.instantsByScoretime[tl][qstamp].forEach((inst) => {
@@ -387,6 +386,10 @@ export default class TempoCurveVis extends Component {
           const iii = deltaQ / deltaT;
           // Convert iii to BPM and then to y position using dynamic scale
           const bpm = iii * 60;
+          if (!isFinite(bpm) || bpm <= 0) {
+            hadInvalidGap = true;
+            return;
+          }
           yPos = this.bpmToY(bpm);
         }
         // if our point is on the current timeline and before or equal to the current qstamp, we are "active"
@@ -394,13 +397,15 @@ export default class TempoCurveVis extends Component {
           tl === this.props.currentTimeline &&
           qstamp <= this.props.currentQstamp;
         // return point data for this timeline and scoretime
-        return {
+        pointsForThisTl.push({
           x: avgXPos,
           y: yPos,
           qstamp: qstamp,
           instants: this.props.instantsByScoretime[tl][qstamp],
           isActive,
-        };
+          gapFromPrevValid: hadInvalidGap,
+        });
+        hadInvalidGap = false;
       });
       pointsPerTimeline[tl] = pointsForThisTl;
     });
@@ -511,6 +516,7 @@ export default class TempoCurveVis extends Component {
           // determine CSS class: "currentTl" if timeline corresponds to selected performance
           // "active" if point is before or equal to the currently active qstamp (in playback)
           let className = tl === this.props.currentTimeline ? "currentTl" : "";
+          const dashedClass = pt.gapFromPrevValid ? " dashed" : "";
           let prevX = 0;
           let prevY = 0;
           if (ix > 0) {
@@ -551,7 +557,7 @@ export default class TempoCurveVis extends Component {
             // and draw a "normal" point
             lines.push(
               this.props.makeLine(
-                className + " tempoConnector estimated",
+                className + " tempoConnector estimated" + dashedClass,
                 pt.qstamp,
                 tl, //timeline
                 prevX,
@@ -584,7 +590,7 @@ export default class TempoCurveVis extends Component {
             // "normal" line and point
             lines.push(
               this.props.makeLine(
-                className + " tempoConnector",
+                className + " tempoConnector" + dashedClass,
                 pt.qstamp,
                 tl, //timeline
                 prevX,
