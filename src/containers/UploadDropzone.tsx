@@ -3,6 +3,7 @@ import { useDropzone } from "react-dropzone";
 import { useSolidAuth } from "@ldo/solid-react";
 import { useNavigate } from "react-router";
 import Api from "../util/api";
+import { createPerformanceLabel } from "../util/date";
 
 export default function UploadDropzone({ score }: { score: string }) {
   const { session } = useSolidAuth();
@@ -12,9 +13,11 @@ export default function UploadDropzone({ score }: { score: string }) {
   const onDrop = useCallback(
     (acceptedFiles: Blob[]) => {
       acceptedFiles.forEach((file: Blob) => {
-        Api.alignMidi(webId, score, file).then((data) => {
-          navigate(`/uploadwait?task=${data.task_id}&score=${score}`);
-        });
+        Api.alignMidi(webId, score, file, createPerformanceLabel()).then(
+          (data) => {
+            navigate(`/uploadwait?task=${data.task_id}&score=${score}`);
+          },
+        );
       });
     },
     [navigate, score, webId],

@@ -25,4 +25,5 @@ export interface PerformanceData {
   midiData: string | null;
   label?: string;
   expansion?: string;
+  recordedAt?: string;
 }

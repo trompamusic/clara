@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from "axios";
+import { createPerformanceLabel } from "./date";
 
 class Api {
   private client: AxiosInstance;
@@ -60,7 +61,12 @@ class Api {
     });
   };
 
-  alignWebMidi = (profile: string, score: string, webMidi: string) => {
+  alignWebMidi = (
+    profile: string,
+    score: string,
+    webMidi: string,
+    label?: string,
+  ) => {
     const data = new FormData();
 
     const blob = new Blob([webMidi], { type: "application/json" });
@@ -69,6 +75,7 @@ class Api {
     data.append("midi_type", "webmidi");
     data.append("score", score);
     data.append("profile", profile);
+    data.append("label", label || createPerformanceLabel());
 
     return this.client.post("/api/align", data).then((result) => {
       return result.data;

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Card, Form, Button, Alert } from "react-bootstrap";
 import { PerformanceData, UploadState } from "./types";
+import { createPerformanceLabel } from "../../util/date";
 
 interface PerformanceUploaderProps {
   performanceData: PerformanceData;
@@ -22,9 +23,14 @@ const PerformanceUploader: React.FC<PerformanceUploaderProps> = ({
   const [expansion, setExpansion] = useState("no expansion");
 
   const handleSubmit = async () => {
+    const recordedAt = performanceData.recordedAt
+      ? new Date(performanceData.recordedAt)
+      : undefined;
     const data = {
       ...performanceData,
-      label: label.trim() || undefined,
+      label:
+        label.trim() ||
+        `foo` + createPerformanceLabel(recordedAt ?? new Date()),
       expansion: expansion === "no expansion" ? undefined : expansion,
     };
     await onUpload(data);

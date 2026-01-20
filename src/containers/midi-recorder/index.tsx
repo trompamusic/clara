@@ -6,6 +6,7 @@ import { Input } from "webmidi";
 import { Button, Card } from "react-bootstrap";
 import { trackToMidi } from "../../util/midi";
 import Api from "../../util/api";
+import { createPerformanceLabel } from "../../util/date";
 import {
   MidiEvent,
   RecordingState,
@@ -45,10 +46,25 @@ const WebMidiRecorder: React.FC<{
 
   // Local storage
   const localStorageKey = `at.ac.mdw.trompa-midiPerformance-${webId}-${score}`;
-  const [midiPerformance, setMidiPerformance] = useLocalStorage<string | null>(
-    localStorageKey,
-    null,
-  );
+  type StoredPerformance = {
+    midiData: string;
+    recordedAt: string;
+  };
+
+  const [midiPerformance, setMidiPerformance] = useLocalStorage<
+    StoredPerformance | string | null
+  >(localStorageKey, null);
+  const storedPerformance =
+    typeof midiPerformance === "string" ? null : midiPerformance;
+
+  useEffect(() => {
+    if (typeof midiPerformance === "string") {
+      setMidiPerformance({
+        midiData: midiPerformance,
+        recordedAt: new Date().toISOString(),
+      });
+    }
+  }, [midiPerformance, setMidiPerformance]);
 
   // Convert MIDI string to Blob for API calls
   const midiStringToBlob = useCallback((midiString: string): Blob => {
@@ -167,7 +183,10 @@ const WebMidiRecorder: React.FC<{
 
       if (midi) {
         const midiString = midi.toString();
-        setMidiPerformance(midiString);
+        const recordedAt = new Date(
+          recordingState.startTime ?? Date.now(),
+        ).toISOString();
+        setMidiPerformance({ midiData: midiString, recordedAt });
 
         // Auto-upload
         const payload = midiStringToBlob(midiString);
@@ -175,7 +194,7 @@ const WebMidiRecorder: React.FC<{
           webId,
           score,
           payload,
-          "Auto-recorded performance",
+          createPerformanceLabel(new Date(recordedAt)),
           "no expansion",
         )
           .then((data) => {
@@ -201,6 +220,7 @@ const WebMidiRecorder: React.FC<{
     }
   }, [
     recordingState.events,
+    recordingState.startTime,
     midiEventsArrayToMidiFile,
     setMidiPerformance,
     webId,
@@ -221,7 +241,10 @@ const WebMidiRecorder: React.FC<{
       const midi = midiEventsArrayToMidiFile(recordingState.events);
       if (midi) {
         const midiString = midi.toString();
-        setMidiPerformance(midiString);
+        const recordedAt = new Date(
+          recordingState.startTime ?? Date.now(),
+        ).toISOString();
+        setMidiPerformance({ midiData: midiString, recordedAt });
       }
     }
 
@@ -233,7 +256,12 @@ const WebMidiRecorder: React.FC<{
       startTime: null,
       // Keep elapsed time in case user wants to continue recording
     }));
-  }, [recordingState.events, midiEventsArrayToMidiFile, setMidiPerformance]);
+  }, [
+    recordingState.events,
+    recordingState.startTime,
+    midiEventsArrayToMidiFile,
+    setMidiPerformance,
+  ]);
 
   // Handle recording state when no events for a while
   useEffect(() => {
@@ -293,7 +321,10 @@ const WebMidiRecorder: React.FC<{
           webId,
           score,
           payload,
-          data.label,
+          data.label ||
+            createPerformanceLabel(
+              data.recordedAt ? new Date(data.recordedAt) : new Date(),
+            ),
           data.expansion,
         );
         setMidiPerformance(null);
@@ -336,16 +367,16 @@ const WebMidiRecorder: React.FC<{
 
   // Upload saved recording handler
   const handleUploadSavedRecording = useCallback(async () => {
-    if (!midiPerformance) return;
+    if (!storedPerformance) return;
 
     try {
       setUploadState({ isUploading: true, error: null });
-      const payload = midiStringToBlob(midiPerformance);
+      const payload = midiStringToBlob(storedPerformance.midiData);
       const data = await Api.alignMidi(
         webId,
         score,
         payload,
-        "Saved performance",
+        createPerformanceLabel(new Date(storedPerformance.recordedAt)),
         "no expansion",
       );
       setMidiPerformance(null);
@@ -358,7 +389,7 @@ const WebMidiRecorder: React.FC<{
       });
     }
   }, [
-    midiPerformance,
+    storedPerformance,
     webId,
     score,
     navigate,
@@ -400,7 +431,7 @@ const WebMidiRecorder: React.FC<{
         />
 
         {/* Saved Recording - always shown if exists */}
-        {midiPerformance && (
+        {storedPerformance && (
           <Card className="mt-3 border-warning">
             <Card.Header className="bg-warning bg-opacity-10">
               <h6 className="mb-0 text-warning">💾 Saved Recording</h6>
@@ -431,9 +462,16 @@ const WebMidiRecorder: React.FC<{
           </Card>
         )}
 
-        {recordingState.events.length > 0 || midiPerformance ? (
+        {recordingState.events.length > 0 || storedPerformance ? (
           <PerformanceUploader
-            performanceData={{ midiData: midiPerformance }}
+            performanceData={{
+              midiData: storedPerformance?.midiData ?? null,
+              recordedAt:
+                storedPerformance?.recordedAt ??
+                (recordingState.startTime
+                  ? new Date(recordingState.startTime).toISOString()
+                  : undefined),
+            }}
             onUpload={handleManualUpload}
             onDiscard={handleDiscardPerformance}
             uploadState={uploadState}
