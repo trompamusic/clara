@@ -958,7 +958,7 @@ class Companion extends Component {
                 playing={this.state.isPlaying}
                 onPlay={this.handlePlayerPlay}
                 onPause={this.handlePlayerPause}
-                progressInterval={1} // in milliseconds
+                progressInterval={10} // Update every 10ms
                 onProgress={(p) => {
                   this.tick(this.state.selectedVideo, p["playedSeconds"]);
                 }}
@@ -1457,7 +1457,23 @@ class Companion extends Component {
           }
         }
       });
-      this.setState(newState);
+
+      // Only update state if active notes have actually changed to avoid unnecessary re-renders
+      // Most playback time is spent on sustained notes or rests where nothing changes
+      const newActiveNoteIds = newState.currentlyActiveNoteIds || [];
+      const currentActiveNoteIds = this.state.currentlyActiveNoteIds || [];
+      const activeNotesChanged =
+        newActiveNoteIds.length !== currentActiveNoteIds.length ||
+        !newActiveNoteIds.every((id, idx) => id === currentActiveNoteIds[idx]);
+
+      // Also update if segment changed (happens rarely, when crossing section boundaries)
+      const segmentChanged =
+        newState.currentSegment &&
+        newState.currentSegment !== this.state.currentSegment;
+
+      if (activeNotesChanged || segmentChanged) {
+        this.setState(newState);
+      }
     }
   };
 
