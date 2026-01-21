@@ -1,14 +1,66 @@
 import React, { FunctionComponent, useMemo, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { useResource, useSubject, useLdo } from "@ldo/solid-react";
+import {
+  useResource,
+  useSubject,
+  useLdo,
+  useSolidAuth,
+} from "@ldo/solid-react";
 import { ScoreShapeType } from "../.ldo/score.shapeTypes";
 import {
   PerformanceShapeType,
   SignalShapeType,
 } from "../.ldo/performance.shapeTypes";
-import { Button, Table } from "react-bootstrap";
+import { Button, Table, OverlayTrigger, Tooltip } from "react-bootstrap";
+import AuthenticatedMediaPlayer from "./companion/AuthenticatedMediaPlayer";
+import { BiDownload } from "react-icons/bi";
 
-// Performance row component to handle useSubject properly
+// Format date with timezone handling
+const formatDate = (
+  dateString?: string,
+): { display: string; tooltip: string } => {
+  if (!dateString) {
+    return { display: "No date", tooltip: "" };
+  }
+
+  try {
+    // Check if dateString has a timezone indicator
+    // Old versions of of the performance data had no timezone indicator so we assume UTC
+    const hasTimezone =
+      dateString.endsWith("Z") ||
+      /[+-]\d{2}:?\d{2}$/.test(dateString) ||
+      (dateString.includes("+") &&
+        dateString.indexOf("+") > dateString.indexOf("T"));
+
+    let date: Date;
+    if (hasTimezone) {
+      date = new Date(dateString);
+    } else {
+      // Assume UTC if no timezone is specified
+      // For xsd:dateTime format like "2025-08-13T12:47:48", append Z to make it UTC
+      date = new Date(dateString + "Z");
+    }
+
+    // Format for display in user's timezone
+    const display = date.toLocaleString(navigator.languages, {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      timeZoneName: "short",
+    });
+
+    // Format for tooltip (original value)
+    const tooltip = dateString;
+
+    return { display, tooltip };
+  } catch (error) {
+    return { display: dateString, tooltip: dateString };
+  }
+};
+
 const PerformanceRow: FunctionComponent<{
   performance: { uri: string; id: string };
   scoreUri: string;
@@ -16,42 +68,106 @@ const PerformanceRow: FunctionComponent<{
   isDeleting: boolean;
 }> = ({ performance, scoreUri, onDelete, isDeleting }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const { fetch } = useSolidAuth();
+
+  const performanceResource = useResource(performance.uri);
   const performanceData = useSubject(PerformanceShapeType, performance.uri);
 
   // Get the signal data if available
   const signalUri = performanceData?.recordedAs?.["@id"];
+  const signalResource = useResource(signalUri || undefined);
   const signalData = useSubject(SignalShapeType, signalUri || undefined);
 
   // Extract audio and MIDI URLs from signal data
   const audioUrl = signalData?.availableAs?.["@id"];
   const midiUrl = signalData?.derivedFrom?.["@id"];
 
+  const dateInfo = formatDate(performanceData?.created);
+
   return (
-    <tr>
-      <td>
+    <tr style={{ verticalAlign: "top" }}>
+      <td style={{ position: "relative" }}>
         <a
           href={`/perform?score=${encodeURIComponent(scoreUri)}&performance=${encodeURIComponent(performance.uri)}`}
         >
-          {performance.id}
+          {performanceData?.label || "No label"}
+        </a>
+        <a
+          href={performance.uri}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="float-end"
+          style={{ marginLeft: "10px" }}
+        >
+          <img
+            src="/solid-logo.svg"
+            alt="Solid Pod"
+            style={{ height: "20px", width: "20px" }}
+          />
         </a>
       </td>
-      <td>{performanceData?.label || "No date"}</td>
       <td>
-        {midiUrl ? (
-          <a href={midiUrl} target="_blank" rel="noopener noreferrer">
-            Download MIDI
-          </a>
+        {dateInfo.tooltip ? (
+          <OverlayTrigger
+            placement="top"
+            overlay={
+              <Tooltip id={`date-tooltip-${performance.uri}`}>
+                {dateInfo.tooltip}
+              </Tooltip>
+            }
+          >
+            <span>{dateInfo.display}</span>
+          </OverlayTrigger>
         ) : (
-          <span className="text-muted">No MIDI</span>
+          <span>{dateInfo.display}</span>
         )}
       </td>
       <td>
         {audioUrl ? (
-          <a href={audioUrl} target="_blank" rel="noopener noreferrer">
-            Download MP3
-          </a>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div>
+              <AuthenticatedMediaPlayer
+                src={audioUrl}
+                fetchFn={fetch}
+                progressInterval={1000}
+                audioOnly={true}
+              />
+            </div>
+            <div style={{ display: "flex", gap: "10px", fontSize: "0.9em" }}>
+              <a
+                href={audioUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  textDecoration: "none",
+                }}
+              >
+                <span>MP3</span>
+                <BiDownload size={16} />
+              </a>
+              {midiUrl && (
+                <a
+                  href={midiUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    textDecoration: "none",
+                  }}
+                >
+                  <span>MIDI</span>
+                  <BiDownload size={16} />
+                </a>
+              )}
+            </div>
+          </div>
         ) : (
-          <span className="text-muted">No Audio</span>
+          <span className="text-muted">No recording</span>
         )}
       </td>
       <td style={{ width: "120px", minWidth: "120px" }}>
@@ -497,14 +613,13 @@ const EditScore: FunctionComponent = () => {
                 </div>
               ) : performancesList.length > 0 ? (
                 <div className="mt-3">
-                  <h5>Individual Performances</h5>
+                  <h5>Performances</h5>
                   <Table striped bordered hover>
                     <thead>
                       <tr>
-                        <th>ID</th>
-                        <th>Date</th>
-                        <th>MIDI</th>
-                        <th>Audio</th>
+                        <th>Label</th>
+                        <th>Recording Date</th>
+                        <th>Recording</th>
                         <th style={{ width: "120px" }}>Actions</th>
                       </tr>
                     </thead>

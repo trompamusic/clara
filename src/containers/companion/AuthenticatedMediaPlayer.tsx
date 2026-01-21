@@ -19,6 +19,9 @@ interface AuthenticatedMediaPlayerProps {
   playing?: boolean;
   onPlay?: ReactPlayerProps["onPlay"];
   onPause?: ReactPlayerProps["onPause"];
+  width?: string | number;
+  height?: string | number;
+  audioOnly?: boolean;
 }
 
 const AuthenticatedMediaPlayer: React.FC<AuthenticatedMediaPlayerProps> = ({
@@ -32,6 +35,9 @@ const AuthenticatedMediaPlayer: React.FC<AuthenticatedMediaPlayerProps> = ({
   playing = false,
   onPlay,
   onPause,
+  width = "100%",
+  height = "100%",
+  audioOnly = false,
 }) => {
   const [resolvedUrl, setResolvedUrl] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -115,7 +121,7 @@ const AuthenticatedMediaPlayer: React.FC<AuthenticatedMediaPlayerProps> = ({
   return (
     <div
       className="authenticatedPlayerWrapper"
-      style={{ position: "relative" }}
+      style={{ position: "relative", width, height }}
     >
       {error && (
         <Alert
@@ -157,12 +163,22 @@ const AuthenticatedMediaPlayer: React.FC<AuthenticatedMediaPlayerProps> = ({
         url={resolvedUrl || undefined}
         progressInterval={progressInterval}
         controls
-        width="100%"
-        height="100%"
+        width={width}
+        height={height}
         onProgress={onProgress}
         onReady={onReady}
         onPlay={onPlay}
         onPause={onPause}
+        config={{
+          file: {
+            attributes: audioOnly
+              ? {
+                  controlsList: "nodownload",
+                }
+              : {},
+            forceAudio: audioOnly,
+          },
+        }}
       />
     </div>
   );

@@ -973,6 +973,7 @@ class Companion extends Component {
                   }
                 }}
                 playerRef={this.player}
+                audioOnly={!this.props.demo}
               />
             )}
           </div>
