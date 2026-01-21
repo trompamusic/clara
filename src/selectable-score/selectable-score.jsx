@@ -39,18 +39,49 @@ class SelectableScore extends Component {
       vrvOptions:
         "vrvOptions" in this.props ? this.props.vrvOptions : defaultVrvOptions,
     };
+    // Store selector as instance property rather than state to avoid unnecessary re-renders
+    this.selector = undefined;
+    // Guard flag to prevent re-entrant score updates within the same animation frame
+    this.pendingScoreUpdate = false;
     this.enableSelector = this.enableSelector.bind(this);
     this.scoreComponent = React.createRef();
     this.handleScoreUpdate = this.handleScoreUpdate.bind(this);
-    this.observer = new MutationObserver(this.handleScoreUpdate);
+    // Debounce observer callback to batch rapid DOM mutations from Verovio rendering
+    this.handleScoreUpdateDebounced = this.debounce(this.handleScoreUpdate, 50);
+    this.observer = new MutationObserver(this.handleScoreUpdateDebounced);
+  }
+
+  // Debounce helper to batch rapid mutations during Verovio SVG rendering
+  debounce(func, wait) {
+    let timeout;
+    return (...args) => {
+      const later = () => {
+        clearTimeout(timeout);
+        func.apply(this, args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
   }
 
   handleScoreUpdate() {
-    this.enableSelector();
-    typeof this.props.onScoreUpdate === "function" &&
-      this.props.onScoreUpdate(
-        ReactDOM.findDOMNode(this.scoreComponent.current).querySelector("svg"),
-      );
+    // Collapse multiple MutationObserver callbacks into a single update per animation frame
+    // to prevent cascading re-renders when Verovio makes rapid DOM changes
+    if (this.pendingScoreUpdate) {
+      return;
+    }
+
+    this.pendingScoreUpdate = true;
+    requestAnimationFrame(() => {
+      this.enableSelector();
+      typeof this.props.onScoreUpdate === "function" &&
+        this.props.onScoreUpdate(
+          ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(
+            "svg",
+          ),
+        );
+      this.pendingScoreUpdate = false;
+    });
   }
 
   enableSelector() {
@@ -58,8 +89,8 @@ class SelectableScore extends Component {
       console.log("Enable selector called before MEI has loaded!");
       return; // no MEI loaded yet
     }
-    if (typeof this.state.selector !== "undefined") {
-      this.state.selector.stop();
+    if (typeof this.selector !== "undefined") {
+      this.selector.stop();
     }
     let selector;
     if (this.state.selectorString.length) {
@@ -76,8 +107,8 @@ class SelectableScore extends Component {
         },
       });
     }
-    // undefined if no selector string specified, otherwise a new DragSelect
-    this.setState({ selector: selector });
+    // Store selector as instance property (not state) to avoid triggering re-render
+    this.selector = selector;
   }
 
   fetchAnnotationContainer() {
@@ -161,6 +192,14 @@ class SelectableScore extends Component {
         );
       }
     }
+  }
+
+  componentWillUnmount() {
+    // Clean up DragSelect instance and MutationObserver to prevent memory leaks
+    if (typeof this.selector !== "undefined") {
+      this.selector.stop();
+    }
+    this.observer.disconnect();
   }
 
   componentDidUpdate(prevProps, prevState) {
