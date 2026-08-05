@@ -24,7 +24,6 @@ export default class TempoCurveVis extends Component {
   }
 
   componentDidMount() {
-    console.log("tempo mounted with props ", this.props);
     this.calculateGlobalTempoRange();
   }
   componentDidUpdate(prevProps) {
@@ -207,8 +206,8 @@ export default class TempoCurveVis extends Component {
     const percentile10 = allTempos[percentile10Index];
     const percentile90 = allTempos[percentile90Index];
 
-    const displayMin = Math.max(percentile10, minTempo * 0.5); // Don't go too far below
-    const displayMax = Math.min(percentile90, maxTempo * 1.5); // Don't go too far above
+    const displayMin = percentile10;
+    const displayMax = percentile90;
 
     // Select appropriate metronome markings
     const selectedMarkings = this.selectMetronomeMarkings(
@@ -492,7 +491,7 @@ export default class TempoCurveVis extends Component {
       // generate points and lines for each timeline
       // ensure that the currently active timeline (if any) is painted last, to paint over the others
       // (no z-index CSS for SVGs...)
-      let timelinesInOrder = this.props.timelinesToVis;
+      let timelinesInOrder = [...this.props.timelinesToVis];
       if (this.props.currentTimeline) {
         const currentTlIndex = timelinesInOrder.indexOf(
           this.props.currentTimeline,

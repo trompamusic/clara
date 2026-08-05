@@ -334,6 +334,7 @@ button.active {
 }
 
 #tempoCurve {
+  overflow: hidden;
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0%, rgba(220, 220, 220, .2) 5%, rgba(220, 220, 220, .2) 95%, rgba(255, 255, 255, .2) 100%);
 }
 
@@ -373,6 +374,10 @@ button.active {
 
 #featureVisContainer line.estimated {
   stroke-dasharray: 1.5;
+}
+
+#featureVisContainer line.dashed {
+  stroke-dasharray: 4 2;
 }
 
 #featureVisContainer text.bpmLabel {
