@@ -3,10 +3,11 @@ declare module "meld-clients-core/lib/actions";
 declare module "meld-clients-core/lib/actions/index" {
   export function setFetchFunction(fetch: any): {
     type: string;
-    payload: {
-      fetch: any;
-    };
+    payload: any;
   };
+
+  // Thunk. Idempotent per URL: see state.score.loadStatus.
+  export function fetchScore(url: string, options?: any): any;
 
   export function scoreNextPageStatic(
     uri: string,

@@ -17,6 +17,7 @@ import {
   scorePrevPageStatic,
   scorePageToComponentTarget,
   fetchScore,
+  setFetchFunction,
 } from "meld-clients-core/lib/actions/index";
 import {
   registerClock,
@@ -809,7 +810,13 @@ class Companion extends Component {
       let currentScore = (
         <div className="loadingMsg">Loading, please wait...</div>
       );
-      if (this.state.currentScore) {
+      // Only mount the score once meld has finished loading it. Score's own
+      // mount-time fetchScore then hits the cached MEI (no network request)
+      // and renders with this.state.vrvOptions straight away.
+      const scoreLoadStatus =
+        this.state.currentScore &&
+        this.props.score.loadStatus[this.state.currentScore];
+      if (scoreLoadStatus && scoreLoadStatus.status === "loaded") {
         currentScore = (
           <div ref={this.scoreComponent} id="scoreSelectionArea">
             <SelectableScore
@@ -819,8 +826,19 @@ class Companion extends Component {
               selectorString=""
               selectionArea="#scoreSelectionArea"
               onSelectionChange={() => {}}
+              // The SVG is already in the state when Score first renders, so
+              // there is no DOM mutation to trigger onScoreUpdate for the
+              // initial load; onScoreReady covers that case.
+              onScoreReady={this.handleDOMChangeObserved}
               onScoreUpdate={this.handleDOMChangeObserved}
             />
+          </div>
+        );
+      } else if (scoreLoadStatus && scoreLoadStatus.status === "failed") {
+        currentScore = (
+          <div className="loadingMsg">
+            Could not load the score ({this.state.currentScore}):{" "}
+            {scoreLoadStatus.error}. Reload the page to retry.
           </div>
         );
       }
@@ -1493,6 +1511,16 @@ class Companion extends Component {
     return Array.isArray(val) ? val : [val];
   };
 
+  withPlainFetch = (fn) => {
+    const authFetch = this.props.fetchFunction;
+    try {
+      this.props.setFetchFunction(null);
+      fn();
+    } finally {
+      this.props.setFetchFunction(authFetch);
+    }
+  };
+
   processTraversalOutcomes = (outcomes) => {
     console.log("PROCESSING OUTCOMES: ", outcomes);
     let segments = [];
@@ -1714,7 +1742,9 @@ class Companion extends Component {
             currentPerformance["http://purl.org/ontology/mo/published_as"][
               "@id"
             ];
-          this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
+          this.withPlainFetch(() =>
+            this.props.fetchScore(currentScore, this.state.vrvOptions),
+          ); // register it with reducer to obtain page count, etc
           this.setState({
             performances,
             segments,
@@ -1737,7 +1767,9 @@ class Companion extends Component {
           currentScore =
             outcomes[4]["http://purl.org/ontology/mo/published_as"]["@id"];
         }
-        this.props.fetchScore(currentScore); // register it with reducer to obtain page count, etc
+        this.withPlainFetch(() =>
+          this.props.fetchScore(currentScore, this.state.vrvOptions),
+        ); // register it with reducer to obtain page count, etc
         // there are no performances -- force pageView mode and disable scorefollowing
         this.setState({
           segments,
@@ -1778,7 +1810,9 @@ const companionInjectedPropTypes = {
   score: PropTypes.object.isRequired,
   graph: PropTypes.object.isRequired,
   traversalPool: PropTypes.object.isRequired,
+  fetchFunction: PropTypes.func,
   fetchScore: PropTypes.func.isRequired,
+  setFetchFunction: PropTypes.func.isRequired,
   traverse: PropTypes.func.isRequired,
   registerTraversal: PropTypes.func.isRequired,
   setTraversalObjectives: PropTypes.func.isRequired,
@@ -1800,14 +1834,20 @@ const companionPropTypes = {
 
 Companion.propTypes = companionPropTypes;
 
-function mapStateToProps({ score, graph, traversalPool }) {
-  return { score, graph, traversalPool };
+function mapStateToProps({ score, graph, traversalPool, sessionControl }) {
+  return {
+    score,
+    graph,
+    traversalPool,
+    fetchFunction: sessionControl.fetchFunction,
+  };
 }
 
 function mapDispatchToProps(dispatch) {
   return bindActionCreators(
     {
       fetchScore,
+      setFetchFunction,
       traverse,
       registerTraversal,
       setTraversalObjectives,

@@ -10,6 +10,13 @@ export interface ScoreData {
   MEI: {
     [key: string]: any;
   };
+  loadStatus: {
+    [key: string]: {
+      status: "loading" | "loaded" | "failed";
+      options?: any;
+      error?: string;
+    };
+  };
   SVG: Record<string, any>;
   vrvTk?: any;
 }
