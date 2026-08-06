@@ -28,6 +28,12 @@ export interface TakeDraft extends Metadata {
   recovered: boolean;
 }
 
+export interface FileDraft extends Metadata {
+  kind: "file";
+  // Distinguishes a reopened panel from an abandoned file selection.
+  session: symbol;
+}
+
 export type Workflow =
   | { phase: "ready" }
   | Recording
@@ -43,4 +49,5 @@ export type Workflow =
       error: string | null;
       confirmingDiscard: boolean;
     }
-  | { phase: "uploading"; draft: TakeDraft };
+  | { phase: "fileSelect"; draft: FileDraft; error: string | null }
+  | { phase: "uploading"; draft: TakeDraft | FileDraft };

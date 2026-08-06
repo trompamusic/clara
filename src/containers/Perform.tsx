@@ -4,22 +4,6 @@ import { useSolidAuth } from "@ldo/solid-react";
 import Companion from "./companion/Companion";
 import { useAuthentication, useMainContainer } from "../util/hooks";
 import WebMidiRecorder from "./midi-recorder";
-import { useNavigate } from "react-router";
-
-function LinkToUpload({ uri }: { uri: string }) {
-  const navigate = useNavigate();
-  return (
-    <a
-      href={`/upload?score=${uri}`}
-      onClick={(e) => {
-        e.preventDefault();
-        navigate(`/upload?score=${uri}`);
-      }}
-    >
-      Upload a performance
-    </a>
-  );
-}
 
 /**
  * The main wrapper to perform a score
@@ -84,7 +68,6 @@ export default function Perform() {
   if (mainContainerUri && score) {
     return (
       <div>
-        <LinkToUpload uri={score} />
         {/* Keyed by the same pair the recorder's storage key is built from:
             it holds an in-progress take, which must never survive into a
             different score or a different user. */}

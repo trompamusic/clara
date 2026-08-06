@@ -15,6 +15,7 @@ import {
   isSystemMessage,
 } from "../../util/midiEvents";
 import {
+  FileDraft,
   Metadata,
   StopReason,
   StoredPerformance,
@@ -177,11 +178,13 @@ export default function useRecorder(
   }, [state, deviceId, finalise]);
 
   const upload = useCallback(
-    async (draft: TakeDraft, payload: Blob) => {
+    async (draft: TakeDraft | FileDraft, payload: Blob) => {
       transition({ phase: "uploading", draft });
       const label =
         draft.label.trim() ||
-        createPerformanceLabel(new Date(draft.take.recordedAt));
+        createPerformanceLabel(
+          draft.kind === "take" ? new Date(draft.take.recordedAt) : undefined,
+        );
       try {
         const result = await Api.alignMidi(
           webId,
@@ -191,18 +194,26 @@ export default function useRecorder(
           toApiExpansion(draft.expansion),
         );
         if (!current.current) return;
-        persist(storageKey, null);
+        if (draft.kind === "take") persist(storageKey, null);
         navigate(`/uploadwait?task=${result.task_id}&score=${score}`);
       } catch (error) {
         if (!current.current) return;
         console.error("Upload failed:", error);
         const message = "Failed to upload performance. Please try again.";
-        transition({
-          phase: "takeReview",
-          draft,
-          error: message,
-          confirmingDiscard: false,
-        });
+        transition(
+          draft.kind === "take"
+            ? {
+                phase: "takeReview",
+                draft,
+                error: message,
+                confirmingDiscard: false,
+              }
+            : {
+                phase: "fileSelect",
+                draft: { ...draft, session: Symbol() },
+                error: message,
+              },
+        );
       }
     },
     [webId, score, storageKey, navigate, transition],
@@ -249,9 +260,42 @@ export default function useRecorder(
 
   const editMetadata = (change: Partial<Metadata>) => {
     const latest = current.current;
-    if (latest?.phase !== "takeCountdown" && latest?.phase !== "takeReview")
+    if (
+      latest?.phase !== "takeCountdown" &&
+      latest?.phase !== "takeReview" &&
+      latest?.phase !== "fileSelect"
+    )
       return;
-    transition({ ...latest, draft: { ...latest.draft, ...change } });
+    if (latest.phase === "fileSelect") {
+      transition({ ...latest, draft: { ...latest.draft, ...change } });
+    } else {
+      transition({ ...latest, draft: { ...latest.draft, ...change } });
+    }
+  };
+
+  const toggleFileUpload = () => {
+    const latest = current.current;
+    if (latest?.phase === "ready")
+      transition({
+        phase: "fileSelect",
+        draft: { kind: "file", session: Symbol(), ...emptyMetadata },
+        error: null,
+      });
+    else if (latest?.phase === "fileSelect") transition({ phase: "ready" });
+  };
+
+  const acceptFile = (session: symbol, file: File) => {
+    const latest = current.current;
+    if (latest?.phase !== "fileSelect" || latest.draft.session !== session)
+      return;
+    void upload(latest.draft, file);
+  };
+
+  const rejectFile = (session: symbol, error: string) => {
+    const latest = current.current;
+    if (latest?.phase !== "fileSelect" || latest.draft.session !== session)
+      return;
+    transition({ ...latest, error });
   };
 
   return {
@@ -261,5 +305,8 @@ export default function useRecorder(
     reviewTake,
     discardTake,
     editMetadata,
+    toggleFileUpload,
+    acceptFile,
+    rejectFile,
   };
 }

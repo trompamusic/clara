@@ -9,7 +9,6 @@ import Startup from "./Startup";
 import Perform from "./Perform";
 import ScoreSelector from "./ScoreSelector";
 import AddWait from "./AddWait";
-import Upload from "./Upload";
 import UploadWait from "./UploadWait";
 import EditScore from "./EditScore";
 
@@ -34,10 +33,6 @@ const router = createBrowserRouter([
       {
         path: "/addwait",
         element: <AddWait />,
-      },
-      {
-        path: "/upload",
-        element: <Upload />,
       },
       {
         path: "/uploadwait",

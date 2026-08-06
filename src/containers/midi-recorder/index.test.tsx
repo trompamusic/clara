@@ -645,22 +645,253 @@ describe("one upload at a time", () => {
   });
 });
 
-describe("devices", () => {
-  it("shows the unsupported message only when WebMIDI is missing", async () => {
-    jest.spyOn(console, "warn").mockImplementation(() => undefined);
-    delete (navigator as any).requestMIDIAccess;
-    await renderRecorder();
+describe("file upload", () => {
+  const TOGGLE = "Upload a MIDI file instead";
 
-    expect(screen.getByText(/does not support WebMIDI/)).toBeInTheDocument();
+  const fileInput = (container: HTMLElement) =>
+    container.querySelector('input[type="file"]') as HTMLInputElement;
+
+  function selectFile(container: HTMLElement, file: File) {
+    fireEvent.change(fileInput(container), { target: { files: [file] } });
+  }
+
+  async function chooseFile(container: HTMLElement, file: File) {
+    fireEvent.click(screen.getByText(TOGGLE));
+    await act(async () => {
+      selectFile(container, file);
+    });
+    await flushEffects();
+  }
+
+  it("uploads a dropped MIDI file with the default label", async () => {
+    const { container } = await renderRecorder();
+
+    const now = Date.now();
+    await chooseFile(
+      container,
+      new File(["MThd"], "take.mid", { type: "audio/midi" }),
+    );
+
+    expect(alignMidi).toHaveBeenCalledTimes(1);
+    const [, , payload, label, expansion] = alignMidi.mock.calls[0];
+    expect(payload.name).toBe("take.mid");
+    expect(label).toBe(createPerformanceLabel(new Date(now)));
+    expect(expansion).toBeUndefined();
+    expect(mockNavigate).toHaveBeenCalledWith(
+      `/uploadwait?task=task-1&score=${SCORE}`,
+    );
   });
 
-  it("does not offer Ready when WebMIDI is unavailable", async () => {
+  it("rejects a non-MIDI file with a visible message and no request", async () => {
+    const { container } = await renderRecorder();
+
+    await chooseFile(
+      container,
+      new File(["RIFF"], "take.wav", { type: "audio/wav" }),
+    );
+
+    expect(alignMidi).not.toHaveBeenCalled();
+    expect(screen.getByText(/Only MIDI files/)).toBeInTheDocument();
+  });
+
+  it("shows a failed file upload on the card that started it", async () => {
+    alignMidi.mockRejectedValue(new Error("network"));
+    jest.spyOn(console, "error").mockImplementation(() => undefined);
+    const { container } = await renderRecorder();
+
+    await chooseFile(
+      container,
+      new File(["MThd"], "take.mid", { type: "audio/midi" }),
+    );
+
+    expect(
+      screen.getByText(/Failed to upload performance/),
+    ).toBeInTheDocument();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("ignores what is played while the panel is open, and listens again after", async () => {
+    const { container } = await renderRecorder();
+
+    fireEvent.click(screen.getByText(TOGGLE));
+    send([0x90, 60, 100]);
+    expect(
+      container.querySelector(".recording-status"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByText(TOGGLE)).not.toBeVisible();
+    expect(screen.getByText("MIDI Device:")).not.toBeVisible();
+    expect(
+      screen.queryByText(/Close the file upload to record/),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Close file upload" }));
+    expect(screen.getByText(TOGGLE)).toBeInTheDocument();
+    expect(screen.getByText("MIDI Device:")).toBeVisible();
+    send([0x90, 60, 100]);
+    expect(container.querySelector(".recording-status")).toBeInTheDocument();
+  });
+
+  it("leaves nothing behind for a later take when the panel is abandoned", async () => {
+    const { container } = await renderRecorder();
+
+    // a label and an error, then walk away from file mode
+    fireEvent.click(screen.getByText(TOGGLE));
+    fireEvent.change(screen.getByLabelText(/Label for this performance/), {
+      target: { value: "typed for the file" },
+    });
+    await act(async () => {
+      selectFile(container, new File(["RIFF"], "x.wav", { type: "audio/wav" }));
+    });
+    expect(screen.getByText(/Only MIDI files/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Close file upload" })); // abandoned
+
+    send([0x90, 60, 100]);
+    send([0x80, 60, 0]);
+    advance(5000);
+
+    fireEvent.click(screen.getByText("Stop / Edit settings"));
+    // the take's card is its own: no inherited label, no stale file error
+    expect(screen.queryByText(/Only MIDI files/)).not.toBeInTheDocument();
+    expect(
+      (screen.getByLabelText(/Label for this performance/) as HTMLInputElement)
+        .value,
+    ).toBe("");
+
+    fireEvent.click(screen.getByText("Submit Recording"));
+    await flushEffects();
+    expect(alignMidi.mock.calls[0][3]).not.toBe("typed for the file");
+  });
+
+  it("keeps the upload active when two drops resolve together", async () => {
+    alignMidi.mockReturnValue(new Promise(() => undefined));
+    const { container } = await renderRecorder();
+
+    fireEvent.click(screen.getByText(TOGGLE));
+
+    // both drops begin before either upload starts, so both callbacks hold the
+    // same render's closure
+    selectFile(
+      container,
+      new File(["MThd"], "one.mid", { type: "audio/midi" }),
+    );
+    selectFile(
+      container,
+      new File(["MThd"], "two.mid", { type: "audio/midi" }),
+    );
+    await flushEffects();
+    await flushEffects();
+
+    expect(alignMidi).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Uploading your performance",
+    );
+    expect(fileInput(container)).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Close file upload" }),
+    ).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Close file upload" }));
+    send([0x90, 60, 100]);
+    expect(
+      container.querySelector(".recording-status"),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
+  });
+
+  it("abandons a drop that resolves after recording has begun", async () => {
+    const { container } = await renderRecorder();
+
+    fireEvent.click(screen.getByText(TOGGLE));
+
+    // the drop begins, but file extraction has not resolved yet
+    selectFile(
+      container,
+      new File(["MThd"], "take.mid", { type: "audio/midi" }),
+    );
+
+    // panel closed and a take started before the promise lands
+    fireEvent.click(screen.getByRole("button", { name: "Close file upload" }));
+    send([0x90, 60, 100]);
+    expect(container.querySelector(".recording-status")).toBeInTheDocument();
+
+    await flushEffects(); // the deferred callback runs now
+
+    expect(alignMidi).not.toHaveBeenCalled();
+    expect(screen.queryByText(/Failed to upload/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Only MIDI files/)).not.toBeInTheDocument();
+  });
+
+  it.each(["take.mid", "take.wav"])(
+    "ignores deferred %s results after the file panel is closed and reopened",
+    async (name) => {
+      const { container } = await renderRecorder();
+      fireEvent.click(screen.getByText(TOGGLE));
+      selectFile(container, new File(["bytes"], name));
+      fireEvent.click(
+        screen.getByRole("button", { name: "Close file upload" }),
+      );
+      fireEvent.click(screen.getByText(TOGGLE));
+      await flushEffects();
+      expect(alignMidi).not.toHaveBeenCalled();
+      expect(screen.queryByText(/Only MIDI files/)).not.toBeInTheDocument();
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    },
+  );
+
+  it("ignores file selection after leaving the page", async () => {
+    const { container, unmount } = await renderRecorder();
+    fireEvent.click(screen.getByText(TOGGLE));
+    selectFile(container, new File(["bytes"], "take.mid"));
+    unmount();
+    await flushEffects();
+    expect(alignMidi).not.toHaveBeenCalled();
+  });
+
+  it("keeps the active upload visible when a deferred rejection arrives", async () => {
+    alignMidi.mockReturnValue(new Promise(() => undefined));
+    const { container } = await renderRecorder();
+    fireEvent.click(screen.getByText(TOGGLE));
+    for (const name of ["take.mid", "take.wav"]) {
+      selectFile(container, new File(["bytes"], name));
+    }
+    await flushEffects();
+    await flushEffects();
+    expect(alignMidi).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    expect(screen.queryByText(/Only MIDI files/)).not.toBeInTheDocument();
+  });
+
+  it("keeps the upload link space reserved while a performance exists", async () => {
+    const { container } = await renderRecorder();
+
+    send([0x90, 60, 100]); // recording
+    expect(screen.getByText(TOGGLE)).not.toBeVisible();
+
+    send([0x80, 60, 0]);
+    advance(5000); // countdown, take pending
+    expect(container.querySelector(".countdown-status")).toBeInTheDocument();
+    expect(screen.getByText(TOGGLE)).not.toBeVisible();
+
+    fireEvent.click(screen.getByText("Stop / Edit settings")); // still pending
+    expect(screen.getByText(TOGGLE)).not.toBeVisible();
+
+    fireEvent.click(screen.getByText("Discard Recording"));
+    fireEvent.click(screen.getByText("Yes, Discard"));
+    expect(screen.getByText(TOGGLE)).toBeInTheDocument();
+  });
+
+  it("offers file upload but not recording when WebMIDI is unsupported", async () => {
+    jest.spyOn(console, "warn").mockImplementation(() => undefined);
     delete (navigator as any).requestMIDIAccess;
     const { container } = await renderRecorder();
 
+    expect(screen.getByText(/does not support WebMIDI/)).toBeInTheDocument();
+    expect(screen.getByText(TOGGLE)).toBeInTheDocument();
     expect(container.querySelector(".ready-status")).not.toBeInTheDocument();
   });
+});
 
+describe("devices", () => {
   it("shows the denied message when the permission prompt is refused", async () => {
     jest.spyOn(console, "error").mockImplementation(() => undefined);
     WebMidi.enable = jest.fn(async () => {
