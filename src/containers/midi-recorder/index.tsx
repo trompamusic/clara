@@ -1,16 +1,21 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useSolidAuth } from "@ldo/solid-react";
 import { useNavigate } from "react-router";
 import { useLocalStorage } from "usehooks-ts";
 import { Input } from "webmidi";
-import { Button, Card } from "react-bootstrap";
-import { trackToMidi } from "../../util/midi";
+import { Alert, Button, Card } from "react-bootstrap";
+import { encodeMidi, eventsToMidi, midiStringToBlob } from "../../util/midi";
+import {
+  isNoteOffMessage,
+  isNoteOnMessage,
+  isSystemMessage,
+} from "../../util/midiEvents";
 import Api from "../../util/api";
 import { createPerformanceLabel } from "../../util/date";
 import {
-  MidiEvent,
   RecordingState,
   PerformanceData,
+  StopReason,
   UploadState,
 } from "./types";
 import MidiDeviceManager from "./MidiDeviceManager";
@@ -30,19 +35,12 @@ const WebMidiRecorder: React.FC<{
   // State
   const [selectedDevice, setSelectedDevice] = useState<Input | null>(null);
   const [recordingState, setRecordingState] = useState<RecordingState>({
-    isRecording: false,
-    startTime: null,
-    elapsedTime: 0,
-    events: [],
+    phase: "idle",
   });
   const [uploadState, setUploadState] = useState<UploadState>({
     isUploading: false,
     error: null,
   });
-  const [noteEventCount, setNoteEventCount] = useState(0);
-
-  // Refs
-  const timerRef = useRef<NodeJS.Timeout>();
 
   // Local storage
   const localStorageKey = `at.ac.mdw.trompa-midiPerformance-${webId}-${score}`;
@@ -66,245 +64,175 @@ const WebMidiRecorder: React.FC<{
     }
   }, [midiPerformance, setMidiPerformance]);
 
-  // Convert MIDI string to Blob for API calls
-  const midiStringToBlob = useCallback((midiString: string): Blob => {
-    const midiArray = midiString.split(",").map((s) => parseInt(s));
-    const midi = new Uint8Array(midiArray);
-    return new Blob([midi]);
-  }, []);
-
-  // Convert MIDI events to MIDI file
-  const midiEventsArrayToMidiFile = useCallback((events: MidiEvent[]) => {
-    if (events.length === 0) return null;
-
-    const firstTimestamp = events[0].timeStamp;
-    const trackNotes = events
-      .map((e) => {
-        const timeStamp = e.timeStamp - firstTimestamp;
-        const d = e.data;
-
-        if (d[0] === 144) {
-          return {
-            type: "noteOn",
-            noteNumber: d[1],
-            velocity: d[2],
-            absoluteTime: timeStamp,
-          } as any;
-        } else if (d[0] === 128) {
-          return {
-            type: "noteOff",
-            noteNumber: d[1],
-            velocity: d[2],
-            absoluteTime: timeStamp,
-          } as any;
-        }
-        return null;
-      })
-      .filter((e): e is NonNullable<typeof e> => e !== null);
-
-    return trackToMidi(trackNotes);
-  }, []);
+  const selectedDeviceId = selectedDevice?.id ?? null;
 
   // Handle MIDI message
   const handleMidiMessage = useCallback(
     (mes: any) => {
       if (!selectedDevice) return;
 
-      const dataArray = Array.from(mes.data);
-      const status = (dataArray[0] as number) ?? 0;
-      const velocity = (dataArray[2] as number) ?? 0;
-      const isNoteOn = status >= 0x90 && status <= 0x9f && velocity > 0;
-      const isNoteOff =
-        (status >= 0x80 && status <= 0x8f) ||
-        (status >= 0x90 && status <= 0x9f && velocity === 0);
-      const isNoteEvent = isNoteOn || isNoteOff;
+      const data = mes.data as Uint8Array;
+      const status = data[0] ?? 0;
+
+      // Drop system messages (0xF0-0xFF)
+      if (isSystemMessage(status)) return;
+
+      const noteNumber = data[1] ?? 0;
+      const velocity = data[2] ?? 0;
+      const isNoteOn = isNoteOnMessage(status, velocity);
+      const isNoteOff = isNoteOffMessage(status, velocity);
       const now = Date.now();
-      let noteEventRecorded = false;
+      const deviceId = selectedDevice.id ?? null;
 
       setRecordingState((prev) => {
-        if (!prev.isRecording && !isNoteOn) {
-          return prev;
-        }
+        if (prev.phase === "stopped") return prev;
+        if (prev.phase === "idle" && !isNoteOn) return prev;
 
-        if (!prev.isRecording && isNoteOn) {
-          noteEventRecorded = true;
-          return {
-            ...prev,
-            isRecording: true,
-            startTime: now,
-            elapsedTime: 0,
-            events: [...prev.events, { data: mes.data, timeStamp: now }],
+        const prior =
+          prev.phase === "recording"
+            ? prev
+            : {
+                startedAt: now,
+                lastNoteEventAt: now,
+                deviceId,
+                heldCounts: {} as Record<number, number>,
+                heldTotal: 0,
+                events: [],
+              };
+
+        let heldCounts = prior.heldCounts;
+        let heldTotal = prior.heldTotal;
+        if (isNoteOn) {
+          heldCounts = {
+            ...heldCounts,
+            [noteNumber]: (heldCounts[noteNumber] ?? 0) + 1,
           };
+          heldTotal += 1;
+        } else if (isNoteOff && (heldCounts[noteNumber] ?? 0) > 0) {
+          heldCounts = { ...heldCounts, [noteNumber]: heldCounts[noteNumber] - 1 };
+          heldTotal -= 1;
         }
 
-        if (prev.isRecording) {
-          if (isNoteEvent) {
-            noteEventRecorded = true;
-          }
-          return {
-            ...prev,
-            events: [...prev.events, { data: mes.data, timeStamp: now }],
-          };
-        }
-
-        return prev;
+        return {
+          phase: "recording",
+          startedAt: prior.startedAt,
+          lastNoteEventAt: isNoteOn || isNoteOff ? now : prior.lastNoteEventAt,
+          deviceId: prior.deviceId,
+          heldCounts,
+          heldTotal,
+          events: [...prior.events, { data, timeStamp: now }],
+        };
       });
-
-      if (noteEventRecorded) {
-        setNoteEventCount((prev) => prev + 1);
-      }
     },
     [selectedDevice],
   );
 
-  // Update elapsed time while recording
+  // Idempotent: three things can end a take, and two of them can land in the
+  // same tick. A second call must not move the deadline or rewrite the reason.
+  const finaliseTake = useCallback((reason: StopReason) => {
+    const now = Date.now();
+    setRecordingState((prev) =>
+      prev.phase === "recording"
+        ? {
+            phase: "stopped",
+            startedAt: prev.startedAt,
+            finalisedAt: now,
+            deadline: now + MIDI_TIMEOUT,
+            reason,
+            events: prev.events,
+          }
+        : prev,
+    );
+  }, []);
+
+  // The take ends MIDI_TIMEOUT after the last note event, but only once every
+  // key is up, so a sustained chord does not finalise mid-chord. A held key
+  // sends nothing on the wire, so note events alone cannot tell "still
+  // holding" from "finished".
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    if (recordingState.phase !== "recording") return;
+    if (recordingState.heldTotal > 0) return;
 
-    if (recordingState.isRecording && recordingState.startTime) {
-      interval = setInterval(() => {
-        const newElapsedTime = Date.now() - (recordingState.startTime || 0);
-        setRecordingState((prev) => ({
-          ...prev,
-          elapsedTime: newElapsedTime,
-        }));
-      }, 100); // Update every 100ms for smooth display
-    }
+    const due = MIDI_TIMEOUT - (Date.now() - recordingState.lastNoteEventAt);
+    const timer = setTimeout(() => finaliseTake("silence"), Math.max(0, due));
 
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [recordingState.isRecording, recordingState.startTime]);
+    return () => clearTimeout(timer);
+  }, [recordingState, finaliseTake]);
+
+  // Losing the device we were capturing from ends the take: no further notes
+  // can arrive, and a note-off in flight never will, which would otherwise
+  // leave the held-note gate shut forever. Covers disconnect, deselection and
+  // switching, since all three change the selected id.
+  useEffect(() => {
+    if (recordingState.phase !== "recording") return;
+    if (recordingState.deviceId === selectedDeviceId) return;
+
+    finaliseTake("deviceChanged");
+  }, [recordingState, selectedDeviceId, finaliseTake]);
+
+  const handleEndTake = useCallback(() => {
+    finaliseTake("ended");
+  }, [finaliseTake]);
 
   // Handle recording timeout
   const handleRecordingTimeout = useCallback(() => {
-    if (recordingState.events.length > 0) {
-      const midi = midiEventsArrayToMidiFile(recordingState.events);
+    if (recordingState.phase !== "stopped") return;
 
-      if (midi) {
-        const midiString = midi.toString();
-        const recordedAt = new Date(
-          recordingState.startTime ?? Date.now(),
-        ).toISOString();
-        setMidiPerformance({ midiData: midiString, recordedAt });
+    const midi = eventsToMidi(recordingState.events, recordingState.finalisedAt);
 
-        // Auto-upload
-        const payload = midiStringToBlob(midiString);
-        Api.alignMidi(
-          webId,
-          score,
-          payload,
-          createPerformanceLabel(new Date(recordedAt)),
-          "no expansion",
-        )
-          .then((data) => {
-            setMidiPerformance(null);
-            navigate(`/uploadwait?task=${data.task_id}&score=${score}`);
-          })
-          .catch((err) => {
-            console.error("Upload failed:", err);
-            setUploadState({
-              isUploading: false,
-              error: "Failed to upload performance. Please try again.",
-            });
+    if (midi) {
+      const recordedAt = new Date(recordingState.startedAt).toISOString();
+      setMidiPerformance({ midiData: encodeMidi(midi), recordedAt });
+
+      // Auto-upload
+      Api.alignMidi(
+        webId,
+        score,
+        new Blob([midi]),
+        createPerformanceLabel(new Date(recordedAt)),
+        "no expansion",
+      )
+        .then((data) => {
+          setMidiPerformance(null);
+          navigate(`/uploadwait?task=${data.task_id}&score=${score}`);
+        })
+        .catch((err) => {
+          console.error("Upload failed:", err);
+          setUploadState({
+            isUploading: false,
+            error: "Failed to upload performance. Please try again.",
           });
-      }
-
-      setRecordingState((prev) => ({
-        ...prev,
-        events: [],
-        isRecording: false,
-        startTime: null,
-        elapsedTime: 0, // Reset after submission
-      }));
+        });
     }
-  }, [
-    recordingState.events,
-    recordingState.startTime,
-    midiEventsArrayToMidiFile,
-    setMidiPerformance,
-    webId,
-    score,
-    navigate,
-    midiStringToBlob,
-  ]);
+
+    setRecordingState({ phase: "idle" });
+  }, [recordingState, setMidiPerformance, webId, score, navigate]);
+
+  // The submission countdown lives here, beside the other timer: it triggers an
+  // upload, so it must not be tied to anything that can unmount.
+  useEffect(() => {
+    if (recordingState.phase !== "stopped") return;
+
+    const due = recordingState.deadline - Date.now();
+    const timer = setTimeout(handleRecordingTimeout, Math.max(0, due));
+
+    return () => clearTimeout(timer);
+  }, [recordingState, handleRecordingTimeout]);
 
   // Handle stopping submission timer
   const handleStopSubmission = useCallback(() => {
-    // Clear the submission timer
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
+    if (recordingState.phase !== "stopped") return;
+
+    const midi = eventsToMidi(recordingState.events, recordingState.finalisedAt);
+    if (midi) {
+      setMidiPerformance({
+        midiData: encodeMidi(midi),
+        recordedAt: new Date(recordingState.startedAt).toISOString(),
+      });
     }
 
-    // Convert current recording events to MIDI data for editing
-    if (recordingState.events.length > 0) {
-      const midi = midiEventsArrayToMidiFile(recordingState.events);
-      if (midi) {
-        const midiString = midi.toString();
-        const recordedAt = new Date(
-          recordingState.startTime ?? Date.now(),
-        ).toISOString();
-        setMidiPerformance({ midiData: midiString, recordedAt });
-      }
-    }
-
-    // Keep the current recording events but stop the submission timer
-    // User can continue recording or manually submit later
-    setRecordingState((prev) => ({
-      ...prev,
-      isRecording: false,
-      startTime: null,
-      // Keep elapsed time in case user wants to continue recording
-    }));
-  }, [
-    recordingState.events,
-    recordingState.startTime,
-    midiEventsArrayToMidiFile,
-    setMidiPerformance,
-  ]);
-
-  // Handle recording state when no events for a while
-  useEffect(() => {
-    if (recordingState.events.length === 0 && recordingState.isRecording) {
-      // If we have no events but are still recording, wait a bit then stop
-      const stopRecordingTimer = setTimeout(() => {
-        if (recordingState.events.length === 0) {
-          setRecordingState((prev) => ({
-            ...prev,
-            isRecording: false,
-            startTime: null,
-            // Keep elapsed time for countdown
-          }));
-        }
-      }, 2000); // Wait 2 seconds after last event before stopping recording
-
-      return () => clearTimeout(stopRecordingTimer);
-    }
-  }, [recordingState.events, recordingState.isRecording]);
-
-  // Handle MIDI events timeout - this should only detect when recording stops, not submit
-  useEffect(() => {
-    if (noteEventCount === 0) {
-      return;
-    }
-
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-    }
-
-    timerRef.current = setTimeout(() => {
-      setRecordingState((prev) => ({
-        ...prev,
-        isRecording: false,
-        startTime: null,
-        // Don't reset elapsedTime here - keep it for the countdown
-      }));
-    }, MIDI_TIMEOUT);
-
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [noteEventCount]);
+    setRecordingState({ phase: "idle" });
+  }, [recordingState, setMidiPerformance]);
 
   // Manual upload handler
   const handleManualUpload = useCallback(
@@ -330,13 +258,7 @@ const WebMidiRecorder: React.FC<{
         setMidiPerformance(null);
 
         // Clear recording state after successful upload
-        setRecordingState((prev) => ({
-          ...prev,
-          events: [],
-          isRecording: false,
-          startTime: null,
-          elapsedTime: 0,
-        }));
+        setRecordingState({ phase: "idle" });
 
         navigate(`/uploadwait?task=${result.task_id}&score=${score}`);
       } catch (err) {
@@ -347,7 +269,7 @@ const WebMidiRecorder: React.FC<{
         });
       }
     },
-    [navigate, score, webId, setMidiPerformance, midiStringToBlob],
+    [navigate, score, webId, setMidiPerformance],
   );
 
   // Discard performance handler
@@ -355,14 +277,7 @@ const WebMidiRecorder: React.FC<{
     setMidiPerformance(null);
     setUploadState({ isUploading: false, error: null });
 
-    // Clear recording state
-    setRecordingState((prev) => ({
-      ...prev,
-      events: [],
-      isRecording: false,
-      startTime: null,
-      elapsedTime: 0,
-    }));
+    setRecordingState({ phase: "idle" });
   }, [setMidiPerformance]);
 
   // Upload saved recording handler
@@ -388,28 +303,17 @@ const WebMidiRecorder: React.FC<{
         error: "Failed to upload existing performance. Please try again.",
       });
     }
-  }, [
-    storedPerformance,
-    webId,
-    score,
-    navigate,
-    setMidiPerformance,
-    midiStringToBlob,
-  ]);
+  }, [storedPerformance, webId, score, navigate, setMidiPerformance]);
 
   // Delete saved recording handler
   const handleDeleteSavedRecording = useCallback(() => {
     setMidiPerformance(null);
   }, [setMidiPerformance]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
-  }, []);
+  const takeStartedAt =
+    recordingState.phase === "idle" ? null : recordingState.startedAt;
+  const hasTakeEvents =
+    recordingState.phase !== "idle" && recordingState.events.length > 0;
 
   return (
     <div id="authWrapper">
@@ -419,16 +323,27 @@ const WebMidiRecorder: React.FC<{
           onDeviceSelect={setSelectedDevice}
           onMidiMessage={handleMidiMessage}
           selectedDevice={selectedDevice}
-          recordingStatus={
-            <RecordingTimer
-              isRecording={recordingState.isRecording}
-              elapsedTime={recordingState.elapsedTime}
-              onTimeout={handleRecordingTimeout}
-              onStopSubmission={handleStopSubmission}
-              timeoutDuration={MIDI_TIMEOUT}
-            />
-          }
         />
+
+        {/* Take status. A sibling of the device panel, not a child of it: it
+            drives the submission countdown, which must survive a device
+            going away. */}
+        <RecordingTimer
+          phase={recordingState.phase}
+          startedAt={takeStartedAt}
+          deadline={
+            recordingState.phase === "stopped" ? recordingState.deadline : null
+          }
+          onEndTake={handleEndTake}
+          onStopSubmission={handleStopSubmission}
+        />
+
+        {recordingState.phase === "stopped" &&
+          recordingState.reason === "deviceChanged" && (
+            <Alert variant="warning" className="mt-2 py-2 small">
+              Your MIDI device changed, so the recording was finished.
+            </Alert>
+          )}
 
         {/* Saved Recording - always shown if exists */}
         {storedPerformance && (
@@ -462,14 +377,14 @@ const WebMidiRecorder: React.FC<{
           </Card>
         )}
 
-        {recordingState.events.length > 0 || storedPerformance ? (
+        {hasTakeEvents || storedPerformance ? (
           <PerformanceUploader
             performanceData={{
               midiData: storedPerformance?.midiData ?? null,
               recordedAt:
                 storedPerformance?.recordedAt ??
-                (recordingState.startTime
-                  ? new Date(recordingState.startTime).toISOString()
+                (takeStartedAt
+                  ? new Date(takeStartedAt).toISOString()
                   : undefined),
             }}
             onUpload={handleManualUpload}

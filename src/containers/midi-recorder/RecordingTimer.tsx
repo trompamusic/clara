@@ -1,65 +1,39 @@
 import React, { useEffect, useState } from "react";
+import { RecordingPhase } from "./types";
 
 interface RecordingTimerProps {
-  isRecording: boolean;
-  elapsedTime: number;
-  onTimeout: () => void;
+  phase: RecordingPhase;
+  // Absolute timestamps, not durations: everything on screen is derived from
+  // the clock on each tick, so the display cannot drift from the timers that
+  // actually act.
+  startedAt: number | null;
+  deadline: number | null;
+  onEndTake: () => void;
   onStopSubmission: () => void;
-  timeoutDuration?: number;
 }
 
+const TICK = 250;
+
 const RecordingTimer: React.FC<RecordingTimerProps> = ({
-  isRecording,
-  elapsedTime,
-  onTimeout,
+  phase,
+  startedAt,
+  deadline,
+  onEndTake,
   onStopSubmission,
-  timeoutDuration = 5000,
 }) => {
-  const [showCountdown, setShowCountdown] = useState(false);
-  const [countdown, setCountdown] = useState<number>(timeoutDuration);
+  const [now, setNow] = useState(() => Date.now());
 
-  // Countdown effect when recording stops
   useEffect(() => {
-    let countdownInterval: NodeJS.Timeout;
+    if (phase === "idle") return;
 
-    if (!isRecording && elapsedTime > 0 && showCountdown) {
-      // Start countdown to submission
-      setCountdown(timeoutDuration);
+    setNow(Date.now());
+    const interval = setInterval(() => setNow(Date.now()), TICK);
 
-      countdownInterval = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev && prev > 100) {
-            return prev - 100;
-          } else {
-            // Timeout reached - just return 0, let the effect handle the timeout
-            return 0;
-          }
-        });
-      }, 100);
-    }
+    return () => clearInterval(interval);
+  }, [phase]);
 
-    return () => {
-      if (countdownInterval) clearInterval(countdownInterval);
-    };
-  }, [isRecording, elapsedTime, showCountdown, timeoutDuration]);
-
-  // Handle countdown timeout
-  useEffect(() => {
-    if (countdown === 0 && showCountdown) {
-      setShowCountdown(false);
-      onTimeout();
-    }
-  }, [countdown, showCountdown, onTimeout]);
-
-  // Start countdown when recording stops
-  useEffect(() => {
-    if (!isRecording && elapsedTime > 0) {
-      setShowCountdown(true);
-    } else if (isRecording) {
-      setShowCountdown(false);
-      setCountdown(timeoutDuration);
-    }
-  }, [isRecording, elapsedTime, timeoutDuration]);
+  const elapsed = startedAt === null ? 0 : Math.max(0, now - startedAt);
+  const remaining = deadline === null ? 0 : Math.max(0, deadline - now);
 
   // Helper function to format elapsed time
   const formatElapsedTime = (ms: number): string => {
@@ -69,37 +43,34 @@ const RecordingTimer: React.FC<RecordingTimerProps> = ({
     return `${minutes.toString().padStart(2, "0")}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  // Helper function to format countdown
-  const formatCountdown = (ms: number): string => {
-    const seconds = Math.ceil(ms / 1000);
-    return `${seconds}s`;
-  };
-
-  const handleStopSubmission = () => {
-    setShowCountdown(false);
-    setCountdown(timeoutDuration);
-    onStopSubmission();
-  };
+  // Never shows 0s: the take is submitted the moment it gets there
+  const formatCountdown = (ms: number): string =>
+    `${Math.max(1, Math.ceil(ms / 1000))}s`;
 
   return (
     <div className="recording-timer">
-      {isRecording ? (
+      {phase === "recording" ? (
         <span className="recording-status">
           <span className="emoji">🔴</span> Recording
-          {elapsedTime > 0 && (
-            <span className="elapsed-time">
-              {formatElapsedTime(elapsedTime)}
-            </span>
+          {elapsed > 0 && (
+            <span className="elapsed-time">{formatElapsedTime(elapsed)}</span>
           )}
+          <button
+            onClick={onEndTake}
+            className="btn btn-sm btn-outline-secondary ms-2"
+            style={{ fontSize: "0.75em", padding: "2px 6px" }}
+          >
+            End take
+          </button>
         </span>
-      ) : showCountdown ? (
+      ) : phase === "stopped" ? (
         <span className="countdown-status">
           <span className="emoji">⏸️</span> Recording stopped
           <span className="countdown-time">
-            Submitting in {formatCountdown(countdown)}
+            Submitting in {formatCountdown(remaining)}
           </span>
           <button
-            onClick={handleStopSubmission}
+            onClick={onStopSubmission}
             className="btn btn-sm btn-outline-secondary ms-2"
             style={{ fontSize: "0.75em", padding: "2px 6px" }}
           >
