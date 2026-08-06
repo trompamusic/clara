@@ -1,48 +1,46 @@
-export type { MidiEvent } from "../../util/midiEvents";
-
 import { MidiEvent } from "../../util/midiEvents";
 
-export type RecordingPhase = "idle" | "recording" | "stopped";
+export type StopReason = "silence" | "deviceChanged";
 
-// Why a take stopped. Only "deviceChanged" is worth telling the user about:
-// the others are what they asked for.
-export type StopReason = "silence" | "deviceChanged" | "ended";
+export interface Recording {
+  phase: "recording";
+  startedAt: number;
+  lastNoteEventAt: number;
+  deviceId: string;
+  heldCounts: Record<number, number>;
+  heldTotal: number;
+  events: MidiEvent[];
+}
 
-// Recording state types
-export type RecordingState =
-  | { phase: "idle" }
+export interface StoredPerformance {
+  midiData: string;
+  recordedAt: string;
+}
+
+export interface Metadata {
+  label: string;
+  expansion: string;
+}
+
+export interface TakeDraft extends Metadata {
+  kind: "take";
+  take: StoredPerformance;
+  recovered: boolean;
+}
+
+export type Workflow =
+  | { phase: "ready" }
+  | Recording
   | {
-      phase: "recording";
-      startedAt: number;
-      lastNoteEventAt: number;
-      // The input this take is capturing from. Compared by id, so a reconnect
-      // swapping in a fresh Input object is not mistaken for a device change.
-      deviceId: string | null;
-      heldCounts: Record<number, number>; // per pitch, so retriggers don't undercount
-      heldTotal: number;
-      events: MidiEvent[];
-    }
-  // submission countdown, running over a finished take
-  | {
-      phase: "stopped";
-      startedAt: number;
-      finalisedAt: number;
-      // Absolute, fixed at finalisation: editing metadata must not extend it.
+      phase: "takeCountdown";
+      draft: TakeDraft;
       deadline: number;
       reason: StopReason;
-      events: MidiEvent[];
-    };
-
-// Upload state types
-export interface UploadState {
-  isUploading: boolean;
-  error: string | null;
-}
-
-// Performance data types
-export interface PerformanceData {
-  midiData: string | null;
-  label?: string;
-  expansion?: string;
-  recordedAt?: string;
-}
+    }
+  | {
+      phase: "takeReview";
+      draft: TakeDraft;
+      error: string | null;
+      confirmingDiscard: boolean;
+    }
+  | { phase: "uploading"; draft: TakeDraft };

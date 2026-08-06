@@ -1,30 +1,26 @@
 import React, { useEffect, useState } from "react";
-import { RecordingPhase } from "./types";
+import { Workflow } from "./types";
 
 interface RecordingTimerProps {
-  phase: RecordingPhase;
-  // Absolute timestamps, not durations: everything on screen is derived from
-  // the clock on each tick, so the display cannot drift from the timers that
-  // actually act.
-  startedAt: number | null;
-  deadline: number | null;
-  onEndTake: () => void;
+  state: Workflow;
+  canCapture: boolean;
   onStopSubmission: () => void;
 }
 
 const TICK = 250;
 
 const RecordingTimer: React.FC<RecordingTimerProps> = ({
-  phase,
-  startedAt,
-  deadline,
-  onEndTake,
+  state,
+  canCapture,
   onStopSubmission,
 }) => {
+  const { phase } = state;
+  const startedAt = state.phase === "recording" ? state.startedAt : null;
+  const deadline = state.phase === "takeCountdown" ? state.deadline : null;
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    if (phase === "idle") return;
+    if (phase !== "recording" && phase !== "takeCountdown") return;
 
     setNow(Date.now());
     const interval = setInterval(() => setNow(Date.now()), TICK);
@@ -55,15 +51,8 @@ const RecordingTimer: React.FC<RecordingTimerProps> = ({
           {elapsed > 0 && (
             <span className="elapsed-time">{formatElapsedTime(elapsed)}</span>
           )}
-          <button
-            onClick={onEndTake}
-            className="btn btn-sm btn-outline-secondary ms-2"
-            style={{ fontSize: "0.75em", padding: "2px 6px" }}
-          >
-            End take
-          </button>
         </span>
-      ) : phase === "stopped" ? (
+      ) : phase === "takeCountdown" ? (
         <span className="countdown-status">
           <span className="emoji">⏸️</span> Recording stopped
           <span className="countdown-time">
@@ -77,9 +66,9 @@ const RecordingTimer: React.FC<RecordingTimerProps> = ({
             Stop / Edit settings
           </button>
         </span>
-      ) : (
+      ) : canCapture ? (
         <span className="ready-status">🟢 Ready</span>
-      )}
+      ) : null}
     </div>
   );
 };

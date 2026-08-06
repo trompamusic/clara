@@ -28,7 +28,7 @@ function LinkToUpload({ uri }: { uri: string }) {
  */
 export default function Perform() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { session, fetch } = useSolidAuth();
+  const { fetch } = useSolidAuth();
   const {
     isAuthenticated,
     isLoading: authLoading,
@@ -85,7 +85,14 @@ export default function Perform() {
     return (
       <div>
         <LinkToUpload uri={score} />
-        <WebMidiRecorder score={score} expansionOptions={[]} />
+        {/* Keyed by the same pair the recorder's storage key is built from:
+            it holds an in-progress take, which must never survive into a
+            different score or a different user. */}
+        <WebMidiRecorder
+          key={`${webId}-${score}`}
+          score={score}
+          expansionOptions={[]}
+        />
         <Companion
           uri={score}
           userPOD={mainContainerUri}

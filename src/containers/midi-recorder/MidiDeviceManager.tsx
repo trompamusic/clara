@@ -6,6 +6,7 @@ interface MidiDeviceManagerProps {
   onDeviceSelect: (device: Input | null) => void;
   onMidiMessage: (event: MessageEvent) => void;
   selectedDevice: Input | null;
+  recordingStatus?: React.ReactNode;
 }
 
 const getUniqueInputsById = (inputs: Input[]): Input[] => {
@@ -24,6 +25,7 @@ const MidiDeviceManager: React.FC<MidiDeviceManagerProps> = ({
   onDeviceSelect,
   onMidiMessage,
   selectedDevice,
+  recordingStatus,
 }) => {
   const [midiInputs, setMidiInputs] = useState<Input[]>([]);
   // null until we know: false here would render "unsupported" on first paint
@@ -135,7 +137,9 @@ const MidiDeviceManager: React.FC<MidiDeviceManagerProps> = ({
     if (selectedDevice) {
       // A reconnect yields a fresh Input; the old object is dead and its
       // midimessage listener will never fire again.
-      const current = midiInputs.find((input) => input.id === selectedDevice.id);
+      const current = midiInputs.find(
+        (input) => input.id === selectedDevice.id,
+      );
       if (current && current !== selectedDevice) onDeviceSelect(current);
       return;
     }
@@ -270,6 +274,7 @@ const MidiDeviceManager: React.FC<MidiDeviceManagerProps> = ({
       <Card.Header>
         <div className="d-flex align-items-center gap-3 flex-wrap">
           {status()}
+          <div className="ms-auto text-end">{recordingStatus}</div>
         </div>
       </Card.Header>
     </Card>

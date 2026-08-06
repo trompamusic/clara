@@ -1,100 +1,77 @@
-import React, { useState } from "react";
+import React from "react";
 import { Card, Form, Button, Alert } from "react-bootstrap";
-import { PerformanceData, UploadState } from "./types";
-import { createPerformanceLabel } from "../../util/date";
+import PerformanceMetadataFields from "./PerformanceMetadataFields";
 
 interface PerformanceUploaderProps {
-  performanceData: PerformanceData;
-  onUpload: (data: PerformanceData) => Promise<void>;
+  recovered: boolean;
+  // Metadata is owned by the recorder, not by this card: the submission
+  // countdown has to be able to read what was typed here.
+  label: string;
+  expansion: string;
+  onLabelChange: (label: string) => void;
+  onExpansionChange: (expansion: string) => void;
+  onUpload: () => void;
   onDiscard: () => void;
-  uploadState: UploadState;
+  onConfirmDiscard: () => void;
+  onCancelDiscard: () => void;
+  confirmingDiscard: boolean;
+  uploading: boolean;
+  error: string | null;
   expansionOptions: string[];
 }
 
 const PerformanceUploader: React.FC<PerformanceUploaderProps> = ({
-  performanceData,
+  recovered,
+  label,
+  expansion,
+  onLabelChange,
+  onExpansionChange,
   onUpload,
   onDiscard,
-  uploadState,
+  onConfirmDiscard,
+  onCancelDiscard,
+  confirmingDiscard,
+  uploading,
+  error,
   expansionOptions,
 }) => {
-  const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
-  const [label, setLabel] = useState("");
-  const [expansion, setExpansion] = useState("no expansion");
-
-  const handleSubmit = async () => {
-    const recordedAt = performanceData.recordedAt
-      ? new Date(performanceData.recordedAt)
-      : undefined;
-    const data = {
-      ...performanceData,
-      label:
-        label.trim() ||
-        `foo` + createPerformanceLabel(recordedAt ?? new Date()),
-      expansion: expansion === "no expansion" ? undefined : expansion,
-    };
-    await onUpload(data);
-  };
-
-  const handleDiscard = () => {
-    setShowDiscardConfirm(false);
-    onDiscard();
-  };
-
-  if (!performanceData.midiData) {
-    return null; // Don't show anything if no performance data
-  }
-
   return (
-    <Card className="mt-3">
-      <Card.Header>
-        <h6 className="mb-0">Performance Options</h6>
+    <Card className={`mt-3${recovered ? " border-warning" : ""}`}>
+      <Card.Header className={recovered ? "bg-warning bg-opacity-10" : ""}>
+        <h6 className={`mb-0${recovered ? " text-warning" : ""}`}>
+          {recovered ? "💾 Saved Recording" : "Performance Options"}
+        </h6>
       </Card.Header>
       <Card.Body>
-        <Form>
-          <Form.Group className="mb-3">
-            <Form.Label htmlFor="performance-label">
-              Label for this performance:
-            </Form.Label>
-            <Form.Control
-              id="performance-label"
-              type="text"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="e.g., 'Morning practice session'"
-            />
-          </Form.Group>
-
-          <Form.Group className="mb-3">
-            <Form.Label htmlFor="performance-expansion">
-              Select expansion:
-            </Form.Label>
-            <Form.Select
-              id="performance-expansion"
-              value={expansion}
-              onChange={(e) => setExpansion(e.target.value)}
-            >
-              {expansionOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
+        {recovered && (
+          <p className="text-muted small mb-3">
+            You have a saved performance which wasn't uploaded. Submit this
+            performance, or discard it, before recording again.
+          </p>
+        )}
+        <Form onSubmit={(event) => event.preventDefault()}>
+          <PerformanceMetadataFields
+            idPrefix="performance"
+            label={label}
+            expansion={expansion}
+            onLabelChange={onLabelChange}
+            onExpansionChange={onExpansionChange}
+            expansionOptions={expansionOptions}
+          />
 
           <div className="d-flex gap-2">
             <Button
-              onClick={handleSubmit}
-              disabled={uploadState.isUploading}
+              onClick={onUpload}
+              disabled={uploading}
               variant="primary"
               size="sm"
             >
-              {uploadState.isUploading ? "Uploading..." : "Submit Recording"}
+              {uploading ? "Uploading..." : "Submit Recording"}
             </Button>
 
-            {!showDiscardConfirm ? (
+            {!confirmingDiscard ? (
               <Button
-                onClick={() => setShowDiscardConfirm(true)}
+                onClick={onConfirmDiscard}
                 variant="outline-danger"
                 size="sm"
               >
@@ -103,11 +80,11 @@ const PerformanceUploader: React.FC<PerformanceUploaderProps> = ({
             ) : (
               <div className="d-flex align-items-center gap-2">
                 <span className="text-muted small">Are you sure?</span>
-                <Button onClick={handleDiscard} variant="danger" size="sm">
+                <Button onClick={onDiscard} variant="danger" size="sm">
                   Yes, Discard
                 </Button>
                 <Button
-                  onClick={() => setShowDiscardConfirm(false)}
+                  onClick={onCancelDiscard}
                   variant="outline-secondary"
                   size="sm"
                 >
@@ -117,9 +94,9 @@ const PerformanceUploader: React.FC<PerformanceUploaderProps> = ({
             )}
           </div>
 
-          {uploadState.error && (
+          {error && (
             <Alert variant="danger" className="mt-3">
-              {uploadState.error}
+              {error}
             </Alert>
           )}
         </Form>
