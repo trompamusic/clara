@@ -72,7 +72,7 @@
     "react-icons": "^4.10.1",
     "react-player": "^2.16.1",
     "react-redux": "^7.2.0",
-    "react-router": "^6.4.3",
+    "react-router": "^8.3.0",
     "react-router-dom": "^6.4.3",
     "react-scripts": "^5.0.1",
     "redux": "^4.0.5",
