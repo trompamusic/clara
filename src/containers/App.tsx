@@ -8,7 +8,6 @@ import Companion from "./companion/Companion";
 import Startup from "./Startup";
 import Perform from "./Perform";
 import ScoreSelector from "./ScoreSelector";
-import AuthCallback from "./AuthCallback";
 import AddWait from "./AddWait";
 import Upload from "./Upload";
 import UploadWait from "./UploadWait";
@@ -58,10 +57,6 @@ const router = createBrowserRouter([
             demo
           />
         ),
-      },
-      {
-        path: "/auth/callback",
-        element: <AuthCallback />,
       },
       {
         path: "/editscore",

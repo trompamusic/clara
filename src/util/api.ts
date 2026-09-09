@@ -25,15 +25,6 @@ class Api {
     });
   };
 
-  doAuthCallback = (code: string, state: string) => {
-    const data = new FormData();
-    data.append("code", code);
-    data.append("state", state);
-    return this.client.post(`/api/auth/callback`, data).then((result) => {
-      return result.data;
-    });
-  };
-
   alignMidi = (
     profile: string,
     score: string,
