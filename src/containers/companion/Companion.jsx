@@ -1017,7 +1017,7 @@ class Companion extends Component {
                 playing={this.state.isPlaying}
                 onPlay={this.handlePlayerPlay}
                 onPause={this.handlePlayerPause}
-                progressInterval={10} // Update every 10ms
+                progressInterval={50} // 20 Hz stays within the 100 ms note-activation window
                 onProgress={(p) => {
                   this.tick(this.state.selectedVideo, p["playedSeconds"]);
                 }}
