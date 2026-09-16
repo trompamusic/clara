@@ -5,6 +5,7 @@ import React from "react";
 import RouterError from "./RouterError";
 import Layout from "./Layout";
 import Companion from "./companion/Companion";
+import { ScoreProvider } from "../score/ScoreProvider";
 import Startup from "./Startup";
 import Perform from "./Perform";
 import ScoreSelector from "./ScoreSelector";
@@ -45,12 +46,14 @@ const router = createBrowserRouter([
       {
         path: "/demo",
         element: (
-          <Companion
-            uri={publicPerformanceCollection}
-            userPOD={`https://storage.inrupt.com/8e7d2ff0-be9c-4430-95b8-5a0370bf2942/`}
-            userProfile={publicUserProfile}
-            demo
-          />
+          <ScoreProvider>
+            <Companion
+              uri={publicPerformanceCollection}
+              userPOD={`https://storage.inrupt.com/8e7d2ff0-be9c-4430-95b8-5a0370bf2942/`}
+              userProfile={publicUserProfile}
+              demo
+            />
+          </ScoreProvider>
         ),
       },
       {

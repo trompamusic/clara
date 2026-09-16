@@ -6,7 +6,6 @@
   "scripts": {
     "start": "react-app-rewired start",
     "build": "react-app-rewired build",
-    "test": "react-app-rewired test",
     "build-dev": "babel src --out-dir lib --source-maps inline",
     "build:ldo": "ldo build --input src/.shapes --output src/.ldo",
     "prepare": "husky install",

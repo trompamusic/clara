@@ -7,6 +7,7 @@ import equal from "fast-deep-equal";
 
 import ClaraScore from "../../score/ClaraScore";
 import PageControls from "../../score/PageControls";
+import withScore from "../../score/withScore";
 
 import {
   traverse,
@@ -85,19 +86,12 @@ export class Companion extends Component {
       maxExpectedVel: 110, // guesstimate as to a note played at fortissimo (unit: midi velocity)
       isPlaying: false,
       mode: "pageView", // currently either pageView (portrait style) or featureVis (flattened single-system with visualisation)
-      scoreReady: false,
-      currentPage: 0,
-      pageCount: 0,
-      mei: undefined,
-      timemap: undefined,
       vrvOptions: vrvOptionsPageView,
       performedElements: {},
       performanceErrors: {},
-      pendingNavigateToNote: null, // note ID to navigate to after mode switch
     };
     this.player = React.createRef();
     this.scoreComponent = React.createRef();
-    this.claraScoreRef = React.createRef();
     this.initialPerformanceAppliedId = "";
     this.featureVisPreferenceAppliedForUri = null;
   }
@@ -232,72 +226,61 @@ export class Companion extends Component {
     }
   };
 
-  scoreResetState = () => ({
-    scoreReady: false,
-    pendingNavigateToNote: null,
-    currentPage: 0,
-    pageCount: 0,
-    notesOnPage: [],
-    committedPage: null,
-    mei: undefined,
-    timemap: undefined,
-  });
-
-  handleScoreRender = (info) => {
-    if (info.uri !== this.state.currentScore) return;
-    const pendingNote = equal(info.options, this.state.vrvOptions)
-      ? this.state.pendingNavigateToNote
-      : null;
-    this.setState(
-      (state) =>
-        info.uri === state.currentScore
-          ? {
-              scoreReady: true,
-              currentPage: info.currentPage,
-              pageCount: info.pageCount,
-              mei: info.mei,
-              timemap: info.timemap,
-              notesOnPage: info.svgElement.querySelectorAll(".note"),
-              committedPage: {
-                uri: info.uri,
-                page: info.currentPage,
-                generation: info.generation,
-                appliedOptions: info.options,
-                mei: info.mei,
-                timemap: info.timemap,
-                geometry:
-                  state.mode === "featureVis" &&
-                  equal(info.options, state.vrvOptions)
-                    ? measureScorePage(info.svgElement)
-                    : null,
-              },
-              pendingNavigateToNote: pendingNote
-                ? null
-                : state.pendingNavigateToNote,
-            }
-          : null,
-      () => {
-        // The new layout has committed. Clear the pending note above before
-        // requesting the second render, whose callback must not consume it again.
-        if (
-          pendingNote &&
-          this.state.scoreReady &&
-          info.uri === this.state.currentScore
-        ) {
-          this.claraScoreRef.current?.goToNote(pendingNote);
-        }
-      },
+  get scoreReady() {
+    return (
+      this.props.scoreState.status === "ready" &&
+      this.props.scoreState.uri === this.state.currentScore
     );
+  }
+
+  scoreResetState = () => ({ notesOnPage: [], committedPage: null });
+
+  // Score SVG commits before this parent's componentDidUpdate. Keep geometry
+  // local to the DOM owner; the provider publishes only renderer data.
+  syncScoreDom = () => {
+    const score = this.props.scoreState;
+    if (!this.scoreReady) {
+      this.measuredScore = null;
+      if (this.state.committedPage) this.setState(this.scoreResetState());
+      return;
+    }
+    if (this.state.loading || this.measuredScore === score) return;
+    const svg = this.scoreComponent.current?.querySelector(".score > svg");
+    if (!svg) {
+      this.props.scoreCommands.reportRenderFailure(
+        score,
+        new Error("Verovio returned no score SVG"),
+      );
+      return;
+    }
+    const committedPage = {
+      uri: score.uri,
+      page: score.currentPage,
+      generation: score.generation,
+      appliedOptions: score.appliedOptions,
+      mei: score.mei,
+      timemap: score.timemap,
+      geometry:
+        this.state.mode === "featureVis" &&
+        equal(score.appliedOptions, this.state.vrvOptions)
+          ? measureScorePage(svg)
+          : null,
+    };
+    this.measuredScore = score;
+    this.setState({
+      committedPage,
+      notesOnPage: svg.querySelectorAll(".note"),
+    });
   };
 
   remeasureScorePage = () => {
     const record = this.state.committedPage;
-    const svg = this.claraScoreRef.current?.getSvgElement();
+    const svg = this.scoreComponent.current?.querySelector(".score > svg");
     if (
-      !this.state.scoreReady ||
+      !this.scoreReady ||
+      this.measuredScore !== this.props.scoreState ||
       this.state.mode !== "featureVis" ||
       !record?.geometry ||
-      record.uri !== this.state.currentScore ||
       !svg?.isConnected
     )
       return;
@@ -309,13 +292,8 @@ export class Companion extends Component {
     );
   };
 
-  handleScoreError = (uri, error) => {
-    if (uri !== this.state.currentScore) return;
-    console.error("Could not render score:", uri, error);
-    this.setState(this.scoreResetState());
-  };
-
   componentDidUpdate(prevProps, prevState) {
+    this.syncScoreDom();
     if (
       prevProps.uri !== this.props.uri ||
       prevProps.selectedPerformance !== this.props.selectedPerformance
@@ -361,7 +339,7 @@ export class Companion extends Component {
     }
 
     if (
-      this.state.scoreReady &&
+      this.scoreReady &&
       this.state.selectedPerformance &&
       (prevState.committedPage !== this.state.committedPage ||
         prevState.selectedPerformance !== this.state.selectedPerformance)
@@ -389,38 +367,29 @@ export class Companion extends Component {
     return null;
   };
 
-  setModeFeatureVis = () => {
-    if (this.state.mode === "featureVis") return;
+  setMode = (mode, options) => {
+    if (this.state.mode === mode) return;
     const targetNote = this.getTargetNoteForModeSwitch();
-    this.persistFeatureVisMode("featureVis");
-    this.setState({
-      mode: "featureVis",
-      scoreReady: false,
-      vrvOptions: vrvOptionsFeatureVis,
-      pendingNavigateToNote: targetNote,
+    this.persistFeatureVisMode(mode);
+    // Keyboard events use a native listener in React 16. Batch the UI mode and
+    // final score snapshot so they commit together there as well as on clicks.
+    ReactDOM.unstable_batchedUpdates(() => {
+      this.setState({ mode, vrvOptions: options });
+      this.props.scoreCommands.applyModeChange(options, targetNote);
     });
   };
 
-  setModePageView = () => {
-    if (this.state.mode === "pageView") return;
-    const targetNote = this.getTargetNoteForModeSwitch();
-    this.persistFeatureVisMode("pageView");
-    this.setState({
-      mode: "pageView",
-      scoreReady: false,
-      vrvOptions: vrvOptionsPageView,
-      pendingNavigateToNote: targetNote,
-    });
-  };
+  setModeFeatureVis = () => this.setMode("featureVis", vrvOptionsFeatureVis);
+  setModePageView = () => this.setMode("pageView", vrvOptionsPageView);
 
   monitorKeys = (e) => {
-    if (this.state.scoreReady) {
+    if (this.scoreReady) {
       switch (e.which) {
         case 37: // left arrow
-          this.claraScoreRef.current?.prevPage();
+          this.props.scoreCommands.prevPage();
           break;
         case 39: // right arrow
-          this.claraScoreRef.current?.nextPage();
+          this.props.scoreCommands.nextPage();
           break;
         case 70: // 'f'  => "follow"
           if (this.state.selectedPerformance) {
@@ -484,7 +453,8 @@ export class Companion extends Component {
   getInstantBoundingRectElements = () => {
     // build React elements for the note bounding rectangles based on current DOM
     if (
-      !this.state.scoreReady ||
+      !this.scoreReady ||
+      this.measuredScore !== this.props.scoreState ||
       !this.state.selectedPerformance ||
       !this.scoreComponent.current ||
       !this.state.instantsByNoteId
@@ -707,7 +677,7 @@ export class Companion extends Component {
       }
       let featureVisElement = "";
       if (
-        this.state.scoreReady &&
+        this.scoreReady &&
         this.state.mode === "featureVis" &&
         this.state.committedPage?.geometry
       ) {
@@ -731,37 +701,17 @@ export class Companion extends Component {
 
       const pageControlsWrapper = this.state.currentScore ? (
         <PageControls
-          currentPage={this.state.currentPage}
-          pageCount={this.state.scoreReady ? this.state.pageCount : 0}
           following={this.state.scoreFollowing}
           mode={this.state.mode}
-          onNextPage={() =>
-            this.state.scoreReady && this.claraScoreRef.current?.nextPage()
-          }
-          onPrevPage={() =>
-            this.state.scoreReady && this.claraScoreRef.current?.prevPage()
-          }
         />
       ) : null;
-      const currentScoreUri = this.state.currentScore;
-      let currentScore = (
+      const currentScore = this.state.currentScore ? (
+        <div ref={this.scoreComponent} id="scoreSelectionArea">
+          <ClaraScore mode={this.state.mode} />
+        </div>
+      ) : (
         <div className="loadingMsg">Loading, please wait...</div>
       );
-      if (this.state.currentScore) {
-        currentScore = (
-          <div ref={this.scoreComponent} id="scoreSelectionArea">
-            <ClaraScore
-              uri={this.state.currentScore}
-              key={this.state.currentScore}
-              ref={this.claraScoreRef}
-              mode={this.state.mode}
-              options={this.state.vrvOptions}
-              onRender={this.handleScoreRender}
-              onError={(error) => this.handleScoreError(currentScoreUri, error)}
-            />
-          </div>
-        );
-      }
 
       const selectedPerformanceId =
         this.state.selectedPerformance && this.state.selectedPerformance["@id"];
@@ -782,7 +732,7 @@ export class Companion extends Component {
           <div id="selectWrapper">
             <select
               name="segmentSelect"
-              disabled={!this.state.scoreReady}
+              disabled={!this.scoreReady}
               onChange={this.handleSegmentSelected}
               ref="segmentSelect"
             >
@@ -922,7 +872,7 @@ export class Companion extends Component {
   }
 
   handleSegmentSelected = (e) => {
-    if (!this.state.scoreReady) return;
+    if (!this.scoreReady) return;
     const selected = this.state.segments.filter((seg) => {
       return seg["@id"] === e.target.value;
     });
@@ -931,7 +881,7 @@ export class Companion extends Component {
       selected[0]["http://purl.org/vocab/frbr/core#embodiment"][
         "http://www.w3.org/2000/01/rdf-schema#member"
       ]["@id"];
-    this.claraScoreRef.current?.goToNote(target);
+    this.props.scoreCommands.goToNote(target);
     // if a video is selected, jump to the beginning of this segment in its performance timeline
     if (this.state.selectedPerformance) {
       const timelineSegment = this.findInstantToSeekTo(selected[0]);
@@ -1324,9 +1274,9 @@ export class Companion extends Component {
         if (noteToFlipTo && closestInstantIx > 0) {
           // a note wasn't on this page -- if we are score-following, flip to its page
           // (the closestInstantIx > 0 check is to avoid flipping to first page each time we swap performance)
-          if (this.state.scoreReady && this.state.scoreFollowing) {
+          if (this.scoreReady && this.state.scoreFollowing) {
             console.log("Asking Score to flip to: ", noteToFlipTo);
-            this.claraScoreRef.current?.goToNote(noteToFlipTo["@id"]);
+            this.props.scoreCommands.goToNote(noteToFlipTo["@id"]);
           }
         } else if (currentNoteElement) {
           // check whether we're in a new section segment
@@ -1647,18 +1597,24 @@ export class Companion extends Component {
             currentPerformance["http://purl.org/ontology/mo/published_as"][
               "@id"
             ];
-          this.setState({
-            performances,
-            segments,
-            instants,
-            instantsByPerfTime,
-            instantsByNoteId,
-            ...(currentScore !== this.state.currentScore
-              ? this.scoreResetState()
-              : {}),
-            currentScore,
-            performedElements,
-            performanceErrors,
+          ReactDOM.unstable_batchedUpdates(() => {
+            const changed = currentScore !== this.state.currentScore;
+            this.setState({
+              performances,
+              segments,
+              instants,
+              instantsByPerfTime,
+              instantsByNoteId,
+              currentScore,
+              performedElements,
+              performanceErrors,
+              ...(changed ? this.scoreResetState() : {}),
+            });
+            if (changed)
+              this.props.scoreCommands.load(
+                currentScore,
+                this.state.vrvOptions,
+              );
           });
         }
       } else if (Object.keys(outcomes[4]).length) {
@@ -1673,15 +1629,19 @@ export class Companion extends Component {
             outcomes[4]["http://purl.org/ontology/mo/published_as"]["@id"];
         }
         // there are no performances -- force pageView mode and disable scorefollowing
-        this.setState({
-          segments,
-          ...(currentScore !== this.state.currentScore
-            ? this.scoreResetState()
-            : {}),
-          currentScore,
-          mode: "pageView",
-          vrvOptions: vrvOptionsPageView,
-          scoreFollowing: false,
+        ReactDOM.unstable_batchedUpdates(() => {
+          const changed = currentScore !== this.state.currentScore;
+          this.setState({
+            segments,
+            currentScore,
+            mode: "pageView",
+            vrvOptions: vrvOptionsPageView,
+            scoreFollowing: false,
+            ...(changed ? this.scoreResetState() : {}),
+          });
+          if (changed)
+            this.props.scoreCommands.load(currentScore, vrvOptionsPageView);
+          else this.props.scoreCommands.setOptions(vrvOptionsPageView);
         });
       }
     }
@@ -1709,6 +1669,8 @@ const companionOwnPropTypes = {
 };
 
 const companionInjectedPropTypes = {
+  scoreState: PropTypes.object.isRequired,
+  scoreCommands: PropTypes.object.isRequired,
   graph: PropTypes.object.isRequired,
   traversalPool: PropTypes.object.isRequired,
   traverse: PropTypes.func.isRequired,
@@ -1750,9 +1712,10 @@ function mapDispatchToProps(dispatch) {
   );
 }
 
-const ConnectedCompanion = connect(mapStateToProps, mapDispatchToProps, false, {
-  forwardRef: true,
-})(Companion);
+const ConnectedCompanion = connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(withScore(Companion));
 
 const CompanionComponent =
   /** @type {import("react").ComponentType<CompanionOwnProps>} */ (

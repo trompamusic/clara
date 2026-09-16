@@ -2,6 +2,7 @@ import React from "react";
 import { useSearchParams } from "react-router-dom";
 import { useSolidAuth } from "@ldo/solid-react";
 import Companion from "./companion/Companion";
+import { ScoreProvider } from "../score/ScoreProvider";
 import { useAuthentication, useMainContainer } from "../util/hooks";
 import WebMidiRecorder from "./midi-recorder";
 import { rateLimitAuthFetch } from "../util/installRateLimiter";
@@ -78,14 +79,16 @@ export default function Perform() {
           score={score}
           expansionOptions={[]}
         />
-        <Companion
-          uri={score}
-          userPOD={mainContainerUri}
-          userProfile={webId!}
-          fetch={fetch}
-          selectedPerformance={performance || undefined}
-          onPerformanceSelected={handlePerformanceSelected}
-        />
+        <ScoreProvider>
+          <Companion
+            uri={score}
+            userPOD={mainContainerUri}
+            userProfile={webId!}
+            fetch={fetch}
+            selectedPerformance={performance || undefined}
+            onPerformanceSelected={handlePerformanceSelected}
+          />
+        </ScoreProvider>
       </div>
     );
   } else {

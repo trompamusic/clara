@@ -1,5 +1,10 @@
 /* eslint-env jest, node */
 import React, { createRef } from "react";
+import {
+  ScoreProvider,
+  useScoreState,
+  useScoreCommands,
+} from "./ScoreProvider";
 import { act, render, waitFor } from "@testing-library/react";
 import { Companion } from "../containers/companion/Companion";
 import { fakeToolkit, fetchMei, setRuntime } from "./testToolkit";
@@ -30,7 +35,9 @@ jest.mock("../containers/companion/FeatureVis", () => {
 class ScoreOnlyCompanion extends Companion {
   UNSAFE_componentWillMount() {}
   componentDidMount() {}
-  componentDidUpdate() {}
+  componentDidUpdate() {
+    this.syncScoreDom();
+  }
   componentWillUnmount() {}
 }
 
@@ -61,27 +68,41 @@ test("mode switches mount visualizations only after the new score layout commits
   setRuntime({ toolkit: jest.fn(() => toolkit) });
   global.fetch = fetchMei();
   const ref = createRef();
+  let commands;
+  function Harness() {
+    const scoreState = useScoreState();
+    const scoreCommands = useScoreCommands();
+    commands = scoreCommands;
+    return (
+      <ScoreOnlyCompanion
+        scoreState={scoreState}
+        scoreCommands={scoreCommands}
+        ref={ref}
+        uri="test-performance"
+        graph={{}}
+        traversalPool={{}}
+        traverse={jest.fn()}
+        registerTraversal={jest.fn()}
+        setTraversalObjectives={jest.fn()}
+        checkTraversalObjectives={jest.fn()}
+        registerClock={jest.fn()}
+        tickTimedResource={jest.fn()}
+      />
+    );
+  }
   const view = render(
-    <ScoreOnlyCompanion
-      ref={ref}
-      uri="test-performance"
-      graph={{}}
-      traversalPool={{}}
-      traverse={jest.fn()}
-      registerTraversal={jest.fn()}
-      setTraversalObjectives={jest.fn()}
-      checkTraversalObjectives={jest.fn()}
-      registerClock={jest.fn()}
-      tickTimedResource={jest.fn()}
-    />,
+    <ScoreProvider>
+      <Harness />
+    </ScoreProvider>,
   );
-  act(() =>
-    ref.current.setState({ loading: false, currentScore: "score.mei" }),
-  );
-  await waitFor(() => expect(ref.current.state.scoreReady).toBe(true));
+  act(() => {
+    ref.current.setState({ loading: false, currentScore: "score.mei" });
+    commands.load("score.mei", ref.current.state.vrvOptions);
+  });
+  await waitFor(() => expect(ref.current.scoreReady).toBe(true));
   expect(mockMounts).toHaveLength(0);
 
-  act(() => ref.current.claraScoreRef.current.goToPage(2));
+  act(() => commands.goToPage(2));
   for (let visit = 1; visit <= 2; visit++) {
     act(() => ref.current.setModeFeatureVis());
     await waitFor(() => expect(mockMounts).toHaveLength(visit));
@@ -89,11 +110,10 @@ test("mode switches mount visualizations only after the new score layout commits
       layout: "line",
       notes: ["note-2"],
     });
-    expect(ref.current.state.currentPage).toBe(2);
-    expect(ref.current.state.pendingNavigateToNote).toBeNull();
+    expect(ref.current.props.scoreState.currentPage).toBe(2);
     act(() => ref.current.setModePageView());
-    expect(ref.current.state.scoreReady).toBe(true);
+    expect(ref.current.scoreReady).toBe(true);
     expect(view.queryByTestId("feature-vis")).toBeNull();
-    expect(ref.current.state.currentPage).toBe(2);
+    expect(ref.current.props.scoreState.currentPage).toBe(2);
   }
 });

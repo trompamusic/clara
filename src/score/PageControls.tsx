@@ -1,22 +1,16 @@
 import React from "react";
+import { useScoreState, useScoreCommands } from "./ScoreProvider";
 
 interface PageControlsProps {
-  currentPage: number;
-  pageCount: number;
   following: boolean;
   mode: "pageView" | "featureVis";
-  onNextPage(): void;
-  onPrevPage(): void;
 }
 
-export default function PageControls({
-  currentPage,
-  pageCount,
-  following,
-  mode,
-  onNextPage,
-  onPrevPage,
-}: PageControlsProps) {
+export default function PageControls({ following, mode }: PageControlsProps) {
+  const score = useScoreState();
+  const { nextPage, prevPage } = useScoreCommands();
+  const currentPage = score.status === "ready" ? score.currentPage : 0;
+  const pageCount = score.status === "ready" ? score.pageCount : 0;
   const canNavigate = !following && pageCount > 0;
 
   return (
@@ -28,7 +22,7 @@ export default function PageControls({
         <button
           type="button"
           className="selectable-score-prevPageButton"
-          onClick={onPrevPage}
+          onClick={prevPage}
         >
           <img src="/static/prev.svg" alt="Previous page" />
         </button>
@@ -42,7 +36,7 @@ export default function PageControls({
         <button
           type="button"
           className="selectable-score-nextPageButton"
-          onClick={onNextPage}
+          onClick={nextPage}
         >
           <img src="/static/next.svg" alt="Next page" />
         </button>
