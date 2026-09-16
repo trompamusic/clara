@@ -214,10 +214,6 @@ button.active {
   display: block;
 }
 
-.selectable-score-postButton {
-  display:inline;
-  margin-left: 10px;
-}
 
 .errorDetected {
   fill:black;
@@ -533,16 +529,7 @@ line.dynamicsConnector.active{
   line-height: 0.85;
 }
 
-.scorepane .annotations {
-  position:absolute;
-}
 
-.scorepane .annotations .highlightEllipse {
-  fill:none;
-  stroke:red;
-  stroke-width: 2;
-  stroke-opacity: .7;
-}
 
 .midi-header-left {
   display: flex;
@@ -618,3 +605,11 @@ line.dynamicsConnector.active{
 
 
 
+
+#pageControlsWrapper button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+}

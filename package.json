@@ -9,7 +9,8 @@
     "test": "react-app-rewired test",
     "build-dev": "babel src --out-dir lib --source-maps inline",
     "build:ldo": "ldo build --input src/.shapes --output src/.ldo",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test": "react-app-rewired test --watchAll=false"
   },
   "proxy": "http://localhost:8000",
   "author": "David M. Weigl, IWK, University of Music and Performing Arts Vienna",
@@ -60,8 +61,8 @@
     "buffer": "^6.0.3",
     "create-react-app": "^4.0.3",
     "crypto-browserify": "^3.12.0",
-    "dragselect": "^3.1.1",
     "events": "^3.3.0",
+    "fast-deep-equal": "^3.1.3",
     "html-midi-player": "^1.5.0",
     "http-proxy-middleware": "^3.0.3",
     "meld-clients-core": "oerc-music/meld-clients-core#1526e3d4716fef3886d502156c608ba8fd9f651a",
