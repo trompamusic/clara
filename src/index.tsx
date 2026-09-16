@@ -12,8 +12,12 @@ import { createStore, applyMiddleware } from "redux";
 import thunk from "redux-thunk";
 import ReduxPromise from "redux-promise";
 
-import { reducers } from "meld-clients-core/lib/reducers";
+import { addReducerSet } from "meld-clients-core/lib/reducers";
+import TimeSyncReducer from "meld-clients-core/lib/reducers/reducer_timesync";
+import { withClockRegistration } from "./clockRegistration";
 import App from "./containers/App";
+
+const reducers = addReducerSet("timesync", withClockRegistration(TimeSyncReducer));
 
 const createStoreWithMiddleware = applyMiddleware(
   thunk,
