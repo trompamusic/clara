@@ -650,7 +650,7 @@ class Companion extends Component {
         this.setState({ isPlaying: true });
         this.tick(this.state.selectedVideo, nDur);
         if (this.player.current) {
-          this.player.current.seekTo(Math.floor(nDur));
+          this.player.current.seekTo(nDur, "seconds");
         }
         // Reset note velocities display for notes after this instant so they redraw when played
         const notesOnPage = document.querySelectorAll(".note");
@@ -747,7 +747,7 @@ class Companion extends Component {
           this.tick(this.state.selectedVideo, nDur);
           console.log(this.player);
           if (this.player.current) {
-            this.player.current.seekTo(Math.floor(nDur));
+            this.player.current.seekTo(nDur, "seconds");
           }
         };
       }
@@ -1022,12 +1022,12 @@ class Companion extends Component {
                   this.tick(this.state.selectedVideo, p["playedSeconds"]);
                 }}
                 onReady={() => {
-                  if (this.state.seekTo && this.player.current) {
+                  if (Number.isFinite(this.state.seekTo) && this.player.current) {
                     console.log(
                       "Render loop onReady: seeking to ",
                       this.state.seekTo,
                     );
-                    this.player.current.seekTo(Math.floor(this.state.seekTo));
+                    this.player.current.seekTo(this.state.seekTo, "seconds");
                     this.setState({ seekTo: "" });
                   }
                 }}
@@ -1078,7 +1078,7 @@ class Companion extends Component {
           ),
         );
         if (this.player.current) {
-          this.player.current.seekTo(Math.floor(startTime));
+          this.player.current.seekTo(startTime, "seconds");
         }
         this.setState({ currentSegment: selected[0] });
       }
@@ -1131,7 +1131,7 @@ class Companion extends Component {
         () => {
           this.props.registerClock(selectedVideo);
           if (this.player.current) {
-            this.player.current.seekTo(seekTo);
+            this.player.current.seekTo(seekTo, "seconds");
           }
         },
       );
