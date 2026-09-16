@@ -25,6 +25,7 @@ import {
 } from "meld-clients-core/lib/actions/index";
 
 import FeatureVis from "./FeatureVis";
+import { measureScorePage } from "../../score/measureScorePage";
 import { MidiPlayer } from "./MidiPlayer";
 import AuthenticatedMediaPlayer from "./AuthenticatedMediaPlayer";
 import {
@@ -67,7 +68,7 @@ class Companion extends Component {
       instantsByPerfTime: [],
       instantsByNoteId: [],
       notesOnPage: [],
-      barlinesOnPage: [],
+      committedPage: null,
       selectedVideo: "",
       selectedPerformance: "",
       performanceSelectionCleared: false,
@@ -98,11 +99,9 @@ class Companion extends Component {
       scoreComponentLoaded: false, // know when to initially start the DOM observer
       performedElements: {},
       performanceErrors: {},
-      latestScoreUpdateTimestamp: 0,
       pendingNavigateToNote: null, // note ID to navigate to after mode switch
     };
     this.player = React.createRef();
-    this.featureVis = React.createRef();
     this.scoreComponent = React.createRef();
     this.initialPerformanceAppliedId = "";
     this.featureVisPreferenceAppliedForUri = null;
@@ -150,6 +149,7 @@ class Companion extends Component {
     }
     this.props.registerTraversal(this.props.uri, params);
     document.addEventListener("keydown", this.monitorKeys);
+    window.addEventListener("resize", this.remeasureScorePage);
     this.setState({
       vrvOptions:
         this.state.mode === "featureVis"
@@ -237,20 +237,60 @@ class Companion extends Component {
     }
   };
 
-  handleDOMChangeObserved = () => {
-    if (this.scoreComponent.current) {
+  handleScoreUnavailable = (uri) => {
+    if (uri !== this.state.currentScore) return;
+    this.committedSvg = null;
+    this.setState({
+      committedPage: null,
+      scoreComponentLoaded: false,
+      notesOnPage: [],
+    });
+  };
+
+  remeasureScorePage = () => {
+    const record = this.state.committedPage;
+    const svg = this.committedSvg;
+    if (
+      this.state.loading ||
+      !this.state.scoreComponentLoaded ||
+      this.state.mode !== "featureVis" ||
+      !record?.geometry ||
+      record.uri !== this.state.currentScore ||
+      !svg?.isConnected ||
+      this.scoreComponent.current?.querySelector(".score > svg") !== svg
+    )
+      return;
+    const geometry = measureScorePage(svg);
+    this.setState((state) =>
+      state.committedPage === record
+        ? { committedPage: { ...record, geometry } }
+        : null,
+    );
+  };
+
+  handleDOMChangeObserved = (svg, snapshot) => {
+    if (
+      !svg?.isConnected ||
+      !snapshot ||
+      snapshot.uri !== this.state.currentScore ||
+      JSON.stringify(snapshot.appliedOptions) !==
+        JSON.stringify(this.state.vrvOptions)
+    )
+      return;
+    if (this.scoreComponent.current?.contains(svg)) {
+      this.committedSvg = svg;
+      const committedPage = {
+        ...snapshot,
+        geometry:
+          this.state.mode === "featureVis" ? measureScorePage(svg) : null,
+      };
       const pendingNote = this.state.pendingNavigateToNote;
       this.setState(
         {
           observingScore: false,
           scoreComponentLoaded: true,
-          notesOnPage: ReactDOM.findDOMNode(
-            this.scoreComponent.current,
-          ).querySelectorAll(".note"),
-          barlinesOnPage: ReactDOM.findDOMNode(
-            this.scoreComponent.current,
-          ).querySelectorAll(".barLineAttr"),
-          latestScoreUpdateTimestamp: Date.now(),
+          notesOnPage: svg.querySelectorAll(".note"),
+          committedPage,
           pendingNavigateToNote: null,
         },
         () => {
@@ -326,6 +366,13 @@ class Companion extends Component {
       }
     }
     if (
+      prevState.currentScore !== this.state.currentScore &&
+      this.state.committedPage?.uri !== this.state.currentScore
+    ) {
+      this.committedSvg = null;
+      this.setState({ committedPage: null, scoreComponentLoaded: false });
+    }
+    if (
       "traversalPool" in this.props && // if traversal pool reducer ready
       Object.keys(this.props.traversalPool.pool).length && // and a traversal is waiting in the pool
       this.props.traversalPool.running < this.state.traversalThreshold // and we don't have too many
@@ -340,8 +387,7 @@ class Companion extends Component {
     if (
       "score" in prevProps &&
       this.state.selectedPerformance &&
-      prevProps.score.latestRenderedPageNum !==
-        this.props.score.latestRenderedPageNum // page flipped while performance selected
+      prevState.committedPage !== this.state.committedPage // page flipped while performance selected
     ) {
       this.highlightDeletedNotes();
     }
@@ -365,6 +411,7 @@ class Companion extends Component {
   componentWillUnmount() {
     // clean up...
     document.removeEventListener("keydown", this.monitorKeys);
+    window.removeEventListener("resize", this.remeasureScorePage);
   }
 
   getTargetNoteForModeSwitch = () => {
@@ -389,6 +436,7 @@ class Companion extends Component {
       scoreComponentLoadingStarted: false,
       scoreComponentLoaded: false,
       pendingNavigateToNote: targetNote,
+      committedPage: null,
     });
   };
 
@@ -401,6 +449,7 @@ class Companion extends Component {
       scoreComponentLoadingStarted: false,
       scoreComponentLoaded: false,
       pendingNavigateToNote: targetNote,
+      committedPage: null,
     });
   };
 
@@ -545,12 +594,6 @@ class Companion extends Component {
       },
     );
 
-    // FeatureVis renders another SVG; when it's present we nudge overlays to line up
-    const nudgeForFeatureVis =
-      this.featureVis.current &&
-      ReactDOM.findDOMNode(this.featureVis.current) &&
-      ReactDOM.findDOMNode(this.featureVis.current).matches("svg");
-
     const elements = [];
 
     // For each instant, figure out the minimal bounding box that contains all its notes
@@ -635,9 +678,7 @@ class Companion extends Component {
         <div
           key={`conf-${instantKey}-clickable`}
           id={`conf-${instantKey}`}
-          className={`clickableBoundedInstant${
-            nudgeForFeatureVis ? " featureVis" : ""
-          }`}
+          className="clickableBoundedInstant"
           title={title}
           style={{
             ...sharedStyle,
@@ -727,26 +768,25 @@ class Companion extends Component {
           ]["@id"] || ""; // FIXME skolemisation bug causing multiple copies of time entity
       }
       let featureVisElement = "";
-      if (this.state.scoreComponentLoaded) {
+      if (
+        this.state.mode === "featureVis" &&
+        this.state.scoreComponentLoaded &&
+        this.state.committedPage?.geometry &&
+        this.state.committedPage.uri === this.state.currentScore
+      ) {
         //&& this.state.currentScore in this.props.score.pageState) {
         featureVisElement = (
           <FeatureVis
+            key={this.state.currentScore}
+            committedPage={this.state.committedPage}
             uri={this.props.uri}
             performedElements={this.state.performedElements}
             performanceErrors={this.state.performanceErrors}
-            notesOnPage={this.state.notesOnPage}
-            barlinesOnPage={this.state.barlinesOnPage}
             instantsByNoteId={this.state.instantsByNoteId}
             instantsByPerfTime={this.state.instantsByPerfTime}
-            timelinesToVis={Object.keys(this.state.instantsByNoteId)}
             currentTimeline={currentTimeline}
             currentlyActiveNoteIds={this.state.currentlyActiveNoteIds}
             seekToInstant={this.seekToInstant}
-            scoreComponent={this.scoreComponent}
-            convertCoords={this.convertCoords}
-            latestScoreUpdateTimestamp={this.state.latestScoreUpdateTimestamp}
-            mode={this.state.mode}
-            ref={this.featureVis}
             ensureArray={this.ensureArray}
             width={1400}
           />
@@ -831,6 +871,7 @@ class Companion extends Component {
               // initial load; onScoreReady covers that case.
               onScoreReady={this.handleDOMChangeObserved}
               onScoreUpdate={this.handleDOMChangeObserved}
+              onScoreUnavailable={this.handleScoreUnavailable}
             />
           </div>
         );

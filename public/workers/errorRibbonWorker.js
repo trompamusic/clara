@@ -1,89 +1,38 @@
-function ensureArray(val) { 
-  return Array.isArray(val) ? val : [val]
+/* Classic worker protocol v2. Keep the URL version in ErrorRibbonVis in sync. */
+const EMBODIMENT = "http://purl.org/vocab/frbr/core#embodimentOf";
+const AT = "http://purl.org/NET/c4dm/timeline.owl#at";
+const array = value => value == null ? [] : Array.isArray(value) ? value : [value];
+function knownIds(instant, map) {
+  return array(instant[EMBODIMENT]).map(e => e && e["@id"])
+    .filter(id => typeof id === "string" && !id.startsWith("https://terms.trompamusic.eu/maps#inserted"))
+    .map(id => id.slice(id.lastIndexOf("#") + 1)).filter(id => Number.isFinite(map[id]?.qstamp));
 }
-
-function closestValidNote(candidates, embodiments) { 
-  return candidates.find( (instant) => 
-    ensureArray(instant["http://purl.org/vocab/frbr/core#embodimentOf"])
-      .filter( (el) => !(el["@id"].startsWith("https://terms.trompamusic.eu/maps#inserted")) )
-      .length > 0
-  )
+function average(ids, map) {
+  return ids.length ? ids.reduce((sum, id) => sum + map[id].qstamp, 0) / ids.length : null;
 }
-function averageScoretime(noteURIs, timemapByNoteId) { 
-    // given a list of note elements, calculate their average scoretime
-    const noteIds = noteURIs.map((n) => n.substr(n.indexOf("#")+1));
-    const knownNotes = noteIds.filter((n) => 
-      Object.keys(timemapByNoteId).includes(n)
-    )
-    if(knownNotes.length) { 
-      // return average scoretime (qstamp)
-      return knownNotes.map((n) => timemapByNoteId[n].qstamp)
-        .reduce( (sum, scoretime) => 
-          sum + scoretime
-        ) / knownNotes.length
-    } else { 
-      console.warn("Attempting to calculate average scoretime without known notes: ", noteIds);
-    }
-  }
-
-onmessage = (e) => { 
-  const props = e.data;
-  let contextualisedInsertedNotes = {};
-  let insertedNotesByScoretime = {};
-  props.timelinesToVis.forEach( (tl, ix) => { 
-    if(tl in props.performanceErrors && "inserted" in props.performanceErrors[tl]) { // we have inserted notes
-      // ensure ALL performed instants (correct and inserted notes) are sorted by time
-      const orderedInstants = props.instantsByPerfTime[tl].slice(0).sort( (a, b) =>  {
-        const instantTimeStringA = a["http://purl.org/NET/c4dm/timeline.owl#at"];
-        const instantTimeA = parseFloat(instantTimeStringA.substr(1, instantTimeStringA.length-2));
-        const instantTimeStringB = b["http://purl.org/NET/c4dm/timeline.owl#at"];
-        const instantTimeB = parseFloat(instantTimeStringB.substr(1, instantTimeStringB.length-2));
-        return instantTimeA - instantTimeB;
+onmessage = ({ data }) => {
+  const { requestId } = data;
+  try {
+    const { timelinesToVis, performanceErrors, instantsByPerfTime, timemapByNoteId: map } = data;
+    const result = {};
+    timelinesToVis.forEach(tl => {
+      const ordered = array(instantsByPerfTime[tl]).filter(i => parseFloat(String(i[AT]).replace(/[PS]/g, "")) >= 0)
+        .slice().sort((a, b) => parseFloat(String(a[AT]).replace(/[PS]/g, "")) - parseFloat(String(b[AT]).replace(/[PS]/g, "")));
+      result[tl] = array(performanceErrors[tl]?.inserted).flatMap(instant => {
+        const index = ordered.findIndex(i => instant["@id"] ? i["@id"] === instant["@id"] : i[AT] === instant[AT]);
+        if (index === -1) return [];
+        let context = knownIds(instant, map);
+        if (!context.length) {
+          const before = ordered.slice(0, index).reverse().find(i => knownIds(i, map).length);
+          const after = ordered.slice(index + 1).find(i => knownIds(i, map).length);
+          context = [...(before ? knownIds(before, map) : []), ...(after ? knownIds(after, map) : [])];
+        }
+        const qstamp = average(context, map);
+        return qstamp === null ? [] : [{ qstamp, instant }];
       });
-      // locate the inserted notes within their performance context
-      const insertedWithIndices = props.performanceErrors[tl].inserted.map( (inserted) => { 
-        return {
-          index: orderedInstants.findIndex( (instant) => instant["http://purl.org/NET/c4dm/timeline.owl#at"] === 
-                               inserted["http://purl.org/NET/c4dm/timeline.owl#at"]
-                ),
-          instant: inserted
-        }
-      }) 
-      console.log("INSERTED WITH INDICES FOR TL ", ix, " ", insertedWithIndices)
-      contextualisedInsertedNotes[tl] = insertedWithIndices.map((inserted) => { 
-        let averageScoretime;
-        const validNotesAtIndex = ensureArray(inserted.instant["http://purl.org/vocab/frbr/core#embodimentOf"])
-          .filter((el) => !(el["@id"].startsWith("https://terms.trompamusic.eu/maps#inserted")))
-        if(validNotesAtIndex.length) { 
-          // if there is a non-inserted note at that index, use its score time
-          averageScoretime = this.averageScoretime(validNotesAtIndex, props.timemapByNoteId);
-        } else{
-          // otherwise, approximate a score time based on preceding and succeeding non-inserted notes
-          let closestValidPredecessorNotes = [];
-          let closestValidSuccessorNotes = [];
-          const predecessors = orderedInstants.slice(0, inserted.index-1).reverse();
-          const closestValidPredecessorInstant = closestValidNote(predecessors);
-          if(closestValidPredecessorInstant) { 
-            closestValidPredecessorNotes = ensureArray(closestValidPredecessorInstant["http://purl.org/vocab/frbr/core#embodimentOf"])
-            .map((embodiment) => embodiment["@id"])
-            .filter((id) => !(id.startsWith("https://terms.trompamusic.eu/maps#inserted")));
-          }
-          const successors = orderedInstants.slice(inserted.index+1);
-          const closestValidSuccessorInstant= closestValidNote(successors);
-          if(closestValidSuccessorInstant) { 
-            closestValidSuccessorNotes = ensureArray(closestValidSuccessorInstant["http://purl.org/vocab/frbr/core#embodimentOf"])
-              .map((embodiment) => embodiment["@id"])
-              .filter((id) => !(id.startsWith("https://terms.trompamusic.eu/maps#inserted")));
-          }
-          averageScoretime = this.averageScoretime([...closestValidPredecessorNotes, ...closestValidSuccessorNotes], props.timemapByNoteId);
-        }
-        inserted["approxScoretime"] = averageScoretime;
-        return inserted;
-      })
-      insertedNotesByScoretime[tl] = Object.keys(contextualisedInsertedNotes[tl]).map((n) => {
-        return { [contextualisedInsertedNotes[tl][n].approxScoretime]: contextualisedInsertedNotes[tl][n].instant }
-      })
-    }
     });
-    postMessage(insertedNotesByScoretime);
-}
+    postMessage({ requestId, result });
+  } catch (error) {
+    postMessage({ requestId, error: String(error.message || error) });
+  }
+};

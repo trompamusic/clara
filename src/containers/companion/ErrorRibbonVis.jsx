@@ -1,461 +1,232 @@
 import React, { Component } from "react";
-import { closestClef, convertCoords } from "../../util/util";
+import { array, noteId } from "./featureVisData";
 
-const padding = 0.1; // proportion of ribbon reserved for whitespace
-const errorIndicatorHeight = 20; // currently in pixels -- perhaps make a proportion instead?
-const insertedNoteWidth = 12; // in pixels: width of inserted note indicator
+const inputKeys = [
+  "performanceErrors",
+  "instantsByPerfTime",
+  "timemapByNoteId",
+  "instantsByNoteId",
+];
+const inputs = (props) => inputKeys.map((key) => props[key]);
+const same = (a, b) => a && b && a.every((value, i) => value === b[i]);
+const validResult = (result) =>
+  result &&
+  typeof result === "object" &&
+  !Array.isArray(result) &&
+  Object.values(result).every(
+    (entries) =>
+      Array.isArray(entries) &&
+      entries.every(
+        (entry) =>
+          Number.isFinite(entry?.qstamp) &&
+          entry.instant &&
+          typeof entry.instant === "object",
+      ),
+  );
 
 export default class ErrorRibbonVis extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      width: this.props.width || "1280",
-      height: this.props.height || "120",
-      pointsPerTimeline: {},
-      insertedNotesByScoretime: {},
-      loading: false,
-      worker: new window.Worker("/workers/errorRibbonWorker.js"),
-      svgElementsWrapper: <div id="errorRibbonLoading" />,
-    };
-    this.errorRibbonSvg = React.createRef();
-  }
+  state = { result: null, resultInputs: null, loading: true, error: null };
+  requestId = 0;
 
   componentDidMount() {
-    console.log("error ribbon visualisation mounted with props ", this.props);
-    //this.props.setErrorRibbonReady(false);
-  }
-
-  componentDidUpdate(prevProps) {
-    // Trigger on page flip (latestScoreUpdateTimestamp changes)
-    // or on initial data load (instantsByScoretimeLastModified becomes available)
-    if (
-      prevProps.latestScoreUpdateTimestamp !==
-        this.props.latestScoreUpdateTimestamp ||
-      prevProps.instantsByScoretimeLastModified !==
-        this.props.instantsByScoretimeLastModified
-    ) {
-      this.setState({ loading: true }, this.contextualiseInsertedNotes);
+    this.mounted = true;
+    try {
+      this.worker = new window.Worker("/workers/errorRibbonWorker.js?v=2");
+      this.worker.onmessage = ({ data }) => {
+        if (!this.mounted) return;
+        if (
+          !data ||
+          !Number.isInteger(data.requestId) ||
+          !(typeof data.error === "string" || validResult(data.result))
+        ) {
+          this.fail("Invalid error ribbon worker response");
+          return;
+        }
+        if (
+          data.requestId !== this.requestId ||
+          !same(this.requestInputs, inputs(this.props))
+        )
+          return;
+        if (data.error) this.fail(data.error);
+        else
+          this.setState({
+            result: data.result,
+            resultInputs: this.requestInputs,
+            loading: false,
+            error: null,
+          });
+      };
+      this.worker.onerror = () => {
+        this.workerFailed = true;
+        this.fail("Error ribbon worker failed");
+      };
+      this.worker.onmessageerror = () =>
+        this.fail("Unreadable error ribbon worker response");
+      this.submit();
+    } catch (error) {
+      this.workerFailed = true;
+      this.fail(String(error.message || error));
     }
   }
 
-  averageScoretime = (noteURIs) => {
-    // given a list of note elements, calculate their average scoretime
-    const noteIds = noteURIs.map((n) => n.substr(n.indexOf("#") + 1));
-    const knownNotes = noteIds.filter((n) =>
-      Object.keys(this.props.timemapByNoteId).includes(n),
-    );
-    if (knownNotes.length) {
-      // return average scoretime (qstamp)
-      return (
-        knownNotes
-          .map((n) => this.props.timemapByNoteId[n].qstamp)
-          .reduce((sum, scoretime) => sum + scoretime) / knownNotes.length
-      );
-    } else {
-      console.warn(
-        "Attempting to calculate average scoretime without known notes: ",
-        noteIds,
-      );
+  componentDidUpdate() {
+    if (!same(this.requestInputs, inputs(this.props))) this.submit();
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
+    if (this.worker) {
+      this.worker.onmessage = null;
+      this.worker.onerror = null;
+      this.worker.onmessageerror = null;
+      this.worker.terminate();
+    }
+  }
+
+  fail = (error) => {
+    if (this.mounted)
+      this.setState({
+        loading: false,
+        error,
+        result: null,
+        resultInputs: this.requestInputs,
+      });
+  };
+
+  submit = () => {
+    this.requestInputs = inputs(this.props);
+    if (!this.worker || this.workerFailed) return;
+    const requestId = ++this.requestId;
+    this.setState({ loading: true, error: null });
+    try {
+      this.worker.postMessage({
+        requestId,
+        timelinesToVis: Object.keys(this.props.instantsByNoteId),
+        ...Object.fromEntries(inputKeys.map((key) => [key, this.props[key]])),
+      });
+    } catch (error) {
+      this.fail(String(error.message || error));
     }
   };
 
-  pitchToNum(pitchName) {
-    let nameToNum;
-    switch (pitchName) {
-      case "C":
-      case "Cs":
-        nameToNum = 0;
-        break;
-      case "Db":
-      case "D":
-      case "Ds":
-        nameToNum = 1;
-        break;
-      case "Eb":
-      case "E":
-        nameToNum = 2;
-        break;
-      case "F":
-      case "Fs":
-        nameToNum = 3;
-        break;
-      case "Gb":
-      case "G":
-      case "Gs":
-        nameToNum = 4;
-        break;
-      case "Ab":
-      case "A":
-      case "As":
-        nameToNum = 5;
-        break;
-      case "Bb":
-      case "B":
-        nameToNum = 6;
-        break;
-      default:
-        console.error(
-          "pitchToNum called with unrecognised pitch name:",
-          pitchName,
+  render() {
+    const {
+      pageData: page,
+      timemapByNoteId: map,
+      currentTimeline,
+      performanceErrors,
+      makeLine,
+      makeRect,
+    } = this.props;
+    const width = this.props.width || 1280,
+      height = this.props.height || 120;
+    const result = same(this.state.resultInputs, inputs(this.props))
+      ? this.state.result
+      : null;
+    const elements = page.geometry.barlines.map((bar, i) =>
+      makeLine(
+        "barLineAttr",
+        null,
+        null,
+        bar.x,
+        0,
+        bar.x,
+        height,
+        "barline-" + i,
+        null,
+      ),
+    );
+    const order = page.geometry.visualOrder.filter((id) =>
+      Number.isFinite(map[id]?.qstamp),
+    );
+    const min = map[order[0]]?.qstamp,
+      max = map[order[order.length - 1]]?.qstamp;
+    const scoretimes = this.props.timemap
+      .filter((t) => t.qstamp >= min && t.qstamp <= max)
+      .slice()
+      .sort((a, b) => a.qstamp - b.qstamp);
+    [...page.timelinesToVis].sort().forEach((tl, i) => {
+      const cls = tl === currentTimeline ? "currentTl" : "";
+      const y =
+        ((height * 0.9) / page.timelinesToVis.length) * i + 1 + height * 0.2;
+      elements.push(
+        makeLine(
+          cls + " timelineMarker",
+          null,
+          tl,
+          0,
+          y,
+          width,
+          y,
+          "timeline-" + tl,
+          tl,
+        ),
+      );
+      const deletedIds = new Set(
+        array(performanceErrors[tl]?.deleted)
+          .flatMap((d) => array(d))
+          .map((e) => noteId(e["@id"])),
+      );
+      deletedIds.forEach((id) => {
+        const note = page.geometry.notes[id];
+        if (note && Number.isFinite(map[id]?.qstamp))
+          elements.push(
+            makeRect(
+              cls + " deleted",
+              map[id].qstamp,
+              tl,
+              note.x,
+              y - 16,
+              note.x2 - note.x,
+              16,
+              "deleted-" + tl + id,
+              "deleted point in timeline " + tl,
+            ),
+          );
+      });
+      (result?.[tl] || []).forEach(({ qstamp, instant }, index) => {
+        if (!(qstamp >= min && qstamp <= max)) return;
+        const before = [...scoretimes]
+          .reverse()
+          .find((t) => t.qstamp <= qstamp);
+        const after = scoretimes.find((t) => t.qstamp >= qstamp);
+        if (!before) return;
+        const notes = [before, after].flatMap((t) =>
+          t ? page.notesForGroup[tl]?.[String(t.qstamp)] || [] : [],
         );
-    }
-    return nameToNum;
-  }
-
-  determineInsertedNoteYPosition = (inserted, clef) => {
-    if (!("shape" in clef.dataset)) {
-      console.error(
-        "Clef metadata not available. Does your Verovio support svgAdditionalAttribute?",
-      );
-      return null;
-    }
-    const clefPitch = clef.dataset.shape;
-    let clefOct;
-    switch (clefPitch) {
-      case "F":
-        clefOct = 3;
-        break;
-      case "G":
-      case "C":
-        clefOct = 4;
-        break;
-      default:
-        console.error("octaveDiff called on clef with unhandled shape: ", clef);
-        return null;
-    }
-    const staff = clef.closest(".staff");
-    const lines = Array.from(
-      document.querySelectorAll("#" + staff.getAttribute("id") + "> path"),
-    ).reverse();
-    console.log("Lines: ", lines);
-    //    const baseline = convertCoords(lines[0]);
-    const interLineDistance =
-      lines[1].getBoundingClientRect().y - lines[0].getBoundingClientRect().y;
-    //    const interLineDistance = convertCoords(lines[1]).y - baseline.y
-    // take the heightOfOrigin to be the Y position of the clef's 'line'
-    //const heightOfOrigin = lines[0].getBoundingClientRect().y - (clef.dataset.line * interLineDistance) - window.scrollY;
-    console.log(
-      "Calling convertCoords on ",
-      lines[0],
-      "with interline distance ",
-      interLineDistance,
-    );
-    //    if(baseline) {
-    //      console.log("Proceeding with baseline ", baseline)
-    const heightOfOrigin =
-      lines[0].getBoundingClientRect().y +
-      clef.dataset.line * interLineDistance;
-    // figure out semitone difference from inserted note to origin
-    const insertedPitch = this.props
-      .ensureArray(
-        Object.values(inserted)[0][
-          "http://purl.org/vocab/frbr/core#embodimentOf"
-        ],
-      )[0]
-      ["@id"].replace("https://terms.trompamusic.eu/maps#inserted_", "");
-    const insertedPitchComponents = /([A-G])([sb]?)(\d)/.exec(insertedPitch);
-    const insertedPitchName = insertedPitchComponents[1];
-    const insertedPitchAccid = insertedPitchComponents[2];
-    const insertedPitchOct = insertedPitchComponents[3];
-
-    const absolutePosition =
-      insertedPitchOct * 7 -
-      this.pitchToNum(insertedPitchName + insertedPitchAccid);
-    const relativeAnchor = (clefOct - 1) * 7 + this.pitchToNum(clefPitch);
-    const offset = absolutePosition + relativeAnchor;
-    // To determine Y position, start at height of origin, move by offset times half the interline distance
-    // (half since one inter-line distance spans two semitones)
-    return heightOfOrigin + (offset * interLineDistance) / 2;
-    // }
-    //   else {
-    //     console.log("Wasn't able to determine coords for line ", lines[0]);
-    //     return null;
-    //   }
-  };
-  contextualiseInsertedNotes = () => {
-    // For inserted notes, we have a performance time but no score time.
-    // In order to place them in our ribbon we need to approximate a score time.
-    // To do this, look for neighbouring "correctly performed" notes for hints.
-    this.state.worker.postMessage({
-      timelinesToVis: this.props.timelinesToVis,
-      performanceErrors: this.props.performanceErrors,
-      instantsByPerfTime: this.props.instantsByPerfTime,
-      timemapByNoteId: this.props.timemapByNoteId,
-    });
-    this.state.worker.onerror = (err) => err;
-    this.state.worker.onmessage = (e) => {
-      console.log("Received from worker: ", e);
-      this.setState(
-        { insertedNotesByScoretime: e.data, loading: false },
-        this.renderSvg,
-      );
-    };
-  };
-
-  renderSvg() {
-    if (!this.state.loading && Object.keys(this.props.timemapByNoteId).length) {
-      let svgElements = [];
-      let notesOnPageForDebug = [];
-      let deletedNoteIndicators = [];
-      let insertedNoteIndicators = [];
-      // generate barlines
-      Array.from(this.props.barlinesOnPage).forEach((bl, ix) => {
-        const absolute = convertCoords(bl);
-        svgElements.push(
-          this.props.makeLine(
-            "barLineAttr", // className,
-            null, // qstamp - barlines don't need one!
-            null, // timeline - barlines don't need one!
-            absolute.x,
-            "0",
-            absolute.x,
-            this.state.height, // x1, y1, x2, y2
-            "barline-" + ix, // react key
-            null, // titleString - barlines don't need one!
+        if (!notes.length) return;
+        const x = notes.reduce((sum, note) => sum + note.x, 0) / notes.length;
+        elements.push(
+          makeRect(
+            cls + " inserted",
+            String(before.qstamp),
+            tl,
+            x,
+            y,
+            12,
+            16,
+            "inserted-" + tl + index,
+            "inserted point in timeline " + tl,
+            () => this.props.handleClickSeekToInstant(instant, tl),
           ),
         );
       });
-
-      const errorLineSpacing =
-        (this.state.height * (1 - padding)) / this.props.timelinesToVis.length;
-
-      this.props.timelinesToVis
-        .slice(0)
-        .sort()
-        .forEach((tl, ix) => {
-          let className = tl === this.props.currentTimeline ? "currentTl" : "";
-          // draw lines to represent each performance timeline
-          const timelineY =
-            errorLineSpacing * ix + 1 + 2 * (this.state.height * padding);
-          svgElements.push(
-            this.props.makeLine(
-              className + " timelineMarker", // className
-              null, // qstamp - timelineMarker doesn't need one!
-              tl["@id"], // timeline
-              "0",
-              timelineY,
-              this.state.width,
-              timelineY, // x1, y1, x2, y2
-              "error-vis-timeline-" + ix, // reactKey
-              tl["@id"], // title string
-            ),
-          );
-          // draw any errors (deleted or inserted notes)
-          if (tl in this.props.performanceErrors) {
-            if ("deleted" in this.props.performanceErrors[tl]) {
-              // this timeline has deleted notes
-              this.props
-                .ensureArray(this.props.performanceErrors[tl].deleted)
-                .forEach((d) => {
-                  const deletedNoteIds = this.props
-                    .ensureArray(d)
-                    .map((e) => e["@id"].substr(e["@id"].indexOf("#") + 1));
-                  // are any of them on the current page?
-                  const deletedNotesOnPage = Array.from(
-                    this.props.notesOnPage,
-                  ).filter((noteOnPage) =>
-                    deletedNoteIds.includes(noteOnPage.getAttribute("id")),
-                  );
-                  deletedNoteIndicators = [
-                    ...deletedNotesOnPage.map((noteElement) => {
-                      const noteCoords = convertCoords(noteElement);
-                      return this.props.makeRect(
-                        className + " deleted",
-                        this.props.timemapByNoteId[
-                          noteElement.getAttribute("id")
-                        ].qstamp,
-                        tl, // timeline
-                        // delete indicators sit underneath the line (ref. y- and height-calculation below)
-                        noteCoords.x,
-                        timelineY - errorIndicatorHeight * 0.8,
-                        noteCoords.x2 - noteCoords.x,
-                        errorIndicatorHeight * 0.8, // x, y, width, height
-                        "deleted-" + tl + noteElement.getAttribute("id"), // react key
-                        "deleted point in timeline " + tl,
-                      );
-                    }),
-                    ...deletedNoteIndicators,
-                  ];
-                });
-            }
-            if (
-              "inserted" in this.props.performanceErrors[tl] &&
-              tl in this.state.insertedNotesByScoretime
-            ) {
-              // figure out whether there are inserted notes on this page
-              // heuristic: figure out scoretime (qstamp) of "first" (top-left) and "last" (bottom-right)
-              // note element on page.  Render any inserted notes with approximate scoretimes in this range
-              const positionSortedNoteElements = Array.from(
-                this.props.notesOnPage,
-              )
-                .slice(0)
-                .sort(
-                  (a, b) =>
-                    a.getBoundingClientRect().x - b.getBoundingClientRect().x ||
-                    a.getBoundingClientRect().y - b.getBoundingClientRect().y,
-                );
-              const minPageScoretime =
-                this.props.timemapByNoteId[
-                  positionSortedNoteElements[0].getAttribute("id")
-                ].qstamp;
-              const maxPageScoretime =
-                this.props.timemapByNoteId[
-                  positionSortedNoteElements[
-                    positionSortedNoteElements.length - 1
-                  ].getAttribute("id")
-                ].qstamp;
-              const scoretimesOfInsertedOnPage =
-                this.state.insertedNotesByScoretime[tl].filter(
-                  (t) =>
-                    Object.keys(t)[0] >= minPageScoretime &&
-                    Object.keys(t)[0] <= maxPageScoretime,
-                );
-              // for the inserted notes on page, find the closest predecessor and successor scoretimes and calculate their corresponding note elements' avg X positions
-              const orderedScoretimesOnPage = this.props.timemap
-                .filter(
-                  (t) =>
-                    t.qstamp >= minPageScoretime &&
-                    t.qstamp <= maxPageScoretime,
-                )
-                .sort();
-              insertedNoteIndicators = [
-                ...insertedNoteIndicators,
-                ...scoretimesOfInsertedOnPage.map((t, ix) => {
-                  if (Object.keys(t).length > 1) {
-                    console.warn(
-                      "Found scoretime of inserted on page with more than one key: ",
-                      t,
-                    );
-                  }
-                  const scoretimeOfInsertedOnPage = Object.keys(t)[0];
-                  let predecessorNoteElements = [];
-                  let predecessorNoteElementXPositions = [];
-                  let successorNoteElements = [];
-                  let successorNoteElementXPositions = [];
-                  const inserted = this.state.insertedNotesByScoretime[tl].find(
-                    (note) =>
-                      Object.keys(note)[0] === scoretimeOfInsertedOnPage,
-                  );
-                  const closestPredecessorScoretime = orderedScoretimesOnPage
-                    .slice(0)
-                    .reverse()
-                    .find((p) => p.qstamp <= scoretimeOfInsertedOnPage);
-                  const closestSuccessorScoretime =
-                    orderedScoretimesOnPage.find(
-                      (p) => p.qstamp >= scoretimeOfInsertedOnPage,
-                    );
-                  if (
-                    closestPredecessorScoretime &&
-                    closestPredecessorScoretime.qstamp in
-                      this.props.instantsByScoretime[tl]
-                  ) {
-                    predecessorNoteElements = this.props.instantsByScoretime[
-                      tl
-                    ][closestPredecessorScoretime.qstamp]
-                      .map((instant) =>
-                        this.props.noteElementsForInstant(instant),
-                      )
-                      .flat();
-                    predecessorNoteElementXPositions =
-                      predecessorNoteElements.map(
-                        (noteElement) => convertCoords(noteElement).x,
-                      );
-                  }
-                  if (
-                    closestSuccessorScoretime &&
-                    closestSuccessorScoretime.qstamp in
-                      this.props.instantsByScoretime[tl]
-                  ) {
-                    successorNoteElements = this.props.instantsByScoretime[tl][
-                      closestSuccessorScoretime.qstamp
-                    ]
-                      .map((instant) =>
-                        this.props.noteElementsForInstant(instant),
-                      )
-                      .flat();
-                    successorNoteElementXPositions = successorNoteElements.map(
-                      (noteElement) => convertCoords(noteElement).x,
-                    );
-                  }
-                  const contextNoteElements = [
-                    ...predecessorNoteElements,
-                    ...successorNoteElements,
-                  ];
-                  const contextNoteElementXPositions = [
-                    ...predecessorNoteElementXPositions,
-                    ...successorNoteElementXPositions,
-                  ];
-                  if (
-                    !contextNoteElementXPositions.length ||
-                    !closestPredecessorScoretime
-                  ) {
-                    console.log(
-                      "Error Ribbon: Found inserted note with no valid note context: ",
-                      inserted,
-                    );
-                    return "";
-                  } else {
-                    const xPos =
-                      contextNoteElementXPositions.reduce(
-                        (sum, x) => sum + x,
-                        0,
-                      ) / contextNoteElementXPositions.length;
-                    return this.props.makeRect(
-                      className + " inserted",
-                      closestPredecessorScoretime.qstamp,
-                      tl,
-                      xPos,
-                      timelineY,
-                      insertedNoteWidth,
-                      errorIndicatorHeight * 0.8,
-                      "inserted-" +
-                        inserted[scoretimeOfInsertedOnPage]["@id"] +
-                        "-" +
-                        ix,
-                      "inserted point in timeline " + tl,
-                      () =>
-                        this.props.handleClickSeekToInstant(
-                          inserted[scoretimeOfInsertedOnPage][
-                            "http://purl.org/NET/c4dm/timeline.owl#at"
-                          ],
-                        ),
-                    );
-                  }
-                }),
-              ];
-            }
-          }
-        });
-
-      svgElements = [
-        ...svgElements,
-        ...deletedNoteIndicators,
-        ...insertedNoteIndicators,
-      ];
-      this.setState({
-        svgElementsWrapper: (
-          <div>
-            <svg
-              id="errorRibbon"
-              xmlns="http://www.w3.org/2000/svg"
-              xmlnsXlink="http://www.w3.org/1999/xlink"
-              width={this.state.width}
-              height={this.state.height}
-              transform="scale(1,-1) translate(0, 50)"
-              ref={this.errorRibbonSvg}
-            >
-              {svgElements}
-            </svg>
-          </div>
-        ),
-      });
-    } else {
-      this.setState({ svgElementsWrapper: <div id="errorRibbonLoading" /> });
-    }
-  }
-
-  render() {
-    // FIXME: Move all dom-based calculation OUTSIDE OF RENDER FUNCTION
-    return this.state.svgElementsWrapper;
+    });
+    return (
+      <div aria-busy={this.state.loading}>
+        {this.state.error && (
+          <div role="alert">Error visualization: {this.state.error}</div>
+        )}
+        <svg
+          id="errorRibbon"
+          xmlns="http://www.w3.org/2000/svg"
+          width={width}
+          height={height}
+          transform="scale(1,-1) translate(0, 50)"
+        >
+          {elements}
+        </svg>
+      </div>
+    );
   }
 }

@@ -53,36 +53,86 @@ class SelectableScore extends Component {
 
   // Debounce helper to batch rapid mutations during Verovio SVG rendering
   debounce(func, wait) {
-    let timeout;
     return (...args) => {
       const later = () => {
-        clearTimeout(timeout);
+        clearTimeout(this.scoreUpdateTimeout);
         func.apply(this, args);
       };
-      clearTimeout(timeout);
-      timeout = setTimeout(later, wait);
+      clearTimeout(this.scoreUpdateTimeout);
+      this.scoreUpdateTimeout = setTimeout(later, wait);
     };
   }
 
   handleScoreUpdate() {
-    // Collapse multiple MutationObserver callbacks into a single update per animation frame
-    // to prevent cascading re-renders when Verovio makes rapid DOM changes
-    if (this.pendingScoreUpdate) {
-      return;
-    }
-
+    if (this.unmounted || this.pendingScoreUpdate) return;
     this.pendingScoreUpdate = true;
-    requestAnimationFrame(() => {
-      this.enableSelector();
-      typeof this.props.onScoreUpdate === "function" &&
-        this.props.onScoreUpdate(
-          ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(
-            "svg",
-          ),
-        );
+    this.scoreUpdateFrame = requestAnimationFrame(() => {
       this.pendingScoreUpdate = false;
+      if (this.unmounted) return;
+      this.enableSelector();
+      this.publishScorePage();
     });
   }
+
+  // Called after React has committed the MELD Score child. The observer is a
+  // fallback notification, never a source of renderer provenance.
+  publishScorePage = () => {
+    const { score, uri } = this.props;
+    const page = score.pageState[uri]?.currentPage;
+    const entry = score.SVG[uri]?.[page];
+    const svg =
+      this.scoreComponent.current &&
+      ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(
+        ".score > svg",
+      );
+    if (
+      !svg ||
+      !svg.isConnected ||
+      !entry ||
+      score.currentlyLoadedIntoVrv !== uri
+    ) {
+      if (this.publishedSvg) {
+        this.publishedSvg = null;
+        this.publishedEntry = null;
+        this.props.onScoreUnavailable?.(uri);
+      }
+      return;
+    }
+    if (this.publishedSvg === svg && this.publishedEntry === entry) return;
+    // A fresh score load replaces the page cache. Page navigation keeps the
+    // previous page entries; reuse score-wide metadata only in that case.
+    const cache = score.SVG[uri];
+    const sharesPage =
+      this.metadataCache &&
+      Object.keys(cache).some(
+        (key) => cache[key] === this.metadataCache.pages[key],
+      );
+    if (
+      !this.metadataCache ||
+      this.metadataCache.uri !== uri ||
+      this.metadataCache.sourceMei !== score.MEI[uri] ||
+      !sharesPage
+    ) {
+      this.metadataCache = {
+        uri,
+        sourceMei: score.MEI[uri],
+        mei: score.vrvTk.getMEI(),
+        timemap: score.vrvTk.renderToTimemap(),
+        pages: cache,
+      };
+    } else {
+      this.metadataCache.pages = cache;
+    }
+    this.publishedSvg = svg;
+    this.publishedEntry = entry;
+    this.props.onScoreUpdate?.(svg, {
+      uri,
+      page,
+      appliedOptions: { ...entry.options },
+      mei: this.metadataCache.mei,
+      timemap: this.metadataCache.timemap,
+    });
+  };
 
   enableSelector() {
     if (!Object.keys(this.props.score.SVG).length) {
@@ -199,10 +249,14 @@ class SelectableScore extends Component {
     if (typeof this.selector !== "undefined") {
       this.selector.stop();
     }
+    this.unmounted = true;
+    clearTimeout(this.scoreUpdateTimeout);
+    cancelAnimationFrame(this.scoreUpdateFrame);
     this.observer.disconnect();
   }
 
   componentDidUpdate(prevProps, prevState) {
+    this.publishScorePage();
     if (
       this.props.annotationContainerUri &&
       !prevProps.toggleAnnotationRetrieval &&

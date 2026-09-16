@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { velocityValue } from "./featureVisData";
 
 const padding = 0.1; // proportion of width/height reserved as whitespace
 const maxPointRadius = 40; // radius of point encoding a velocity of 127 (max midi velocity)
@@ -18,10 +19,6 @@ export default class ZoomBox extends Component {
     this.determineSvgElements = this.determineSvgElements.bind(this);
   }
 
-  componentDidMount() {
-    console.log("zoom box mounted with props ", this.props);
-  }
-
   determineSvgElements(scoretime, timeline) {
     if (
       timeline in this.props.instantsByScoretime &&
@@ -31,23 +28,40 @@ export default class ZoomBox extends Component {
       this.props.instantsByScoretime[timeline][scoretime].forEach((instant) => {
         let t = instant["http://purl.org/NET/c4dm/timeline.owl#at"];
         t = parseFloat(t.substr(1, t.length - 2));
-        if (t > 0) {
+        if (Number.isFinite(t) && t >= 0) {
           // skip deleted notes, which are at t = -1
           notesPerformedAtThisScoretime.push(
             this.props
               .ensureArray(
                 instant["http://purl.org/vocab/frbr/core#embodimentOf"],
               )
+              .filter((e) => typeof e?.["@id"] === "string")
               .map((e) => {
                 const noteId = e["@id"].slice(e["@id"].indexOf("#") + 1);
+                const attributes = this.props.noteAttributes[noteId];
+                const velocity = velocityValue(
+                  this.props.performedElements[noteId]?.[timeline],
+                );
+                if (
+                  !attributes?.pname ||
+                  attributes.oct === null ||
+                  attributes.oct === "" ||
+                  !String(attributes.oct).trim() ||
+                  !Number.isInteger(Number(attributes.oct)) ||
+                  !Number.isFinite(velocity) ||
+                  velocity < 0 ||
+                  velocity > 127
+                )
+                  return null;
                 return {
                   noteId: noteId,
                   at: t,
                   pname: this.props.noteAttributes[noteId].pname,
                   oct: this.props.noteAttributes[noteId].oct,
-                  velocity: this.props.performedElements[noteId][timeline],
+                  velocity,
                 };
-              }),
+              })
+              .filter(Boolean),
           );
         }
       });
