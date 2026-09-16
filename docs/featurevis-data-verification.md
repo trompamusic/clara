@@ -76,16 +76,71 @@ in a fresh Chrome window. Final-code observations:
   Staff 1 preference restored and its dynamics polygon was visible.
   This sequence returned to page 1; it does not establish later-page preservation.
 
+### Follow-up acceptance run
+
+- Layer 1:1 toggle produced the three expected performance polygons and restored
+  after leaving/re-entering feature mode.
+- Hover showed details immediately, remained visible immediately after mouseout,
+  and was hidden after 600 ms (configured delay 500 ms). Page navigation cleared
+  visible hover state.
+- Feature page 2 -> page mode retained its target note. Page mode page 2 ->
+  feature mode mapped to page 6, with the target note still present.
+- Tempo click requested 7.759 seconds, dynamics click requested 15.279 seconds,
+  and inserted click passed an instant corresponding to 13.309 seconds including
+  the performance offset. Actual media positions were 7, 15, and 13 seconds.
+  Companion's pre-existing `onReady` handler floors pending seek times; exact
+  subsecond seeking therefore does not pass. The handler is unchanged by this
+  refactor.
+- Deleted-note IDs exactly matched alignment data on feature pages 6 and 7
+  (one each), and page-mode pages 2 and 3 (two and six respectively).
+- Scroll, window zoom/resize, and browser zoom to 90% retained exact barline
+  alignment (four measured x differences all zero on feature page 6). Browser
+  zoom was restored afterwards.
+
+**Playback-following blocker found before the fixes below:** video playback advanced, but Companion's last
+media tick stayed zero. Calling the actual ReactPlayer progress method exposed
+`Invariant Violation: update(): $merge expects a target of type 'object'; got
+undefined` in MELD's timesync reducer. `TICK` merges into a missing media-resource
+entry. Inspection of the unchanged dependency shows `REGISTER_CLOCK` replaces
+`mediaResources` with an empty map when registering an already-present URI,
+which can cause this after repeated seeks/performance selections. This was the clock-registration failure fixed below.
+
+Interaction assertions used temporary DevTools instrumentation and dispatched
+DOM events, plus native browser controls. The first inserted-marker probe tried
+to inspect an uncaptured instant and caused a diagnostic TypeError; the corrected
+probe captured the actual child callback argument successfully. That diagnostic
+error is separate from the timesync reducer failure above.
+
 These cases remain **unverified**, not passed:
 
-- Layer toggles and hover timing/details.
-- Playback-driven page following and later-page preservation across mode changes.
-- Exact expected inserted-instant timestamp comparison, and tempo/dynamics seek.
-- Deleted-note highlighting after page changes in both modes.
-- Explicit window resize, scroll and browser zoom alignment (DevTools was opened
-  and closed during the tested navigation).
 - Replacement-input races, native worker errors, empty/malformed musical data,
   and observing actual worker termination beyond cleared handlers/unmounted state.
+
+### Playback fixes and final regression checks
+
+- `5d63585`: override only MELD's `REGISTER_CLOCK` action through its supported
+  reducer-registration API. Duplicate registration is a no-op; new clocks retain
+  all existing clock times and annotations. Other actions use MELD's reducer.
+  Direct assertions passed for initialization, duplicate registration, adding a
+  second clock, retaining references/data, immutability, and delegation.
+- `bcbd660`: use explicit seconds for Companion seeks, retain fractional values,
+  and accept a pending zero-second seek in the player-ready callback.
+- Removing the development effect-frequency guard exposed normal playback again,
+  but the user preferred retaining it. The final code restores the guard and
+  changes playback polling from 10 ms to 50 ms. This remains inside the existing
+  100 ms active-note window, while avoiding the guard's 60-effects/second limit.
+- Chrome demo, final code with guard enabled: repeated chart clicks followed by
+  six seconds of playback produced 101 ticks, advanced media time to 45.632134
+  and Companion time to 45.606592, highlighted an active note, and automatically
+  moved from feature page 1 to page 3. The same error-ribbon instance remained.
+- Final seek comparisons: tempo expected 7.759 / actual 7.758999; dynamics
+  expected 49.010 / actual 49.009999; inserted note expected/actual 46.143.
+  These are browser floating-point/media precision differences, not truncation.
+- Player-ready callback checks landed at exactly 0.25 seconds and zero seconds.
+- After paused playback settled, a 1.2-second observation recorded zero extra
+  progress ticks. No runaway-effect or timesync crash occurred in this run.
+- TypeScript and changed-source ESLint passed (existing Companion warnings only).
+  Development webpack compiled with existing source-map/lint warnings.
 
 No automated test infrastructure or permanent diagnostic API was introduced.
 No implementation commit/hash or completed status has been added to the external
