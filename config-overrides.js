@@ -50,5 +50,18 @@ module.exports = function override(config, env) {
     resolve: { fullySpecified: false },
   });
 
+  // Webpack's persistent filesystem cache treats everything under node_modules/
+  // as immutable and only re-validates a package by its package.json version.
+  // meld-clients-core is often replaced by a symlink to a local checkout
+  // (`npm link ../meld-clients-core`) and rebuilt in place, and its version
+  // never changes, so webpack would keep serving a stale copy. Exclude it from
+  // the managed set so its files are snapshotted by mtime like project source,
+  // whether it is symlinked or installed from git. The cost is a stat of a few
+  // hundred files at startup.
+  config.snapshot = {
+    ...config.snapshot,
+    managedPaths: [/^(.+?[\\/]node_modules[\\/](?!meld-clients-core[\\/]))/],
+  };
+
   return config;
 };
