@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import PropTypes, { InferProps } from "prop-types";
 import { connect } from "react-redux";
 import { bindActionCreators } from "redux";
+import Spinner from "react-bootstrap/Spinner";
 
 import SelectableScore from "../../selectable-score/selectable-score";
 import NextPageButton from "../../selectable-score/next-page-button";
@@ -82,7 +83,8 @@ export class Companion extends Component {
       videoOffset: 0, // in seconds
       activeWindow: 0.1, // window of notes before current instant considered active, in seconds
       traversalThreshold: 10, // max parallel traversal threads,
-      loading: true, // flip when traversals are completed
+      loading: true, // stays true until the score SVG is ready
+      loadingError: null,
       scoreFollowing: true, // if true, page automatically with playback
       showVelocities: true, // if true, visualise note velocities
       showInsertedDeleted: true, // if true, visualise note insertions and deletions
@@ -245,6 +247,7 @@ export class Companion extends Component {
         {
           observingScore: false,
           scoreComponentLoaded: true,
+          loading: false,
           notesOnPage: ReactDOM.findDOMNode(
             this.scoreComponent.current,
           ).querySelectorAll(".note"),
@@ -273,6 +276,11 @@ export class Companion extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
+    const scoreLoad = this.props.score.loadStatus?.[this.state.currentScore];
+    if (this.state.loading && scoreLoad?.status === "failed") {
+      this.handleLoadingError(new Error(scoreLoad.error));
+      return;
+    }
     if (
       prevProps.uri !== this.props.uri ||
       prevProps.selectedPerformance !== this.props.selectedPerformance
@@ -308,13 +316,7 @@ export class Companion extends Component {
       prevProps.traversalPool.running > 0 &&
       this.props.traversalPool.running === 0
     ) {
-      // finished all traversals
-      this.setState({ loading: false }, () => {
-        this.props.checkTraversalObjectives(
-          this.props.graph.graph,
-          this.props.graph.objectives,
-        );
-      });
+      this.scheduleTraversalObjectives();
     }
     if ("graph" in prevProps) {
       // check our traversal objectives if the graph has updated
@@ -323,7 +325,11 @@ export class Companion extends Component {
         this.props.graph.allObjectivesApplied
       ) {
         // outcomes have changed, need to update our projections!
-        this.processTraversalOutcomes(this.props.graph.outcomes);
+        try {
+          this.processTraversalOutcomes(this.props.graph.outcomes);
+        } catch (error) {
+          this.handleLoadingError(error);
+        }
       }
     }
     if (
@@ -365,8 +371,45 @@ export class Companion extends Component {
 
   componentWillUnmount() {
     // clean up...
+    cancelAnimationFrame(this.framingPaintFrame);
+    cancelAnimationFrame(this.framingWorkFrame);
     document.removeEventListener("keydown", this.monitorKeys);
   }
+
+  handleLoadingError = (error) => {
+    console.error("Could not load score and performances", error);
+    this.setState({
+      loading: false,
+      loadingError:
+        "We couldn’t load this score and its performances. Please reload to try again.",
+    });
+  };
+
+  scheduleTraversalObjectives = () => {
+    if (this.framingPaintFrame != null || this.framingWorkFrame != null) {
+      return;
+    }
+    this.setState({ loading: true, loadingError: null }, () => {
+      // Allow the loader to paint before framing blocks the main thread.
+      this.framingPaintFrame = requestAnimationFrame(() => {
+        this.framingPaintFrame = null;
+        this.framingWorkFrame = requestAnimationFrame(() => {
+          this.framingWorkFrame = null;
+          try {
+            if (!this.props.graph.graph.length) {
+              throw new Error("Traversal returned no graph data");
+            }
+            this.props.checkTraversalObjectives(
+              this.props.graph.graph,
+              this.props.graph.objectives,
+            );
+          } catch (error) {
+            this.handleLoadingError(error);
+          }
+        });
+      });
+    });
+  };
 
   getTargetNoteForModeSwitch = () => {
     // Determine which note to focus on after mode switch:
@@ -715,8 +758,33 @@ export class Companion extends Component {
   };
 
   render() {
-    if (this.state.loading) {
-      return <div id="wrapper">Loading, please wait</div>;
+    if (this.state.loadingError) {
+      return (
+        <div id="wrapper" className="py-5 text-center" role="alert">
+          <p>{this.state.loadingError}</p>
+          <button
+            className="btn btn-primary"
+            onClick={() => window.location.reload()}
+          >
+            Reload
+          </button>
+        </div>
+      );
+    }
+    const loader = (
+      <div
+        className="py-5 text-center"
+        role="status"
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <Spinner animation="border" aria-hidden="true" />
+        <p className="mt-3 mb-1">Loading score and performances…</p>
+        <p className="text-muted">This may take a few seconds.</p>
+      </div>
+    );
+    if (this.state.loading && !this.state.currentScore) {
+      return <div id="wrapper">{loader}</div>;
     } else {
       let currentTimeline = "";
       if (this.state.selectedPerformance) {
@@ -853,163 +921,181 @@ export class Companion extends Component {
           : "placeholder";
 
       return (
-        <div id="wrapper">
-          {featureVisElement}
-          <div id="instantBoundingBoxes">
-            {this.getInstantBoundingRectElements()}
-          </div>
-          {currentScore}
-          {pageControlsWrapper}
-          <div id="selectWrapper">
-            {this.state.performanceLoadError && (
-              <div role="alert" className="alert alert-warning">
-                {this.state.performanceLoadError}
-              </div>
-            )}
-            <select
-              name="segmentSelect"
-              onChange={this.handleSegmentSelected}
-              ref="segmentSelect"
-            >
-              <option value="none">Select a segment...</option>
-              {this.state.segments.map((seg) => {
-                return (
-                  <option key={seg["@id"]} value={seg["@id"]}>
-                    {seg["http://www.w3.org/2000/01/rdf-schema#label"] ||
-                      seg["@id"].substr(seg["@id"].lastIndexOf("#") + 1)}
-                  </option>
-                );
-              })}
-            </select>
-            <select
-              name="perfSelect"
-              value={performanceSelectValue}
-              onChange={(e) => this.handlePerformanceSelected(e.target.value)}
-            >
-              <option value="placeholder" disabled>
-                Select a rendition...
-              </option>
-              <option value="none">-- None --</option>
-              {this.state.performances
-                .sort((a, b) =>
-                  a["http://www.w3.org/2000/01/rdf-schema#label"].localeCompare(
-                    b["http://www.w3.org/2000/01/rdf-schema#label"],
-                  ),
-                )
-                .map((perf) => {
-                  const loadStatus = this.getPerformanceLoadStatus(perf);
+        <div id="wrapper" className="position-relative">
+          {this.state.loading && loader}
+          {/* Mount at full width so Verovio can render before revealing the UI. */}
+          <div
+            aria-hidden={this.state.loading || undefined}
+            style={
+              this.state.loading
+                ? {
+                    visibility: "hidden",
+                    position: "absolute",
+                    width: "100%",
+                    pointerEvents: "none",
+                  }
+                : undefined
+            }
+          >
+            {featureVisElement}
+            <div id="instantBoundingBoxes">
+              {this.getInstantBoundingRectElements()}
+            </div>
+            {currentScore}
+            {pageControlsWrapper}
+            <div id="selectWrapper">
+              {this.state.performanceLoadError && (
+                <div role="alert" className="alert alert-warning">
+                  {this.state.performanceLoadError}
+                </div>
+              )}
+              <select
+                name="segmentSelect"
+                onChange={this.handleSegmentSelected}
+                ref="segmentSelect"
+              >
+                <option value="none">Select a segment...</option>
+                {this.state.segments.map((seg) => {
                   return (
-                    <option
-                      key={perf["@id"]}
-                      value={perf["@id"]}
-                      disabled={loadStatus !== "ready"}
-                    >
-                      {perf["http://www.w3.org/2000/01/rdf-schema#label"]}
-                      {loadStatus === "loading"
-                        ? " — loading…"
-                        : loadStatus === "unavailable"
-                          ? " — unavailable"
-                          : ""}
+                    <option key={seg["@id"]} value={seg["@id"]}>
+                      {seg["http://www.w3.org/2000/01/rdf-schema#label"] ||
+                        seg["@id"].substr(seg["@id"].lastIndexOf("#") + 1)}
                     </option>
                   );
                 })}
-            </select>
-            &nbsp;
-            <span>
-              {this.state.performances.length &&
-              this.state.selectedPerformance ? (
-                <span>
-                  <span id="scoreFollowToggle">
-                    <input
-                      id="controlAutomaticPageTurning"
-                      type="checkbox"
-                      checked={this.state.scoreFollowing}
-                      onChange={() => {
-                        this.setState({
-                          scoreFollowing: !this.state.scoreFollowing,
-                        });
-                      }}
-                    />
-                    &nbsp;
-                    <label htmlFor="controlAutomaticPageTurning">
-                      Automatic page turning
-                    </label>
-                  </span>
-                  &nbsp;
-                  <span id="modeToggle">
-                    <input
-                      type="checkbox"
-                      id="controlFeatureVisualisation"
-                      ref="modeToggle"
-                      checked={this.state.mode === "featureVis"}
-                      onChange={() => {
-                        if (this.state.mode === "featureVis") {
-                          this.setModePageView();
-                        } else {
-                          this.setModeFeatureVis();
-                        }
-                      }}
-                    />
-                    &nbsp;
-                    <label htmlFor="controlFeatureVisualisation">
-                      Feature visualisation
-                    </label>
-                  </span>
-                </span>
-              ) : (
-                <span />
-              )}
-            </span>
-            {this.state.selectedPerformance ? (
-              <div id="currentPerformanceLabel">
-                Current performance:{" "}
-                <strong>
-                  {
-                    this.state.selectedPerformance[
+              </select>
+              <select
+                name="perfSelect"
+                value={performanceSelectValue}
+                onChange={(e) => this.handlePerformanceSelected(e.target.value)}
+              >
+                <option value="placeholder" disabled>
+                  Select a rendition...
+                </option>
+                <option value="none">-- None --</option>
+                {this.state.performances
+                  .sort((a, b) =>
+                    a[
                       "http://www.w3.org/2000/01/rdf-schema#label"
-                    ]
-                  }
-                </strong>
-                {!this.props.demo && (
-                  <button
-                    className="delete"
-                    onClick={() => this.deleteSelectedPerformance()}
-                  >
-                    Delete performance
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div />
-            )}
-          </div>
-          <div className="videoWrapper">
-            {this.state.selectedVideo && (
-              <AuthenticatedMediaPlayer
-                src={this.state.selectedVideo}
-                demo={!!this.props.demo}
-                fetchFn={this.props.fetch}
-                playing={this.state.isPlaying}
-                onPlay={this.handlePlayerPlay}
-                onPause={this.handlePlayerPause}
-                progressInterval={10} // Update every 10ms
-                onProgress={(p) => {
-                  this.tick(this.state.selectedVideo, p["playedSeconds"]);
-                }}
-                onReady={() => {
-                  if (this.state.seekTo && this.player.current) {
-                    console.log(
-                      "Render loop onReady: seeking to ",
-                      this.state.seekTo,
+                    ].localeCompare(
+                      b["http://www.w3.org/2000/01/rdf-schema#label"],
+                    ),
+                  )
+                  .map((perf) => {
+                    const loadStatus = this.getPerformanceLoadStatus(perf);
+                    return (
+                      <option
+                        key={perf["@id"]}
+                        value={perf["@id"]}
+                        disabled={loadStatus !== "ready"}
+                      >
+                        {perf["http://www.w3.org/2000/01/rdf-schema#label"]}
+                        {loadStatus === "loading"
+                          ? " — loading…"
+                          : loadStatus === "unavailable"
+                            ? " — unavailable"
+                            : ""}
+                      </option>
                     );
-                    this.player.current.seekTo(Math.floor(this.state.seekTo));
-                    this.setState({ seekTo: "" });
-                  }
-                }}
-                playerRef={this.player}
-                audioOnly={!this.props.demo}
-              />
-            )}
+                  })}
+              </select>
+              &nbsp;
+              <span>
+                {this.state.performances.length &&
+                this.state.selectedPerformance ? (
+                  <span>
+                    <span id="scoreFollowToggle">
+                      <input
+                        id="controlAutomaticPageTurning"
+                        type="checkbox"
+                        checked={this.state.scoreFollowing}
+                        onChange={() => {
+                          this.setState({
+                            scoreFollowing: !this.state.scoreFollowing,
+                          });
+                        }}
+                      />
+                      &nbsp;
+                      <label htmlFor="controlAutomaticPageTurning">
+                        Automatic page turning
+                      </label>
+                    </span>
+                    &nbsp;
+                    <span id="modeToggle">
+                      <input
+                        type="checkbox"
+                        id="controlFeatureVisualisation"
+                        ref="modeToggle"
+                        checked={this.state.mode === "featureVis"}
+                        onChange={() => {
+                          if (this.state.mode === "featureVis") {
+                            this.setModePageView();
+                          } else {
+                            this.setModeFeatureVis();
+                          }
+                        }}
+                      />
+                      &nbsp;
+                      <label htmlFor="controlFeatureVisualisation">
+                        Feature visualisation
+                      </label>
+                    </span>
+                  </span>
+                ) : (
+                  <span />
+                )}
+              </span>
+              {this.state.selectedPerformance ? (
+                <div id="currentPerformanceLabel">
+                  Current performance:{" "}
+                  <strong>
+                    {
+                      this.state.selectedPerformance[
+                        "http://www.w3.org/2000/01/rdf-schema#label"
+                      ]
+                    }
+                  </strong>
+                  {!this.props.demo && (
+                    <button
+                      className="delete"
+                      onClick={() => this.deleteSelectedPerformance()}
+                    >
+                      Delete performance
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div />
+              )}
+            </div>
+            <div className="videoWrapper">
+              {this.state.selectedVideo && (
+                <AuthenticatedMediaPlayer
+                  src={this.state.selectedVideo}
+                  demo={!!this.props.demo}
+                  fetchFn={this.props.fetch}
+                  playing={this.state.isPlaying}
+                  onPlay={this.handlePlayerPlay}
+                  onPause={this.handlePlayerPause}
+                  progressInterval={10} // Update every 10ms
+                  onProgress={(p) => {
+                    this.tick(this.state.selectedVideo, p["playedSeconds"]);
+                  }}
+                  onReady={() => {
+                    if (this.state.seekTo && this.player.current) {
+                      console.log(
+                        "Render loop onReady: seeking to ",
+                        this.state.seekTo,
+                      );
+                      this.player.current.seekTo(Math.floor(this.state.seekTo));
+                      this.setState({ seekTo: "" });
+                    }
+                  }}
+                  playerRef={this.player}
+                  audioOnly={!this.props.demo}
+                />
+              )}
+            </div>
           </div>
         </div>
       );
@@ -1557,6 +1643,14 @@ export class Companion extends Component {
   };
 
   processTraversalOutcomes = (outcomes) => {
+    if (
+      outcomes.length !== 5 ||
+      !Array.from(outcomes).every(
+        (outcome) => outcome && typeof outcome === "object",
+      )
+    ) {
+      throw new Error("Traversal objectives did not all complete successfully");
+    }
     console.log("PROCESSING OUTCOMES: ", outcomes);
     let segments = [];
     let performances = [];
@@ -1790,6 +1884,8 @@ export class Companion extends Component {
             performedElements,
             performanceErrors,
           });
+        } else {
+          throw new Error("Performance has no published score");
         }
       } else if (Object.keys(outcomes[4]).length) {
         let currentScore;
@@ -1812,6 +1908,8 @@ export class Companion extends Component {
           mode: "pageView",
           scoreFollowing: false,
         });
+      } else {
+        throw new Error("Traversal returned no score");
       }
     }
   };
