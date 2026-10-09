@@ -1,4 +1,10 @@
 import "./runawayEffects";
+import { installRateLimiter } from "./util/installRateLimiter";
+
+// Must run before anything makes a request: the Solid auth library, LDO and
+// meld all call the global fetch by name.
+installRateLimiter();
+
 import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";

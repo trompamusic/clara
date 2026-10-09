@@ -7,9 +7,14 @@ import { bindActionCreators } from "redux";
 import Footer from "./Footer";
 import { useDispatch, useSelector } from "react-redux";
 import { setFetchFunction } from "meld-clients-core/lib/actions";
+import { dataset } from "@ldo/solid-react";
+import { rateLimitAuthFetch } from "../util/installRateLimiter";
 
 function LayoutContent() {
-  const { session, fetch, ranInitialAuthCheck } = useSolidAuth();
+  const { session, fetch: authFetch, ranInitialAuthCheck } = useSolidAuth();
+  // Queue and retry *before* the auth library signs each request, so a
+  // delayed or retried request always carries a fresh DPoP proof.
+  const fetch = rateLimitAuthFetch(authFetch);
   const navigate = useNavigate();
   const location = useLocation();
   const [routerReady, setRouterReady] = useState(false);
@@ -45,6 +50,10 @@ function LayoutContent() {
   useEffect(() => {
     if (session.isLoggedIn && fetch) {
       boundActions.setFetchFunction(fetch);
+      // LDO's own reads (useResource etc.) use the fetch in its dataset
+      // context, which the provider set to the raw auth fetch. Point it at
+      // the rate-limited one too.
+      dataset.setContext("solid", { fetch });
     }
   }, [session.isLoggedIn, fetch, boundActions]);
 

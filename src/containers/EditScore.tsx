@@ -14,6 +14,7 @@ import {
 import { Button, Table, OverlayTrigger, Tooltip } from "react-bootstrap";
 import AuthenticatedMediaPlayer from "./companion/AuthenticatedMediaPlayer";
 import { BiDownload } from "react-icons/bi";
+import { rateLimitAuthFetch } from "../util/installRateLimiter";
 
 // Format date with timezone handling
 const formatDate = (
@@ -68,7 +69,8 @@ const PerformanceRow: FunctionComponent<{
   isDeleting: boolean;
 }> = ({ performance, scoreUri, onDelete, isDeleting }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const { fetch } = useSolidAuth();
+  const { fetch: authFetch } = useSolidAuth();
+  const fetch = rateLimitAuthFetch(authFetch);
 
   const performanceResource = useResource(performance.uri);
   const performanceData = useSubject(PerformanceShapeType, performance.uri);

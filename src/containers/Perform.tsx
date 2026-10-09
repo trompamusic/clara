@@ -4,6 +4,7 @@ import { useSolidAuth } from "@ldo/solid-react";
 import Companion from "./companion/Companion";
 import { useAuthentication, useMainContainer } from "../util/hooks";
 import WebMidiRecorder from "./midi-recorder";
+import { rateLimitAuthFetch } from "../util/installRateLimiter";
 
 /**
  * The main wrapper to perform a score
@@ -12,7 +13,8 @@ import WebMidiRecorder from "./midi-recorder";
  */
 export default function Perform() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { fetch } = useSolidAuth();
+  const { fetch: authFetch } = useSolidAuth();
+  const fetch = rateLimitAuthFetch(authFetch);
   const {
     isAuthenticated,
     isLoading: authLoading,
