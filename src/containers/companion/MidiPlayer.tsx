@@ -4,6 +4,7 @@ import { useSolidAuth } from "@ldo/solid-react";
 import { useAuthentication } from "../../util/hooks";
 import { PlayerElement } from "html-midi-player";
 import { createComponent, EventName } from "@lit-labs/react";
+import { rateLimitAuthFetch } from "../../util/installRateLimiter";
 
 // Wrap the <midi-player> web component in a React class that also handles events.
 export const MidiPlayerElement = createComponent({
@@ -22,7 +23,8 @@ interface MidiPlayerProps {
 
 export const MidiPlayer = forwardRef<PlayerElement, MidiPlayerProps>(
   ({ url }: MidiPlayerProps, ref) => {
-    const { session, fetch } = useSolidAuth();
+    const { session, fetch: authFetch } = useSolidAuth();
+    const fetch = rateLimitAuthFetch(authFetch);
     const { isAuthenticated, isLoading } = useAuthentication();
     const [notes, setNotes] = useState<NoteSequence | null>(null);
 
