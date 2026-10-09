@@ -6,13 +6,14 @@ import { createStore, applyMiddleware } from "redux";
 import thunk from "redux-thunk";
 import ReduxPromise from "redux-promise";
 
-import { reducers } from "meld-clients-core/lib/reducers";
+import { createReducers } from "meld-clients-core/lib/reducers";
 import App from "./containers/App";
 
 const createStoreWithMiddleware = applyMiddleware(
   thunk,
   ReduxPromise,
 )(createStore);
+const reducers = createReducers({ computeOutcomesHash: false });
 
 ReactDOM.render(
   <Provider store={createStoreWithMiddleware(reducers)}>
