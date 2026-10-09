@@ -55,7 +55,7 @@ const vrvOptionsFeatureVis = {
   svgAdditionalAttribute: ["clef@shape", "clef@line"],
 };
 
-class Companion extends Component {
+export class Companion extends Component {
   /** @type {CompanionProps} */
   props;
   constructor(props) {
@@ -70,6 +70,7 @@ class Companion extends Component {
       barlinesOnPage: [],
       selectedVideo: "",
       selectedPerformance: "",
+      performanceLoadError: "",
       performanceSelectionCleared: false,
       lastMediaTick: 0,
       previouslyActive: [],
@@ -468,9 +469,9 @@ class Companion extends Component {
       );
       const thisTimeline =
         thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
-      const deletedNotesInstant = this.state.instantsByPerfTime[
-        thisTimeline
-      ].filter((i) => {
+      const timelineInstants = this.state.instantsByPerfTime[thisTimeline];
+      if (!timelineInstants) return;
+      const deletedNotesInstant = timelineInstants.filter((i) => {
         let dur = i["http://purl.org/NET/c4dm/timeline.owl#at"];
         dur = parseInt(dur.substr(1, dur.length - 2));
         return dur === -1; // all deleted notes "occur" at this instant
@@ -860,6 +861,11 @@ class Companion extends Component {
           {currentScore}
           {pageControlsWrapper}
           <div id="selectWrapper">
+            {this.state.performanceLoadError && (
+              <div role="alert" className="alert alert-warning">
+                {this.state.performanceLoadError}
+              </div>
+            )}
             <select
               name="segmentSelect"
               onChange={this.handleSegmentSelected}
@@ -891,9 +897,19 @@ class Companion extends Component {
                   ),
                 )
                 .map((perf) => {
+                  const loadStatus = this.getPerformanceLoadStatus(perf);
                   return (
-                    <option key={perf["@id"]} value={perf["@id"]}>
+                    <option
+                      key={perf["@id"]}
+                      value={perf["@id"]}
+                      disabled={loadStatus !== "ready"}
+                    >
                       {perf["http://www.w3.org/2000/01/rdf-schema#label"]}
+                      {loadStatus === "loading"
+                        ? " — loading…"
+                        : loadStatus === "unavailable"
+                          ? " — unavailable"
+                          : ""}
                     </option>
                   );
                 })}
@@ -1097,6 +1113,36 @@ class Companion extends Component {
     }
   };
 
+  getPerformanceLoadStatus = (performance) => {
+    const signal = this.ensureArray(
+      performance["http://purl.org/ontology/mo/recorded_as"],
+    )[0];
+    const time = this.ensureArray(
+      signal?.["http://purl.org/ontology/mo/time"],
+    )[0];
+    const timeline = this.ensureArray(
+      time?.["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"],
+    )[0]?.["@id"];
+    if (
+      this.state.instantsByPerfTime[timeline]?.length &&
+      this.state.instantsByNoteId[timeline]
+    ) {
+      return "ready";
+    }
+    // Traversal failures are not tracked per URL by meld. Missing alignment
+    // data is only considered unavailable once traversal and framing finish.
+    const { traversalPool, graph } = this.props;
+    if (
+      this.state.loading ||
+      traversalPool.running > 0 ||
+      Object.keys(traversalPool.pool).length > 0 ||
+      !graph.allObjectivesApplied
+    ) {
+      return "loading";
+    }
+    return "unavailable";
+  };
+
   handlePerformanceSelected = (perfId, options = {}) => {
     const { notifyParent = true } = options;
     console.log("Rendition selected: ", perfId);
@@ -1111,6 +1157,7 @@ class Companion extends Component {
       this.setState(
         {
           selectedPerformance: "",
+          performanceLoadError: "",
           selectedVideo: "",
           seekTo: "",
           performanceSelectionCleared: true,
@@ -1133,6 +1180,17 @@ class Companion extends Component {
       console.warn("Unable to locate performance", perfId);
       return;
     }
+    const loadStatus = this.getPerformanceLoadStatus(selected);
+    if (loadStatus !== "ready") {
+      const message =
+        loadStatus === "loading"
+          ? "This rendition is still loading."
+          : "This rendition’s timeline couldn’t be loaded. Try reloading the page later.";
+      if (this.state.performanceLoadError !== message) {
+        this.setState({ performanceLoadError: message });
+      }
+      return;
+    }
     const selectedVideo =
       selected["http://purl.org/ontology/mo/recorded_as"][
         "http://purl.org/ontology/mo/available_as"
@@ -1142,6 +1200,7 @@ class Companion extends Component {
     let newState = {
       selectedVideo,
       selectedPerformance,
+      performanceLoadError: "",
       performanceSelectionCleared: false,
       isPlaying: false,
     };
@@ -1176,42 +1235,18 @@ class Companion extends Component {
     const initialPerformanceId = this.props.selectedPerformance;
     if (
       !initialPerformanceId ||
-      !this.isGraphReady() ||
       this.initialPerformanceAppliedId === initialPerformanceId
     ) {
       return;
     }
-    const timelineIds = Object.keys(this.state.instantsByNoteId || {});
-
     const matchingPerformance =
       this.findPerformanceByIdentifier(initialPerformanceId);
-    if (!matchingPerformance) {
-      return;
+    if (!matchingPerformance) return;
+    const loadStatus = this.getPerformanceLoadStatus(matchingPerformance);
+    if (loadStatus === "loading") return;
+    if (loadStatus === "ready") {
+      this.initialPerformanceAppliedId = initialPerformanceId;
     }
-
-    const performances =
-      this.ensureArray(
-        matchingPerformance["http://purl.org/ontology/mo/recorded_as"],
-      ) || [];
-    const matchingTimeline = performances
-      .map((signal) =>
-        this.ensureArray(signal["http://purl.org/ontology/mo/time"]),
-      )
-      .flat()
-      .map((instant) =>
-        this.ensureArray(
-          instant["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"],
-        ),
-      )
-      .flat()
-      .map((timeline) => timeline && timeline["@id"])
-      .find((id) => id && timelineIds.includes(id));
-
-    if (!matchingTimeline) {
-      return;
-    }
-
-    this.initialPerformanceAppliedId = initialPerformanceId;
     this.handlePerformanceSelected(matchingPerformance["@id"], {
       notifyParent: false,
     });
