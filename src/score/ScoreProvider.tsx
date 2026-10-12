@@ -1,9 +1,4 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import equal from "fast-deep-equal";
 import { ScoreRenderer, TimemapEntry, VerovioOptions } from "./ScoreRenderer";
 
@@ -25,7 +20,7 @@ export type ScoreState =
   | ReadyScore;
 
 export interface ScoreCommands {
-  load(uri: string, options: VerovioOptions): void;
+  load(uri: string, options: VerovioOptions, downloadedMei?: string): void;
   setOptions(options: VerovioOptions): void;
   applyModeChange(options: VerovioOptions, targetNote: string | null): void;
   nextPage(): void;
@@ -107,7 +102,7 @@ function createSession(publish: (state: ScoreState) => void) {
     if (!equal(options, score.options)) score.setOptions(options);
   };
   const commands: ScoreCommands = {
-    load(nextUri, nextOptions) {
+    load(nextUri, nextOptions, downloadedMei) {
       dispose();
       uri = nextUri;
       options = nextOptions;
@@ -117,13 +112,16 @@ function createSession(publish: (state: ScoreState) => void) {
       emit({ status: "loading", uri });
       void (async () => {
         try {
-          const response = await fetch(nextUri, {
-            mode: "cors",
-            signal: controller.signal,
-          });
-          if (!response.ok)
-            throw new Error(`Could not load score: HTTP ${response.status}`);
-          const mei = await response.text();
+          let mei = downloadedMei;
+          if (mei === undefined) {
+            const response = await fetch(nextUri, {
+              mode: "cors",
+              signal: controller.signal,
+            });
+            if (!response.ok)
+              throw new Error(`Could not load score: HTTP ${response.status}`);
+            mei = await response.text();
+          }
           if (controller.signal.aborted || request !== controller) return;
           // Construct only after data arrives; options may have changed during fetch.
           const score = new ScoreRenderer();

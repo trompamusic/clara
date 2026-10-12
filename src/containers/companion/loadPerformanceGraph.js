@@ -36,6 +36,8 @@ export function loadPerformanceGraph({
     applyMiddleware(thunk),
   );
   return new Promise((resolve, reject) => {
+    const requests = new AbortController();
+    let score = null;
     let settled = false;
     let scheduled = false;
     let processing = false;
@@ -47,8 +49,10 @@ export function loadPerformanceGraph({
       unsubscribe();
       cancelAnimationFrame(frame);
       signal.removeEventListener("abort", abort);
-      if (error) reject(error);
-      else resolve(outcomes);
+      if (error) {
+        requests.abort();
+        reject(error);
+      } else resolve({ outcomes, score });
     };
     const abort = () =>
       finish(new DOMException("Page load cancelled", "AbortError"));
@@ -72,6 +76,31 @@ export function loadPerformanceGraph({
           }
           return;
         }
+        if (!score) {
+          const published = state.graph.graph.find(
+            (node) => node["http://purl.org/ontology/mo/published_as"],
+          );
+          const scoreUri =
+            published?.["http://purl.org/ontology/mo/published_as"]?.[0]?.[
+              "@id"
+            ];
+          if (scoreUri) {
+            score = { uri: scoreUri, mei: null };
+            // Use the same global, rate-limited fetch as the score provider.
+            fetch(scoreUri, { mode: "cors", signal: requests.signal })
+              .then(async (response) => {
+                if (!response.ok)
+                  throw new Error(
+                    `Could not load score: HTTP ${response.status}`,
+                  );
+                const mei = await response.text();
+                if (settled) return;
+                score.mei = mei;
+                schedule();
+              })
+              .catch((error) => finish(error));
+          }
+        }
         while (
           state.traversalPool.running < 10 &&
           Object.keys(state.traversalPool.pool).length
@@ -82,15 +111,19 @@ export function loadPerformanceGraph({
         }
         const pending =
           state.traversalPool.running +
-          Object.keys(state.traversalPool.pool).length;
+          Object.keys(state.traversalPool.pool).length +
+          (score && score.mei === null ? 1 : 0);
         onProgress({
           status: "traversing",
-          loaded: state.graph.graphDocs.length,
+          loaded:
+            state.graph.graphDocs.length +
+            (score && score.mei !== null ? 1 : 0),
           pending,
         });
         if (pending) return;
         if (!state.graph.graph.length)
           throw new Error("Traversal returned no score data");
+        if (!score) throw new Error("Traversal returned no published score");
         processing = true;
         onProgress({ status: "processing" });
         // Paint the processing state before JSON-LD framing occupies the thread.
@@ -126,9 +159,12 @@ export function loadPerformanceGraph({
     signal.addEventListener("abort", abort, { once: true });
     store.dispatch(
       setFetchFunction(async (input, init) => {
-        if (signal.aborted)
+        if (requests.signal.aborted)
           throw new DOMException("Page load cancelled", "AbortError");
-        const response = await fetchFn(input, { ...init, signal });
+        const response = await fetchFn(input, {
+          ...init,
+          signal: requests.signal,
+        });
         if (!response.ok && response.status !== 304)
           throw new Error(`HTTP ${response.status}: ${input}`);
         return response;

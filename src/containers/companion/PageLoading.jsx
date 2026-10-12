@@ -20,9 +20,9 @@ export default function PageLoading({ load }) {
     );
   }
   const messages = {
-    traversing: "Loading score and performances…",
-    processing: "Processing performances…",
-    score: "Loading and rendering score…",
+    traversing: "Downloading…",
+    processing: "Processing…",
+    score: "Processing…",
   };
   return (
     <div

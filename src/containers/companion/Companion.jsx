@@ -133,9 +133,9 @@ export class Companion extends Component {
       signal,
       onProgress: (load) => this.setState({ load }),
     })
-      .then((outcomes) => {
+      .then(({ outcomes, score }) => {
         if (signal.aborted) return;
-        this.processTraversalOutcomes(outcomes);
+        this.processTraversalOutcomes(outcomes, score);
       })
       .catch((error) => {
         if (!signal.aborted) this.failLoad(error);
@@ -1412,7 +1412,7 @@ export class Companion extends Component {
     return Array.isArray(val) ? val : [val];
   };
 
-  processTraversalOutcomes = (outcomes) => {
+  processTraversalOutcomes = (outcomes, downloadedScore) => {
     console.log("PROCESSING OUTCOMES: ", outcomes);
     let segments = [];
     let performances = [];
@@ -1633,6 +1633,8 @@ export class Companion extends Component {
             currentPerformance["http://purl.org/ontology/mo/published_as"][
               "@id"
             ];
+          if (currentScore !== downloadedScore.uri)
+            throw new Error("Performance references a different score");
           ReactDOM.unstable_batchedUpdates(() => {
             const changed = currentScore !== this.state.currentScore;
             this.setState({
@@ -1651,6 +1653,7 @@ export class Companion extends Component {
               this.props.scoreCommands.load(
                 currentScore,
                 this.state.vrvOptions,
+                downloadedScore.mei,
               );
           });
         } else {
@@ -1668,6 +1671,8 @@ export class Companion extends Component {
             outcomes[4]["http://purl.org/ontology/mo/published_as"]["@id"];
         }
         // there are no performances -- force pageView mode and disable scorefollowing
+        if (currentScore !== downloadedScore.uri)
+          throw new Error("Score metadata references a different score");
         ReactDOM.unstable_batchedUpdates(() => {
           const changed = currentScore !== this.state.currentScore;
           this.setState({
@@ -1680,7 +1685,11 @@ export class Companion extends Component {
             ...(changed ? this.scoreResetState() : {}),
           });
           if (changed)
-            this.props.scoreCommands.load(currentScore, vrvOptionsPageView);
+            this.props.scoreCommands.load(
+              currentScore,
+              vrvOptionsPageView,
+              downloadedScore.mei,
+            );
           else this.props.scoreCommands.setOptions(vrvOptionsPageView);
         });
       } else {

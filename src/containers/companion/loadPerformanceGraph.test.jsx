@@ -66,6 +66,10 @@ beforeEach(() => {
   jest.spyOn(console, "log").mockImplementation(() => {});
   jest.spyOn(console, "warn").mockImplementation(() => {});
   setRuntime({ toolkit: jest.fn(() => fakeToolkit()) });
+  global.fetch = jest.fn(async () => ({
+    ok: true,
+    text: async () => "<mei/>",
+  }));
 });
 afterEach(() => {
   setRuntime();
@@ -110,10 +114,15 @@ test("the page waits for discovered performance and timeline responses, then sco
   );
   expect(view.getByRole("status")).toBeVisible();
   expect(view.getByRole("status")).toHaveTextContent(
-    "Loaded 1 documents · 1 pending",
+    "Loaded 1 documents · 2 pending",
   );
   expect(view.container.querySelector(".score")).toBeNull();
-  expect(global.fetch).not.toHaveBeenCalled();
+  expect(global.fetch).toHaveBeenCalledWith(mei, expect.anything());
+  await act(async () =>
+    score.resolve({ ok: true, text: async () => "<mei/>" }),
+  );
+  expect(global.verovio.toolkit).not.toHaveBeenCalled();
+  expect(view.getByRole("status")).toHaveTextContent("Downloading…");
 
   await act(async () => take.resolve(response(performance)));
   await waitFor(() =>
@@ -123,19 +132,57 @@ test("the page waits for discovered performance and timeline responses, then sco
   expect(view.container.querySelector(".score")).toBeNull();
 
   await act(async () => times.resolve(response(timeline)));
-  await waitFor(() =>
-    expect(global.fetch).toHaveBeenCalledWith(mei, expect.anything()),
-  );
-  expect(view.getByRole("status")).toHaveTextContent(
-    "Loading and rendering score…",
-  );
-  expect(view.container.querySelector(".score")).not.toBeVisible();
-  await act(async () =>
-    score.resolve({ ok: true, text: async () => "<mei/>" }),
-  );
+  expect(view.getByRole("status")).toHaveTextContent("Processing…");
   await waitFor(() => expect(view.queryByRole("status")).toBeNull());
   expect(view.container.querySelector(".score > svg")).toBeVisible();
   expect(fetchFn).toHaveBeenCalledTimes(3);
+  expect(global.fetch).toHaveBeenCalledTimes(1);
+});
+
+test("a failed MEI download aborts performance requests without waiting for them", async () => {
+  jest.spyOn(console, "error").mockImplementation(() => {});
+  const take = deferred();
+  const fetchFn = jest.fn((uri) =>
+    uri === performance ? take.promise : Promise.resolve(response(uri)),
+  );
+  global.fetch = jest.fn(async () => ({ ok: false, status: 404 }));
+  const view = render(
+    <ScoreProvider>
+      <Page fetchFn={fetchFn} />
+    </ScoreProvider>,
+  );
+  await waitFor(() => expect(view.getByRole("alert")).toBeVisible());
+  const request = fetchFn.mock.calls.find(([uri]) => uri === performance);
+  expect(request[1].signal.aborted).toBe(true);
+  expect(view.queryByRole("status")).toBeNull();
+  expect(global.verovio.toolkit).not.toHaveBeenCalled();
+  await act(async () => take.resolve(response(performance)));
+  expect(fetchFn).toHaveBeenCalledTimes(2);
+});
+
+test("processing waits for the MEI body even when traversal has finished", async () => {
+  const body = deferred();
+  global.fetch = jest.fn(async () => ({ ok: true, text: () => body.promise }));
+  const fetchFn = jest.fn(async (uri) => response(uri));
+  const progress = jest.fn();
+  const result = loadPerformanceGraph({
+    uri: root,
+    params: { extendObjectPrefix: ["https://example.org/"] },
+    fetch: fetchFn,
+    signal: new AbortController().signal,
+    onProgress: progress,
+  });
+  await waitFor(() =>
+    expect(progress).toHaveBeenLastCalledWith({
+      status: "traversing",
+      loaded: 3,
+      pending: 1,
+    }),
+  );
+  body.resolve("<mei/>");
+  await expect(result).resolves.toMatchObject({
+    score: { uri: mei, mei: "<mei/>" },
+  });
 });
 
 test("cancelling a load aborts its requests and prevents later processing", async () => {
@@ -187,7 +234,7 @@ test("each visit downloads its own graph instead of reusing a previous traversal
     });
   await load();
   fetchFn.mockClear();
-  const outcomes = await load();
+  const { outcomes } = await load();
   expect(fetchFn).toHaveBeenCalledTimes(3);
   expect(outcomes[0]["@id"]).toBe(performance);
 });
