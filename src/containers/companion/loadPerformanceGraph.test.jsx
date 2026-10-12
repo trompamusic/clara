@@ -109,6 +109,9 @@ test("the page waits for discovered performance and timeline responses, then sco
     expect(fetchFn).toHaveBeenCalledWith(performance, expect.anything()),
   );
   expect(view.getByRole("status")).toBeVisible();
+  expect(view.getByRole("status")).toHaveTextContent(
+    "Loaded 1 documents · 1 pending",
+  );
   expect(view.container.querySelector(".score")).toBeNull();
   expect(global.fetch).not.toHaveBeenCalled();
 
@@ -123,7 +126,9 @@ test("the page waits for discovered performance and timeline responses, then sco
   await waitFor(() =>
     expect(global.fetch).toHaveBeenCalledWith(mei, expect.anything()),
   );
-  expect(view.getByRole("status")).toBeVisible();
+  expect(view.getByRole("status")).toHaveTextContent(
+    "Loading and rendering score…",
+  );
   expect(view.container.querySelector(".score")).not.toBeVisible();
   await act(async () =>
     score.resolve({ ok: true, text: async () => "<mei/>" }),
@@ -165,6 +170,7 @@ test("a failed root request ends the page load with an error", async () => {
     </ScoreProvider>,
   );
   await waitFor(() => expect(view.getByRole("alert")).toBeVisible());
+  expect(view.getByRole("button", { name: "Reload" })).toBeVisible();
   expect(view.queryByRole("status")).toBeNull();
   expect(view.container.querySelector(".score")).toBeNull();
 });

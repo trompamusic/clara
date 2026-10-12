@@ -9,6 +9,7 @@ import ClaraScore from "../../score/ClaraScore";
 import PageControls from "../../score/PageControls";
 import withScore from "../../score/withScore";
 import { loadPerformanceGraph } from "./loadPerformanceGraph";
+import PageLoading from "./PageLoading";
 
 import {
   registerClock,
@@ -648,17 +649,12 @@ export class Companion extends Component {
   };
 
   render() {
-    if (this.state.load.status === "error") {
+    if (
+      ["traversing", "processing", "error"].includes(this.state.load.status)
+    ) {
       return (
-        <div id="wrapper" role="alert">
-          Could not load score and performances.
-        </div>
-      );
-    }
-    if (["traversing", "processing"].includes(this.state.load.status)) {
-      return (
-        <div id="wrapper" role="status">
-          Loading, please wait
+        <div id="wrapper">
+          <PageLoading load={this.state.load} />
         </div>
       );
     } else {
@@ -720,7 +716,7 @@ export class Companion extends Component {
       return (
         <div id="wrapper" className="position-relative">
           {this.state.load.status !== "ready" && (
-            <div role="status">Loading, please wait</div>
+            <PageLoading load={this.state.load} />
           )}
           <div
             aria-hidden={this.state.load.status !== "ready" || undefined}
