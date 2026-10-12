@@ -179,6 +179,7 @@ class SelectableScore extends Component {
   }
 
   componentDidMount() {
+    this.checkScoreReady();
     // handle fetching of annotation container contents
     if (
       this.props.annotationContainerUri &&
@@ -223,25 +224,7 @@ class SelectableScore extends Component {
       }
     }
 
-    if (!prevState.scoreComponentLoaded && this.scoreComponent.current) {
-      // first load of score component - run onScoreReady callback if provided, and start observing for DOM changes
-      const svgElement = ReactDOM.findDOMNode(
-        this.scoreComponent.current,
-      ).querySelector("svg");
-      if (svgElement) {
-        this.setState({ scoreComponentLoaded: true }, () => {
-          typeof this.props.onScoreReady === "function" &&
-            this.props.onScoreReady(svgElement, this.props.score.vrvTk);
-          this.observer.observe(
-            ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(
-              ".score",
-            ),
-            { childList: true },
-          );
-          this.enableSelector();
-        });
-      }
-    }
+    this.checkScoreReady();
     if (prevProps.selectorString !== this.props.selectorString) {
       // selector changed (e.g. from .note to .measure), re-initialise selectors
       this.setState({ selectorString: this.props.selectorString }, () =>
@@ -259,6 +242,28 @@ class SelectableScore extends Component {
       this.setState({ vrvOptions: this.props.vrvOptions }, () =>
         this.props.scoreSetOptions(this.props.uri, this.state.vrvOptions),
       );
+    }
+  }
+
+  checkScoreReady() {
+    if (!this.state.scoreComponentLoaded && this.scoreComponent.current) {
+      // first load of score component - run onScoreReady callback if provided, and start observing for DOM changes
+      const svgElement = ReactDOM.findDOMNode(
+        this.scoreComponent.current,
+      ).querySelector("svg");
+      if (svgElement) {
+        this.setState({ scoreComponentLoaded: true }, () => {
+          typeof this.props.onScoreReady === "function" &&
+            this.props.onScoreReady(svgElement, this.props.score.vrvTk);
+          this.observer.observe(
+            ReactDOM.findDOMNode(this.scoreComponent.current).querySelector(
+              ".score",
+            ),
+            { childList: true },
+          );
+          this.enableSelector();
+        });
+      }
     }
   }
 

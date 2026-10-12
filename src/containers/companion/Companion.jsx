@@ -84,6 +84,7 @@ export class Companion extends Component {
       activeWindow: 0.1, // window of notes before current instant considered active, in seconds
       traversalThreshold: 10, // max parallel traversal threads,
       loading: true, // stays true until the score SVG is ready
+      processingPerformances: false,
       loadingError: null,
       scoreFollowing: true, // if true, page automatically with playback
       showVelocities: true, // if true, visualise note velocities
@@ -389,26 +390,29 @@ export class Companion extends Component {
     if (this.framingPaintFrame != null || this.framingWorkFrame != null) {
       return;
     }
-    this.setState({ loading: true, loadingError: null }, () => {
-      // Allow the loader to paint before framing blocks the main thread.
-      this.framingPaintFrame = requestAnimationFrame(() => {
-        this.framingPaintFrame = null;
-        this.framingWorkFrame = requestAnimationFrame(() => {
-          this.framingWorkFrame = null;
-          try {
-            if (!this.props.graph.graph.length) {
-              throw new Error("Traversal returned no graph data");
+    this.setState(
+      { loading: true, loadingError: null, processingPerformances: true },
+      () => {
+        // Allow the loader to paint before framing blocks the main thread.
+        this.framingPaintFrame = requestAnimationFrame(() => {
+          this.framingPaintFrame = null;
+          this.framingWorkFrame = requestAnimationFrame(() => {
+            this.framingWorkFrame = null;
+            try {
+              if (!this.props.graph.graph.length) {
+                throw new Error("Traversal returned no graph data");
+              }
+              this.props.checkTraversalObjectives(
+                this.props.graph.graph,
+                this.props.graph.objectives,
+              );
+            } catch (error) {
+              this.handleLoadingError(error);
             }
-            this.props.checkTraversalObjectives(
-              this.props.graph.graph,
-              this.props.graph.objectives,
-            );
-          } catch (error) {
-            this.handleLoadingError(error);
-          }
+          });
         });
-      });
-    });
+      },
+    );
   };
 
   getTargetNoteForModeSwitch = () => {
@@ -771,6 +775,21 @@ export class Companion extends Component {
         </div>
       );
     }
+    const pendingDocuments =
+      Object.keys(this.props.traversalPool.pool).length +
+      this.props.traversalPool.running;
+    const loadedDocuments = this.props.graph.graphDocs?.length || 0;
+    const loadingDocuments =
+      pendingDocuments > 0 ||
+      (!this.state.processingPerformances && !this.state.currentScore);
+    const loadingMessage = loadingDocuments
+      ? "Loading score and performances…"
+      : this.state.currentScore
+        ? this.props.score.loadStatus?.[this.state.currentScore]?.status ===
+          "loaded"
+          ? "Rendering score…"
+          : "Downloading score…"
+        : "Processing performances…";
     const loader = (
       <div
         className="py-5 text-center"
@@ -779,8 +798,12 @@ export class Companion extends Component {
         aria-busy="true"
       >
         <Spinner animation="border" aria-hidden="true" />
-        <p className="mt-3 mb-1">Loading score and performances…</p>
-        <p className="text-muted">This may take a few seconds.</p>
+        <p className="mt-3 mb-1">{loadingMessage}</p>
+        {loadingDocuments && (
+          <p className="text-muted">
+            Loaded {loadedDocuments} documents · {pendingDocuments} pending
+          </p>
+        )}
       </div>
     );
     if (this.state.loading && !this.state.currentScore) {
