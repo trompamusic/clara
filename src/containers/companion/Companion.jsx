@@ -8,12 +8,9 @@ import equal from "fast-deep-equal";
 import ClaraScore from "../../score/ClaraScore";
 import PageControls from "../../score/PageControls";
 import withScore from "../../score/withScore";
+import { loadPerformanceGraph } from "./loadPerformanceGraph";
 
 import {
-  traverse,
-  registerTraversal,
-  setTraversalObjectives,
-  checkTraversalObjectives,
   registerClock,
   tickTimedResource,
 } from "meld-clients-core/lib/actions/index";
@@ -65,6 +62,7 @@ export class Companion extends Component {
       committedPage: null,
       selectedVideo: "",
       selectedPerformance: "",
+      performanceLoadError: "",
       performanceSelectionCleared: false,
       lastMediaTick: 0,
       previouslyActive: [],
@@ -75,8 +73,7 @@ export class Companion extends Component {
       seekTo: "",
       videoOffset: 0, // in seconds
       activeWindow: 0.1, // window of notes before current instant considered active, in seconds
-      traversalThreshold: 10, // max parallel traversal threads,
-      loading: true, // flip when traversals are completed
+      load: { status: "traversing", loaded: 0, pending: 1 },
       scoreFollowing: true, // if true, page automatically with playback
       showVelocities: true, // if true, visualise note velocities
       showInsertedDeleted: true, // if true, visualise note insertions and deletions
@@ -94,16 +91,6 @@ export class Companion extends Component {
     this.scoreComponent = React.createRef();
     this.initialPerformanceAppliedId = "";
     this.featureVisPreferenceAppliedForUri = null;
-  }
-
-  UNSAFE_componentWillMount() {
-    this.props.setTraversalObjectives([
-      { "@type": "http://purl.org/ontology/mo/Performance" },
-      { "@type": "http://www.linkedmusic.org/ontologies/segment/Segment" },
-      { "@type": "http://purl.org/NET/c4dm/timeline.owl#Instant" },
-      { "@type": "http://www.w3.org/ns/oa#Annotation" },
-      { "@type": "http://purl.org/ontology/mo/Score" },
-    ]);
   }
 
   componentDidMount() {
@@ -136,7 +123,22 @@ export class Companion extends Component {
         `https://tpl-alignment-test.trompa-solid.upf.edu/public/mei`,
       ];
     }
-    this.props.registerTraversal(this.props.uri, params);
+    this.loadController = new AbortController();
+    const { signal } = this.loadController;
+    loadPerformanceGraph({
+      uri: this.props.uri,
+      params,
+      fetch: this.props.fetch || fetch,
+      signal,
+      onProgress: (load) => this.setState({ load }),
+    })
+      .then((outcomes) => {
+        if (signal.aborted) return;
+        this.processTraversalOutcomes(outcomes);
+      })
+      .catch((error) => {
+        if (!signal.aborted) this.failLoad(error);
+      });
     document.addEventListener("keydown", this.monitorKeys);
     window.addEventListener("resize", this.remeasureScorePage);
     this.setState({
@@ -150,7 +152,7 @@ export class Companion extends Component {
   isGraphReady = () => {
     const timelineIds = Object.keys(this.state.instantsByNoteId || {});
     return (
-      !this.state.loading &&
+      this.state.load.status === "ready" &&
       this.state.performances.length > 0 &&
       timelineIds.length > 0
     );
@@ -244,7 +246,11 @@ export class Companion extends Component {
       if (this.state.committedPage) this.setState(this.scoreResetState());
       return;
     }
-    if (this.state.loading || this.measuredScore === score) return;
+    if (
+      !["score", "ready"].includes(this.state.load.status) ||
+      this.measuredScore === score
+    )
+      return;
     const svg = this.scoreComponent.current?.querySelector(".score > svg");
     if (!svg) {
       this.props.scoreCommands.reportRenderFailure(
@@ -268,6 +274,7 @@ export class Companion extends Component {
     };
     this.measuredScore = score;
     this.setState({
+      load: { status: "ready" },
       committedPage,
       notesOnPage: svg.querySelectorAll(".note"),
     });
@@ -293,6 +300,13 @@ export class Companion extends Component {
   };
 
   componentDidUpdate(prevProps, prevState) {
+    if (
+      this.props.scoreState.status === "error" &&
+      this.state.load.status !== "error"
+    ) {
+      this.failLoad(this.props.scoreState.error);
+      return;
+    }
     this.syncScoreDom();
     if (
       prevProps.uri !== this.props.uri ||
@@ -302,41 +316,6 @@ export class Companion extends Component {
     }
     this.applyInitialPerformanceSelection();
     this.applyFeatureVisModePreference();
-    if (
-      "traversalPool" in prevProps &&
-      Object.keys(this.props.traversalPool.pool).length === 0 &&
-      prevProps.traversalPool.running > 0 &&
-      this.props.traversalPool.running === 0
-    ) {
-      // finished all traversals
-      this.setState({ loading: false }, () => {
-        this.props.checkTraversalObjectives(
-          this.props.graph.graph,
-          this.props.graph.objectives,
-        );
-      });
-    }
-    if ("graph" in prevProps) {
-      // check our traversal objectives if the graph has updated
-      if (
-        !prevProps.graph.allObjectivesApplied &&
-        this.props.graph.allObjectivesApplied
-      ) {
-        // outcomes have changed, need to update our projections!
-        this.processTraversalOutcomes(this.props.graph.outcomes);
-      }
-    }
-    if (
-      "traversalPool" in this.props && // if traversal pool reducer ready
-      Object.keys(this.props.traversalPool.pool).length && // and a traversal is waiting in the pool
-      this.props.traversalPool.running < this.state.traversalThreshold // and we don't have too many
-    ) {
-      // then start another traversal
-      const nextTraversalUri = Object.keys(this.props.traversalPool.pool)[0];
-      const nextTraversalParams =
-        this.props.traversalPool.pool[nextTraversalUri];
-      this.props.traverse(nextTraversalUri, nextTraversalParams);
-    }
 
     if (
       this.scoreReady &&
@@ -350,9 +329,15 @@ export class Companion extends Component {
 
   componentWillUnmount() {
     // clean up...
+    this.loadController.abort();
     document.removeEventListener("keydown", this.monitorKeys);
     window.removeEventListener("resize", this.remeasureScorePage);
   }
+
+  failLoad = (error) => {
+    console.error("Could not load score and performances", error);
+    this.setState({ load: { status: "error", error } });
+  };
 
   getTargetNoteForModeSwitch = () => {
     // Determine which note to focus on after mode switch:
@@ -426,9 +411,9 @@ export class Companion extends Component {
       );
       const thisTimeline =
         thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
-      const deletedNotesInstant = this.state.instantsByPerfTime[
-        thisTimeline
-      ].filter((i) => {
+      const timelineInstants = this.state.instantsByPerfTime[thisTimeline];
+      if (!timelineInstants) return;
+      const deletedNotesInstant = timelineInstants.filter((i) => {
         let dur = i["http://purl.org/NET/c4dm/timeline.owl#at"];
         dur = parseInt(dur.substr(1, dur.length - 2));
         return dur === -1; // all deleted notes "occur" at this instant
@@ -663,8 +648,19 @@ export class Companion extends Component {
   };
 
   render() {
-    if (this.state.loading) {
-      return <div id="wrapper">Loading, please wait</div>;
+    if (this.state.load.status === "error") {
+      return (
+        <div id="wrapper" role="alert">
+          Could not load score and performances.
+        </div>
+      );
+    }
+    if (["traversing", "processing"].includes(this.state.load.status)) {
+      return (
+        <div id="wrapper" role="status">
+          Loading, please wait
+        </div>
+      );
     } else {
       let currentTimeline = "";
       if (this.state.selectedPerformance) {
@@ -722,149 +718,187 @@ export class Companion extends Component {
           : "placeholder";
 
       return (
-        <div id="wrapper">
-          {featureVisElement}
-          <div id="instantBoundingBoxes">
-            {this.getInstantBoundingRectElements()}
-          </div>
-          {currentScore}
-          {pageControlsWrapper}
-          <div id="selectWrapper">
-            <select
-              name="segmentSelect"
-              disabled={!this.scoreReady}
-              onChange={this.handleSegmentSelected}
-              ref="segmentSelect"
-            >
-              <option value="none">Select a segment...</option>
-              {this.state.segments.map((seg) => {
-                return (
-                  <option key={seg["@id"]} value={seg["@id"]}>
-                    {seg["http://www.w3.org/2000/01/rdf-schema#label"] ||
-                      seg["@id"].substr(seg["@id"].lastIndexOf("#") + 1)}
-                  </option>
-                );
-              })}
-            </select>
-            <select
-              name="perfSelect"
-              value={performanceSelectValue}
-              onChange={(e) => this.handlePerformanceSelected(e.target.value)}
-            >
-              <option value="placeholder" disabled>
-                Select a rendition...
-              </option>
-              <option value="none">-- None --</option>
-              {this.state.performances
-                .sort((a, b) =>
-                  a["http://www.w3.org/2000/01/rdf-schema#label"].localeCompare(
-                    b["http://www.w3.org/2000/01/rdf-schema#label"],
-                  ),
-                )
-                .map((perf) => {
+        <div id="wrapper" className="position-relative">
+          {this.state.load.status !== "ready" && (
+            <div role="status">Loading, please wait</div>
+          )}
+          <div
+            aria-hidden={this.state.load.status !== "ready" || undefined}
+            style={
+              this.state.load.status !== "ready"
+                ? {
+                    opacity: 0,
+                    visibility: "hidden",
+                    position: "absolute",
+                    width: "100%",
+                    pointerEvents: "none",
+                  }
+                : undefined
+            }
+          >
+            {featureVisElement}
+            <div id="instantBoundingBoxes">
+              {this.getInstantBoundingRectElements()}
+            </div>
+            {currentScore}
+            {pageControlsWrapper}
+            <div id="selectWrapper">
+              {this.state.performanceLoadError && (
+                <div role="alert" className="alert alert-warning">
+                  {this.state.performanceLoadError}
+                </div>
+              )}
+              <select
+                name="segmentSelect"
+                disabled={!this.scoreReady}
+                onChange={this.handleSegmentSelected}
+                ref="segmentSelect"
+              >
+                <option value="none">Select a segment...</option>
+                {this.state.segments.map((seg) => {
                   return (
-                    <option key={perf["@id"]} value={perf["@id"]}>
-                      {perf["http://www.w3.org/2000/01/rdf-schema#label"]}
+                    <option key={seg["@id"]} value={seg["@id"]}>
+                      {seg["http://www.w3.org/2000/01/rdf-schema#label"] ||
+                        seg["@id"].substr(seg["@id"].lastIndexOf("#") + 1)}
                     </option>
                   );
                 })}
-            </select>
-            &nbsp;
-            <span>
-              {this.state.performances.length &&
-              this.state.selectedPerformance ? (
-                <span>
-                  <span id="scoreFollowToggle">
-                    <input
-                      id="controlAutomaticPageTurning"
-                      type="checkbox"
-                      checked={this.state.scoreFollowing}
-                      onChange={() => {
-                        this.setState({
-                          scoreFollowing: !this.state.scoreFollowing,
-                        });
-                      }}
-                    />
-                    &nbsp;
-                    <label htmlFor="controlAutomaticPageTurning">
-                      Automatic page turning
-                    </label>
-                  </span>
-                  &nbsp;
-                  <span id="modeToggle">
-                    <input
-                      type="checkbox"
-                      id="controlFeatureVisualisation"
-                      ref="modeToggle"
-                      checked={this.state.mode === "featureVis"}
-                      onChange={() => {
-                        if (this.state.mode === "featureVis") {
-                          this.setModePageView();
-                        } else {
-                          this.setModeFeatureVis();
-                        }
-                      }}
-                    />
-                    &nbsp;
-                    <label htmlFor="controlFeatureVisualisation">
-                      Feature visualisation
-                    </label>
-                  </span>
-                </span>
-              ) : (
-                <span />
-              )}
-            </span>
-            {this.state.selectedPerformance ? (
-              <div id="currentPerformanceLabel">
-                Current performance:{" "}
-                <strong>
-                  {
-                    this.state.selectedPerformance[
+              </select>
+              <select
+                name="perfSelect"
+                value={performanceSelectValue}
+                onChange={(e) => this.handlePerformanceSelected(e.target.value)}
+              >
+                <option value="placeholder" disabled>
+                  Select a rendition...
+                </option>
+                <option value="none">-- None --</option>
+                {this.state.performances
+                  .sort((a, b) =>
+                    a[
                       "http://www.w3.org/2000/01/rdf-schema#label"
-                    ]
-                  }
-                </strong>
-                {!this.props.demo && (
-                  <button
-                    className="delete"
-                    onClick={() => this.deleteSelectedPerformance()}
-                  >
-                    Delete performance
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div />
-            )}
-          </div>
-          <div className="videoWrapper">
-            {this.state.selectedVideo && (
-              <AuthenticatedMediaPlayer
-                src={this.state.selectedVideo}
-                demo={!!this.props.demo}
-                fetchFn={this.props.fetch}
-                playing={this.state.isPlaying}
-                onPlay={this.handlePlayerPlay}
-                onPause={this.handlePlayerPause}
-                progressInterval={50} // 20 Hz stays within the 100 ms note-activation window
-                onProgress={(p) => {
-                  this.tick(this.state.selectedVideo, p["playedSeconds"]);
-                }}
-                onReady={() => {
-                  if (Number.isFinite(this.state.seekTo) && this.player.current) {
-                    console.log(
-                      "Render loop onReady: seeking to ",
-                      this.state.seekTo,
+                    ].localeCompare(
+                      b["http://www.w3.org/2000/01/rdf-schema#label"],
+                    ),
+                  )
+                  .map((perf) => {
+                    const loadStatus = this.getPerformanceLoadStatus(perf);
+                    return (
+                      <option
+                        key={perf["@id"]}
+                        value={perf["@id"]}
+                        disabled={loadStatus !== "ready"}
+                      >
+                        {perf["http://www.w3.org/2000/01/rdf-schema#label"]}
+                        {loadStatus === "loading"
+                          ? " — loading…"
+                          : loadStatus === "unavailable"
+                            ? " — unavailable"
+                            : ""}
+                      </option>
                     );
-                    this.player.current.seekTo(this.state.seekTo, "seconds");
-                    this.setState({ seekTo: "" });
-                  }
-                }}
-                playerRef={this.player}
-                audioOnly={!this.props.demo}
-              />
-            )}
+                  })}
+              </select>
+              &nbsp;
+              <span>
+                {this.state.performances.length &&
+                this.state.selectedPerformance ? (
+                  <span>
+                    <span id="scoreFollowToggle">
+                      <input
+                        id="controlAutomaticPageTurning"
+                        type="checkbox"
+                        checked={this.state.scoreFollowing}
+                        onChange={() => {
+                          this.setState({
+                            scoreFollowing: !this.state.scoreFollowing,
+                          });
+                        }}
+                      />
+                      &nbsp;
+                      <label htmlFor="controlAutomaticPageTurning">
+                        Automatic page turning
+                      </label>
+                    </span>
+                    &nbsp;
+                    <span id="modeToggle">
+                      <input
+                        type="checkbox"
+                        id="controlFeatureVisualisation"
+                        ref="modeToggle"
+                        checked={this.state.mode === "featureVis"}
+                        onChange={() => {
+                          if (this.state.mode === "featureVis") {
+                            this.setModePageView();
+                          } else {
+                            this.setModeFeatureVis();
+                          }
+                        }}
+                      />
+                      &nbsp;
+                      <label htmlFor="controlFeatureVisualisation">
+                        Feature visualisation
+                      </label>
+                    </span>
+                  </span>
+                ) : (
+                  <span />
+                )}
+              </span>
+              {this.state.selectedPerformance ? (
+                <div id="currentPerformanceLabel">
+                  Current performance:{" "}
+                  <strong>
+                    {
+                      this.state.selectedPerformance[
+                        "http://www.w3.org/2000/01/rdf-schema#label"
+                      ]
+                    }
+                  </strong>
+                  {!this.props.demo && (
+                    <button
+                      className="delete"
+                      onClick={() => this.deleteSelectedPerformance()}
+                    >
+                      Delete performance
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div />
+              )}
+            </div>
+            <div className="videoWrapper">
+              {this.state.selectedVideo && (
+                <AuthenticatedMediaPlayer
+                  src={this.state.selectedVideo}
+                  demo={!!this.props.demo}
+                  fetchFn={this.props.fetch}
+                  playing={this.state.isPlaying}
+                  onPlay={this.handlePlayerPlay}
+                  onPause={this.handlePlayerPause}
+                  progressInterval={50} // 20 Hz stays within the 100 ms note-activation window
+                  onProgress={(p) => {
+                    this.tick(this.state.selectedVideo, p["playedSeconds"]);
+                  }}
+                  onReady={() => {
+                    if (
+                      Number.isFinite(this.state.seekTo) &&
+                      this.player.current
+                    ) {
+                      console.log(
+                        "Render loop onReady: seeking to ",
+                        this.state.seekTo,
+                      );
+                      this.player.current.seekTo(this.state.seekTo, "seconds");
+                      this.setState({ seekTo: "" });
+                    }
+                  }}
+                  playerRef={this.player}
+                  audioOnly={!this.props.demo}
+                />
+              )}
+            </div>
           </div>
         </div>
       );
@@ -966,6 +1000,30 @@ export class Companion extends Component {
     }
   };
 
+  getPerformanceLoadStatus = (performance) => {
+    const signal = this.ensureArray(
+      performance["http://purl.org/ontology/mo/recorded_as"],
+    )[0];
+    const time = this.ensureArray(
+      signal?.["http://purl.org/ontology/mo/time"],
+    )[0];
+    const timeline = this.ensureArray(
+      time?.["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"],
+    )[0]?.["@id"];
+    if (
+      this.state.instantsByPerfTime[timeline]?.length &&
+      this.state.instantsByNoteId[timeline]
+    ) {
+      return "ready";
+    }
+    // Traversal failures are not tracked per URL by meld. Missing alignment
+    // data is only considered unavailable once traversal and framing finish.
+    if (["traversing", "processing"].includes(this.state.load.status)) {
+      return "loading";
+    }
+    return "unavailable";
+  };
+
   handlePerformanceSelected = (perfId, options = {}) => {
     const { notifyParent = true } = options;
     console.log("Rendition selected: ", perfId);
@@ -980,6 +1038,7 @@ export class Companion extends Component {
       this.setState(
         {
           selectedPerformance: "",
+          performanceLoadError: "",
           selectedVideo: "",
           seekTo: "",
           performanceSelectionCleared: true,
@@ -1002,6 +1061,17 @@ export class Companion extends Component {
       console.warn("Unable to locate performance", perfId);
       return;
     }
+    const loadStatus = this.getPerformanceLoadStatus(selected);
+    if (loadStatus !== "ready") {
+      const message =
+        loadStatus === "loading"
+          ? "This rendition is still loading."
+          : "This rendition’s timeline couldn’t be loaded. Try reloading the page later.";
+      if (this.state.performanceLoadError !== message) {
+        this.setState({ performanceLoadError: message });
+      }
+      return;
+    }
     const selectedVideo =
       selected["http://purl.org/ontology/mo/recorded_as"][
         "http://purl.org/ontology/mo/available_as"
@@ -1011,6 +1081,7 @@ export class Companion extends Component {
     let newState = {
       selectedVideo,
       selectedPerformance,
+      performanceLoadError: "",
       performanceSelectionCleared: false,
       isPlaying: false,
     };
@@ -1045,42 +1116,18 @@ export class Companion extends Component {
     const initialPerformanceId = this.props.selectedPerformance;
     if (
       !initialPerformanceId ||
-      !this.isGraphReady() ||
       this.initialPerformanceAppliedId === initialPerformanceId
     ) {
       return;
     }
-    const timelineIds = Object.keys(this.state.instantsByNoteId || {});
-
     const matchingPerformance =
       this.findPerformanceByIdentifier(initialPerformanceId);
-    if (!matchingPerformance) {
-      return;
+    if (!matchingPerformance) return;
+    const loadStatus = this.getPerformanceLoadStatus(matchingPerformance);
+    if (loadStatus === "loading") return;
+    if (loadStatus === "ready") {
+      this.initialPerformanceAppliedId = initialPerformanceId;
     }
-
-    const performances =
-      this.ensureArray(
-        matchingPerformance["http://purl.org/ontology/mo/recorded_as"],
-      ) || [];
-    const matchingTimeline = performances
-      .map((signal) =>
-        this.ensureArray(signal["http://purl.org/ontology/mo/time"]),
-      )
-      .flat()
-      .map((instant) =>
-        this.ensureArray(
-          instant["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"],
-        ),
-      )
-      .flat()
-      .map((timeline) => timeline && timeline["@id"])
-      .find((id) => id && timelineIds.includes(id));
-
-    if (!matchingTimeline) {
-      return;
-    }
-
-    this.initialPerformanceAppliedId = initialPerformanceId;
     this.handlePerformanceSelected(matchingPerformance["@id"], {
       notifyParent: false,
     });
@@ -1111,32 +1158,30 @@ export class Companion extends Component {
       thisTime[0]["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"];
     // find the time instant on the selected performance's timeline that corresponds to the
     // selected segment
-    const timelineSegment = this.props.graph.outcomes[2]["@graph"].filter(
-      (i) => {
-        if (
-          !("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in i) ||
-          i["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] !==
-            selectedTimeline
-        ) {
-          return false;
-        }
-        let segNotes = [];
-        // do any of our instant's note embodiments match one of the segment's note embodiments?
-        segNotes = segment["http://purl.org/vocab/frbr/core#embodiment"][
-          "https://meld.linkedmusic.org/terms/notes"
-        ].filter((segNote) => {
-          // ensure array (in chords, one timeline instance maps to multiple note instances)
-          const embodiments = this.ensureArray(
-            i["http://purl.org/vocab/frbr/core#embodimentOf"],
-          );
-          const embodimentFound = embodiments.filter((e) => {
-            return e["@id"] === segNote["@id"];
-          });
-          return embodimentFound.length; // true if we found a matching embodiment
+    const timelineSegment = this.state.instants.filter((i) => {
+      if (
+        !("http://purl.org/NET/c4dm/timeline.owl#onTimeLine" in i) ||
+        i["http://purl.org/NET/c4dm/timeline.owl#onTimeLine"]["@id"] !==
+          selectedTimeline
+      ) {
+        return false;
+      }
+      let segNotes = [];
+      // do any of our instant's note embodiments match one of the segment's note embodiments?
+      segNotes = segment["http://purl.org/vocab/frbr/core#embodiment"][
+        "https://meld.linkedmusic.org/terms/notes"
+      ].filter((segNote) => {
+        // ensure array (in chords, one timeline instance maps to multiple note instances)
+        const embodiments = this.ensureArray(
+          i["http://purl.org/vocab/frbr/core#embodimentOf"],
+        );
+        const embodimentFound = embodiments.filter((e) => {
+          return e["@id"] === segNote["@id"];
         });
-        return segNotes.length; // true if we found a matching instance
-      },
-    );
+        return embodimentFound.length; // true if we found a matching embodiment
+      });
+      return segNotes.length; // true if we found a matching instance
+    });
     // returned them in chronological order
     const sorted = timelineSegment.sort((a, b) => {
       let aDur = a["http://purl.org/NET/c4dm/timeline.owl#at"];
@@ -1304,12 +1349,7 @@ export class Companion extends Component {
           ) {
             // we've entered a new section (segment)
             //find the corresponding segment in our outcomes
-            let segments;
-            if ("@graph" in this.props.graph.outcomes[1]) {
-              segments = this.props.graph.outcomes[1]["@graph"];
-            } else {
-              segments = [this.props.graph.outcomes[1]];
-            }
+            const segments = this.state.segments;
             const newSeg = segments.filter((s) => {
               return (
                 s["@id"].substr(s["@id"].lastIndexOf("#") + 1) === sectionId
@@ -1601,6 +1641,7 @@ export class Companion extends Component {
             const changed = currentScore !== this.state.currentScore;
             this.setState({
               performances,
+              load: { status: "score" },
               segments,
               instants,
               instantsByPerfTime,
@@ -1616,6 +1657,8 @@ export class Companion extends Component {
                 this.state.vrvOptions,
               );
           });
+        } else {
+          throw new Error("Performance has no published score");
         }
       } else if (Object.keys(outcomes[4]).length) {
         let currentScore;
@@ -1633,6 +1676,7 @@ export class Companion extends Component {
           const changed = currentScore !== this.state.currentScore;
           this.setState({
             segments,
+            load: { status: "score" },
             currentScore,
             mode: "pageView",
             vrvOptions: vrvOptionsPageView,
@@ -1643,21 +1687,13 @@ export class Companion extends Component {
             this.props.scoreCommands.load(currentScore, vrvOptionsPageView);
           else this.props.scoreCommands.setOptions(vrvOptionsPageView);
         });
+      } else {
+        throw new Error("Traversal returned no score");
       }
     }
   };
 }
 
-// PropTypes documentation:
-// - graph: Redux state from graph reducer
-//   - graph.graph: Array - Array of graph nodes
-//   - graph.objectives: Array - Array of traversal objectives
-//   - graph.outcomes: Array - Array of traversal outcomes (indexed: 0=performances, 1=segments, 2=instants, 3=annotations, 4=scores)
-//   - graph.allObjectivesApplied: boolean - Whether all traversal objectives have been applied
-// - traversalPool: Redux state from traversalPool reducer
-//   - traversalPool.running: number - Number of currently running traversals
-//   - traversalPool.pool: Record<string, any> - Map of traversal URIs to their parameters
-//   - traversalPool.graphDocs: Array<string> - Array of graph document URIs
 const companionOwnPropTypes = {
   uri: PropTypes.string.isRequired,
   userPOD: PropTypes.string,
@@ -1671,12 +1707,6 @@ const companionOwnPropTypes = {
 const companionInjectedPropTypes = {
   scoreState: PropTypes.object.isRequired,
   scoreCommands: PropTypes.object.isRequired,
-  graph: PropTypes.object.isRequired,
-  traversalPool: PropTypes.object.isRequired,
-  traverse: PropTypes.func.isRequired,
-  registerTraversal: PropTypes.func.isRequired,
-  setTraversalObjectives: PropTypes.func.isRequired,
-  checkTraversalObjectives: PropTypes.func.isRequired,
   registerClock: PropTypes.func.isRequired,
   tickTimedResource: PropTypes.func.isRequired,
 };
@@ -1691,20 +1721,9 @@ const companionPropTypes = {
 
 Companion.propTypes = companionPropTypes;
 
-function mapStateToProps({ graph, traversalPool }) {
-  return {
-    graph,
-    traversalPool,
-  };
-}
-
 function mapDispatchToProps(dispatch) {
   return bindActionCreators(
     {
-      traverse,
-      registerTraversal,
-      setTraversalObjectives,
-      checkTraversalObjectives,
       registerClock,
       tickTimedResource,
     },
@@ -1713,7 +1732,7 @@ function mapDispatchToProps(dispatch) {
 }
 
 const ConnectedCompanion = connect(
-  mapStateToProps,
+  null,
   mapDispatchToProps,
 )(withScore(Companion));
 

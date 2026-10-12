@@ -79,7 +79,7 @@ export default function Perform() {
           score={score}
           expansionOptions={[]}
         />
-        <ScoreProvider>
+        <ScoreProvider key={`${webId}-${score}`}>
           <Companion
             uri={score}
             userPOD={mainContainerUri}

@@ -10,6 +10,7 @@ import { Companion } from "../containers/companion/Companion";
 import { fakeToolkit, fetchMei, setRuntime } from "./testToolkit";
 
 jest.mock("meld-clients-core/lib/actions/index", () => ({}));
+jest.mock("../containers/companion/loadPerformanceGraph", () => ({}));
 jest.mock("../containers/companion/MidiPlayer", () => ({
   MidiPlayer: () => null,
 }));
@@ -96,7 +97,10 @@ test("mode switches mount visualizations only after the new score layout commits
     </ScoreProvider>,
   );
   act(() => {
-    ref.current.setState({ loading: false, currentScore: "score.mei" });
+    ref.current.setState({
+      load: { status: "score" },
+      currentScore: "score.mei",
+    });
     commands.load("score.mei", ref.current.state.vrvOptions);
   });
   await waitFor(() => expect(ref.current.scoreReady).toBe(true));
