@@ -553,7 +553,25 @@ export function createRateLimiter({
         recordStart(bucket, t, cost, persist);
         return;
       }
-      await waitOrAbort(earliest - t, signal);
+      console.debug(
+        `rateLimiter: sleeping ${Math.ceil(earliest - t)}ms for bucket "${bucket.key || "default"}"`,
+        {
+          reason: bucket.pausedUntil > t ? "server cooldown" : "request budget",
+          queued: bucket.queued,
+          resumeAt: new Date(earliest).toISOString(),
+        },
+      );
+      try {
+        await waitOrAbort(earliest - t, signal);
+      } catch (error) {
+        console.debug(
+          `rateLimiter: wait interrupted for bucket "${bucket.key || "default"}"`,
+        );
+        throw error;
+      }
+      console.debug(
+        `rateLimiter: woke for bucket "${bucket.key || "default"}", checking request budget again`,
+      );
     }
   }
 
